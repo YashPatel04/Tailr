@@ -33,6 +33,7 @@ Job seekers tailor their resumes for every application, but existing tools eithe
 - `tailoring-session`: Full lifecycle for tailoring sessions — create from master resume + JD, store company/role metadata, attach chat history, manage patches, generate cover letters, organize by company with global tag support.
 - `ui-layout`: ChatGPT-style three-pane layout: collapsible sidebar (logo + search + new chat + projects + history + profile), dominant document canvas, right-side chat rail. Search modal overlay. Design system with Paper/Ink/Brass/Proof colors and serif/sans/mono typefaces.
 - `diff-view`: Interactive rendered document diff with margin proofreading marks (green/red vertical rules, caret for insertions, strikethrough for deletions). 150-200ms transitions on updates. Live alongside chat for iterative revision.
+- `ci-quality`: Backend tests (pytest with async support), frontend tests (Vitest + React Testing Library), and linting (ruff for Python, ESLint + Prettier for TypeScript). Enforced via pre-commit hooks and CI.
 
 ### Modified Capabilities
 

@@ -2,11 +2,15 @@
 
 - [ ] 1.1 Create top-level `docker-compose.yml` with services: db (PostgreSQL 16-alpine), redis (7-alpine), latex (texlive-full), backend, frontend, mailhog
 - [ ] 1.2 Create `docker/latex/Dockerfile` based on texlive/texlive (or ubuntu + texlive-full) with latexmk, set entrypoint to `sleep infinity`
-- [ ] 1.3 Create `backend/` FastAPI project with Poetry/pip, add dependencies: fastapi, uvicorn, sqlalchemy[asyncio], asyncpg, alembic, pydantic, python-jose, httpx, beautifulsoup4, duckduckgo-search, python-docx, slowapi, bcrypt, redis, tree-sitter, tree-sitter-latex
-- [ ] 1.4 Create `frontend/` Next.js project with TypeScript, configure Tailwind CSS with the design system palette (Paper #F1F2EE, Ink #171B22, Slate #5B6472, Brass #B8863A, Proof Green #2E7D5B, Proof Red #B23B3B), and custom font families (Newsreader, Public Sans, JetBrains Mono)
+- [ ] 1.3 Create `backend/` FastAPI project with Poetry/pip, add dependencies: fastapi, uvicorn, sqlalchemy[asyncio], asyncpg, alembic, pydantic, python-jose, httpx, beautifulsoup4, duckduckgo-search, python-docx, slowapi, bcrypt, redis, tree-sitter, tree-sitter-latex, pytest, pytest-asyncio, httpx (for test client), ruff
+- [ ] 1.4 Create `frontend/` Next.js project with TypeScript, configure Tailwind CSS with the design system palette (Paper #F1F2EE, Ink #171B22, Slate #5B6472, Brass #B8863A, Proof Green #2E7D5B, Proof Red #B23B3B), and custom font families (Newsreader, Public Sans, JetBrains Mono). Add vitest, @testing-library/react, @testing-library/jest-dom, eslint, prettier, eslint-config-next
 - [ ] 1.5 Configure Alembic and create initial migration with all tables: users, llm_providers, master_resumes, sessions, session_documents, patches, chat_messages, refresh_tokens, email_verifications
 - [ ] 1.6 Add Lucide icon package and configure SVG sprite or per-icon imports
 - [ ] 1.7 Create backend `.env` / environment config loader with DATABASE_URL, REDIS_URL, LATEX_WORK_DIR, SECRET_KEY, SMTP_HOST, SMTP_PORT
+- [ ] 1.8 Configure ruff in `backend/pyproject.toml` with rules for formatting, import sorting, and code style
+- [ ] 1.9 Configure ESLint + Prettier in `frontend/` with TypeScript rules, consistent with Next.js defaults
+- [ ] 1.10 Create `.pre-commit-config.yaml` at repo root running ruff check, ESLint, and Prettier on staged files
+- [ ] 1.11 Create GitHub Actions CI workflow (`.github/workflows/ci.yml`) running backend tests, frontend tests, ruff, ESLint, and Prettier on push
 
 ## 2. Authentication System
 
@@ -146,12 +150,46 @@
 - [ ] 14.5 Build Templates settings: upload custom .cls/.sty files for LaTeX compilation (stretch goal)
 - [ ] 14.6 Build Account settings: change password, linked OAuth accounts management, delete account
 
-## 15. Integration & Polish
+## 15. Backend Tests
 
-- [ ] 15.1 Wire full flow: sidebar → new session → JD paste → research → tailoring → diff view → accept/reject → export
-- [ ] 15.2 Implement light/dark mode with theme persistence (localStorage), Paper/Ink swap, consistent Brass accent
-- [ ] 15.3 Add loading states and error boundaries across all components
-- [ ] 15.4 Test LaTeX parsing against real resume templates: moderncv, Awesome-CV, AltaCV, basic custom templates
-- [ ] 15.5 Test .docx and .txt import/export round-trips
-- [ ] 15.6 Test LLM integration across all three providers (OpenAI, Anthropic, Ollama)
-- [ ] 15.7 Test error paths: invalid .tex compilation, network failures, LLM API errors, patch validation failures
+- [ ] 15.1 Set up pytest configuration in `backend/pyproject.toml` with async test support and coverage targets
+- [ ] 15.2 Write API integration tests for auth endpoints: register, verify, login, refresh, logout, forgot/reset password
+- [ ] 15.3 Write API integration tests for OAuth flow: GitHub callback, Google callback, account linking
+- [ ] 15.4 Write unit tests for document parsing: token tree construction, round-trip serialization, vocabulary extraction
+- [ ] 15.5 Write unit tests for document model extraction: known commands → semantic types, unknown macros → opaque spans, formatting spans
+- [ ] 15.6 Write unit tests for .docx and .txt import normalization
+- [ ] 15.7 Write unit tests for patch validation: valid patches accepted, invalid IDs rejected, cycles detected, required metadata protected
+- [ ] 15.8 Write unit tests for patch application: modify, insert, delete, move operations produce correct document model changes
+- [ ] 15.9 Write unit tests for version chain and diff computation
+- [ ] 15.10 Write unit tests for master resume push-back: selective operation application
+- [ ] 15.11 Write unit tests for LLM provider adapters: OpenAI, Anthropic, Ollama request/response handling, error cases
+- [ ] 15.12 Write unit tests for API key encryption/decryption
+- [ ] 15.13 Write unit tests for research pipeline: timeboxing, source timeout, graceful degradation
+- [ ] 15.14 Write unit tests for LaTeX compilation: valid compile, error extraction, cheap LLM suggestion, timeout
+- [ ] 15.15 Write API integration tests for session CRUD: create, list by date, archive, delete
+- [ ] 15.16 Write API integration tests for cover letter generation and editing
+
+## 16. Frontend Tests
+
+- [ ] 16.1 Configure Vitest with jsdom environment and React Testing Library in `frontend/`
+- [ ] 16.2 Write component tests for Sidebar: expanded/collapsed states, history groups, session entries, profile section
+- [ ] 16.3 Write component tests for SearchModal: opens/closes on icon click and Cmd+K, live filters, results grouped by category, closes on Escape
+- [ ] 16.4 Write component tests for ChatRail: message rendering (user/system roles), progress event rendering with correct Lucide icons
+- [ ] 16.5 Write component tests for ChatInput: text entry, Enter to send, Shift+Enter for newline
+- [ ] 16.6 Write component tests for DocumentCanvas: section rendering, serif font application, empty state
+- [ ] 16.7 Write component tests for raw .tex toggle: CodeMirror editor mount/unmount, re-parsing
+- [ ] 16.8 Write component tests for DiffView: proofreading marks (green caret, red strikethrough), hover tooltips, accept/reject buttons
+- [ ] 16.9 Write component tests for diff transitions: animation classes applied on change
+- [ ] 16.10 Write hook tests for SSE client: event parsing, state updates
+- [ ] 16.11 Write component tests for Settings pages: providers CRUD, career context save, master resume upload
+
+## 17. Integration & Polish
+
+- [ ] 17.1 Wire full flow: sidebar → new session → JD paste → research → tailoring → diff view → accept/reject → export
+- [ ] 17.2 Implement light/dark mode with theme persistence (localStorage), Paper/Ink swap, consistent Brass accent
+- [ ] 17.3 Add loading states and error boundaries across all components
+- [ ] 17.4 Manual test: LaTeX parsing against real resume templates (moderncv, Awesome-CV, AltaCV, basic custom)
+- [ ] 17.5 Manual test: .docx and .txt import/export round-trips
+- [ ] 17.6 Manual test: LLM integration across all three providers (OpenAI, Anthropic, Ollama)
+- [ ] 17.7 Manual test: error paths (invalid .tex compilation, network failures, LLM API errors, patch validation failures)
+- [ ] 17.8 Run full test suite and linting before merge to main
