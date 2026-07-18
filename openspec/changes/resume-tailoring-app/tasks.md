@@ -64,7 +64,7 @@
 - [ ] 6.4 Build Anthropic provider adapter: messages API with configurable model, temperature, max_tokens
 - [ ] 6.5 Build Ollama provider adapter: chat API with configurable model, base URL
 - [ ] 6.6 Build "custom" provider adapter for arbitrary OpenAI-compatible APIs (configurable base URL + API key)
-- [ ] 6.7 Build prompt assembler: combine document model + JD text + user notes + career context + research summary + tailoring level into structured system prompt with JSON patch response format
+- [ ] 6.7 Build prompt assembler: combine document model + JD text + user notes + career context + research summary + tailoring mode (Polish/Refine/Rewrite) into structured system prompt with JSON patch response format
 - [ ] 6.8 Implement SSE streaming endpoint: /api/sessions/[id]/chat accepts user message, runs research if needed, streams progress events (researching/research_progress/research_done/thinking/writing/done)
 - [ ] 6.9 Implement LLM response parsing: extract JSON patch from streaming/non-streaming LLM response, handle malformed responses with retry prompt
 
@@ -92,7 +92,7 @@
 
 ## 9. Tailoring Session Management
 
-- [ ] 9.1 Implement session CRUD: create (from master resume + JD + company/role + tailoring level + provider), read, update, archive, delete
+- [ ] 9.1 Implement session CRUD: create (from master resume + JD + company/role + tailoring mode + provider), read, update, archive, delete
 - [ ] 9.2 Implement JD fetching: accept URL, fetch and parse content, store as session's job_description
 - [ ] 9.3 Build session document initialization: copy master resume as first session_documents row with version 0
 - [ ] 9.4 Implement chat message storage: save all messages (user, assistant, system) with metadata_json for progress events and patch references
@@ -121,7 +121,7 @@
 - [ ] 11.3 Build ProgressMessage component: Lucide icons per phase (Search → researching, Sparkles → thinking, Pencil → writing, Check → done), sub-text for researching/writing details
 - [ ] 11.4 Build ChatInput component: textarea with auto-resize, Enter to send, Shift+Enter for newline
 - [ ] 11.5 Implement SSE client: EventSource connection to /api/sessions/[id]/chat, parse event types, append messages to chat rail, update document canvas on writing/done events
-- [ ] 11.6 Build session setup form within chat: company name, role title, JD input (URL or paste), tailoring level selector, provider/model selector, notes field
+- [ ] 11.6 Build session setup form within chat: company name, role title, JD input (URL or paste), tailoring mode selector (Polish/Refine/Rewrite), provider/model selector, notes field
 
 ## 12. Frontend — Document Canvas
 

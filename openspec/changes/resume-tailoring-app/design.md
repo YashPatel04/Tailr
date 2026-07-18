@@ -37,7 +37,7 @@ A **template vocabulary map** records which commands the user's template uses fo
 
 ### Decision 2: JSON patch protocol for LLM edits
 
-The LLM receives the structured document model (not raw .tex) and returns a JSON patch with operations: `modify`, `insert`, `delete`, `move`, `ask`. Each operation carries a `reasoning` field for quality control and UI tooltips. The `ask` operation pauses the patch and surfaces a question to the user (for Level 2/3 proactive queries).
+The LLM receives the structured document model (not raw .tex) and returns a JSON patch with operations: `modify`, `insert`, `delete`, `move`, `ask`. Each operation carries a `reasoning` field for quality control and UI tooltips. The `ask` operation pauses the patch and surfaces a question to the user (for Refine/Rewrite proactive queries).
 
 Server-side validation before applying: ID existence, no cycle creation on moves, no deletion of required metadata, format types must exist in vocabulary map, text length limits.
 

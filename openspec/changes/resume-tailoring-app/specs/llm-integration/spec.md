@@ -42,15 +42,15 @@ The system SHALL allow the user to select which provider and model to use for ea
 - **THEN** the next LLM request uses the newly selected provider
 
 ### Requirement: Build tailoring prompts with full context
-The system SHALL assemble LLM prompts that include: the document model of the current resume, the full job description text, the user's per-session notes, the user's career context from settings, the company research summary, and the authorized tailoring level. Each context component SHALL be clearly delimited in the prompt.
+The system SHALL assemble LLM prompts that include: the document model of the current resume, the full job description text, the user's per-session notes, the user's career context from settings, the company research summary, and the authorized tailoring mode. Each context component SHALL be clearly delimited in the prompt.
 
-#### Scenario: Build a Level 1 tailoring prompt
-- **WHEN** a session is configured with tailoring level 1
+#### Scenario: Build a Polish-mode tailoring prompt
+- **WHEN** a session is configured with Polish mode
 - **THEN** the system prompt authorizes micro-edits only (adjust words, tweak bullets, add/remove individual skills) and instructs the LLM not to reorganize sections
 
-#### Scenario: Build a Level 2 tailoring prompt
-- **WHEN** a session is configured with tailoring level 2
-- **THEN** the system prompt authorizes Level 1 actions plus reordering/regrouping sections, and instructs the LLM to use the `ask` operation if missing information is needed
+#### Scenario: Build a Refine-mode tailoring prompt
+- **WHEN** a session is configured with Refine mode
+- **THEN** the system prompt authorizes Polish-level actions plus reordering/regrouping sections, and instructs the LLM to use the `ask` operation if missing information is needed
 
 #### Scenario: Include career context in every prompt
 - **WHEN** the user has set a career context in Settings ("5 years backend infra, targeting staff-level roles at startups")

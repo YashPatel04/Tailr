@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Create tailoring sessions from master resume
-The system SHALL allow users to create a tailoring session by selecting their master resume, pasting a job description (URL or raw text), optionally naming the company and role, setting a tailoring level (1, 2, or 3), selecting an LLM provider, and adding per-session notes.
+The system SHALL allow users to create a tailoring session by selecting their master resume, pasting a job description (URL or raw text), optionally naming the company and role, setting a tailoring mode (Polish, Refine, or Rewrite), selecting an LLM provider, and adding per-session notes.
 
 #### Scenario: Create a session with a JD URL
 - **WHEN** a user submits a session with a JD URL instead of raw text
@@ -11,9 +11,9 @@ The system SHALL allow users to create a tailoring session by selecting their ma
 - **WHEN** a user has no master resume set
 - **THEN** the system prompts the user to upload one before proceeding with the session
 
-#### Scenario: Set tailoring level
-- **WHEN** a user creates a session with tailoring level 2
-- **THEN** the system stores the level and includes it in the LLM prompt, authorizing reorganization but not full restructuring by default
+#### Scenario: Set tailoring mode
+- **WHEN** a user creates a session with Refine mode
+- **THEN** the system stores the mode and includes it in the LLM prompt, authorizing reorganization but not full restructuring by default
 
 ### Requirement: Manage session lifecycle
 The system SHALL support viewing, continuing, archiving, and deleting tailoring sessions. Sessions SHALL be organized by company (extracted or user-supplied) and displayable in the sidebar grouped by date (Today, Yesterday, Previous 7 Days, Older).

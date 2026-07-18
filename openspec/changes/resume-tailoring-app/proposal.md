@@ -7,7 +7,7 @@ Job seekers tailor their resumes for every application, but existing tools eithe
 - New web application with Python FastAPI backend and React Next.js frontend
 - LaTeX-native document pipeline: parse `.tex` into a lossless syntactic token tree, extract a structured document model for LLM editing, and serialize back to idiomatic `.tex`
 - Multi-provider LLM integration (OpenAI, Anthropic, Ollama) with encrypted API key storage, configurable per tailoring session
-- Three tailoring levels (micro-edits, reorganization, full rewrite) controlling how aggressively the LLM restructures the resume
+- Three tailoring modes — Polish (micro-edits), Refine (reorganization), Rewrite (full restructure) — controlling how aggressively the LLM restructures the resume
 - Company research pipeline that scrapes official sources and subreddits before tailoring, informing tone and emphasis
 - Interactive diff view with margin proofreading marks (Proof Green/Red) on rendered document sections — not PDF diffs
 - Chat-style interface with SSE-based progress pipeline (Researching → Thinking → Writing → Done)
