@@ -71,14 +71,19 @@ def _docx_apply_spans(paragraph, spans: list, text: str):
         paragraph.add_run(text)
         return
 
+    def _attr(span, key):
+        if isinstance(span, dict):
+            return span.get(key)
+        return getattr(span, key, None)
+
     cursor = 0
-    for span in sorted(spans, key=lambda s: s["start"]):
-        s_start = span["start"]
-        s_end = span["end"]
+    for span in sorted(spans, key=lambda s: _attr(s, "start")):
+        s_start = _attr(span, "start")
+        s_end = _attr(span, "end")
         if cursor < s_start:
             paragraph.add_run(text[cursor:s_start])
         run = paragraph.add_run(text[s_start:s_end])
-        formats = span.get("formats") or []
+        formats = _attr(span, "formats") or []
         if "bold" in formats:
             run.bold = True
         if "italic" in formats:
@@ -146,8 +151,13 @@ async def export_document(
 
     if format == "pdf":
         try:
+            tex_to_compile = tex_source
+            if _CONTENT_OPS_AVAILABLE and doc.content_json:
+                content = ResumeContent.model_validate(doc.content_json)
+                renderer = ResumeRenderer()
+                tex_to_compile = renderer.render_tex(content)
             compiler = LatexCompiler()
-            pdf_bytes = compiler.compile(tex_source, str(doc.id))
+            pdf_bytes = compiler.compile(tex_to_compile, str(doc.id))
             return Response(
                 content=pdf_bytes,
                 media_type="application/pdf",
@@ -162,38 +172,44 @@ async def export_document(
         from docx.shared import Pt
 
         docx = DocxDocument()
-        doc_model = doc.document_model_json
-        if not doc_model:
+        if _CONTENT_OPS_AVAILABLE and doc.content_json:
+            content = ResumeContent.model_validate(doc.content_json)
+            if content.basics.name:
+                docx.add_heading(content.basics.name, 0)
+                info_parts = []
+                if content.basics.email:
+                    info_parts.append(content.basics.email)
+                if content.basics.phone:
+                    info_parts.append(content.basics.phone)
+                if content.basics.location:
+                    info_parts.append(content.basics.location)
+                if info_parts:
+                    p = docx.add_paragraph()
+                    p.add_run("  |  ".join(info_parts)).italic = True
+            for section in content.sections:
+                docx.add_heading(section.label, level=1)
+                for entry in section.entries:
+                    p = docx.add_paragraph()
+                    run = p.add_run(entry.title)
+                    run.bold = True
+                    if entry.dates:
+                        p.add_run(f"  —  {entry.dates}")
+                    if entry.role:
+                        role_p = docx.add_paragraph()
+                        role_p.add_run(entry.role).italic = True
+                        if entry.location:
+                            role_p.add_run(f"  —  {entry.location}").italic = True
+                    for bullet in entry.bullets:
+                        bp = docx.add_paragraph(style="List Bullet")
+                        _docx_apply_spans(bp, [s.model_dump() if hasattr(s, 'model_dump') else s for s in bullet.spans], bullet.text)
+                for sk in section.skill_rows:
+                    p = docx.add_paragraph()
+                    run = p.add_run(f"{sk.category} ")
+                    run.bold = True
+                    p.add_run(sk.items)
+        else:
             docx.add_heading("Resume", 0)
             docx.add_paragraph("No document content.")
-        else:
-            for node in _walk_model(doc_model):
-                ntype = node.get("type", "")
-                if ntype == "section":
-                    label = node.get("label") or ""
-                    docx.add_heading(label, level=1)
-                elif ntype == "entry":
-                    entry = _resolve_entry_fields(node)
-                    p = docx.add_paragraph()
-                    run = p.add_run(entry["title"])
-                    run.bold = True
-                    if entry["dates"]:
-                        p.add_run(f"  —  {entry['dates']}")
-                    if entry["organization"]:
-                        docx.add_paragraph(entry["organization"])
-                elif ntype == "bullet":
-                    text = node.get("text") or ""
-                    spans = node.get("spans") or []
-                    p = docx.add_paragraph(style="List Bullet")
-                    _docx_apply_spans(p, spans, text)
-                elif ntype == "skill_row":
-                    cat = node.get("category") or ""
-                    items = node.get("items") or ""
-                    p = docx.add_paragraph()
-                    run = p.add_run(f"{cat} ")
-                    run.bold = True
-                    if items:
-                        p.add_run(items)
 
         buffer = BytesIO()
         docx.save(buffer)
@@ -206,28 +222,38 @@ async def export_document(
 
     elif format == "txt":
         lines: list[str] = []
-        doc_model = doc.document_model_json
-        if doc_model:
-            for node in _walk_model(doc_model):
-                ntype = node.get("type", "")
-                if ntype == "section":
-                    label = node.get("label") or ""
-                    lines.append(f"\n{label.upper()}\n")
-                elif ntype == "entry":
-                    entry = _resolve_entry_fields(node)
-                    title_line = entry["title"]
-                    if entry["dates"]:
-                        title_line += f"  --  {entry['dates']}"
+        if _CONTENT_OPS_AVAILABLE and doc.content_json:
+            content = ResumeContent.model_validate(doc.content_json)
+            if content.basics.name:
+                lines.append(content.basics.name.upper())
+                info_parts = []
+                if content.basics.email:
+                    info_parts.append(content.basics.email)
+                if content.basics.phone:
+                    info_parts.append(content.basics.phone)
+                if content.basics.location:
+                    info_parts.append(content.basics.location)
+                if info_parts:
+                    lines.append("  ".join(info_parts))
+                lines.append("")
+            for section in content.sections:
+                lines.append(section.label.upper())
+                lines.append("")
+                for entry in section.entries:
+                    title_line = entry.title
+                    if entry.dates:
+                        title_line += f"  --  {entry.dates}"
                     lines.append(title_line)
-                    if entry["organization"]:
-                        lines.append(f"    {entry['organization']}")
-                elif ntype == "bullet":
-                    text = node.get("text") or ""
-                    lines.append(f"  \u2022 {text}")
-                elif ntype == "skill_row":
-                    cat = node.get("category") or ""
-                    items = node.get("items") or ""
-                    lines.append(f"{cat} {items}")
+                    if entry.role:
+                        role_line = f"    {entry.role}"
+                        if entry.location:
+                            role_line += f"  --  {entry.location}"
+                        lines.append(role_line)
+                    for bullet in entry.bullets:
+                        lines.append(f"  \u2022 {bullet.text}")
+                for sk in section.skill_rows:
+                    lines.append(f"{sk.category}: {sk.items}")
+                lines.append("")
         else:
             for line in (tex_source or "").split("\n"):
                 cleaned = line.strip()

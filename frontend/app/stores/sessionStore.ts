@@ -1,6 +1,13 @@
 import { create } from "zustand"
 import type { SessionDocument } from "@/types"
 
+export interface PendingProposal {
+  message: string
+  operations: any[]
+  diff: any
+  patch_summary: string
+}
+
 interface SessionState {
   activeSessionId: string | null
   activeDocType: "resume" | "cover_letter"
@@ -9,6 +16,7 @@ interface SessionState {
   isStreaming: boolean
   latestDocument: SessionDocument | null
   latestDiff: any | null
+  pendingProposal: PendingProposal | null
   progressPhase: string
   progressMessage: string
   setActiveSession: (id: string | null) => void
@@ -18,6 +26,8 @@ interface SessionState {
   setStreaming: (streaming: boolean) => void
   setLatestDocument: (doc: SessionDocument | null) => void
   setLatestDiff: (diff: any | null) => void
+  setPendingProposal: (proposal: PendingProposal | null) => void
+  clearProposal: () => void
   setProgress: (phase: string, message: string) => void
 }
 
@@ -29,6 +39,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   isStreaming: false,
   latestDocument: null,
   latestDiff: null,
+  pendingProposal: null,
   progressPhase: "",
   progressMessage: "",
   setActiveSession: (id) => set({ activeSessionId: id }),
@@ -38,5 +49,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setLatestDocument: (doc) => set({ latestDocument: doc }),
   setLatestDiff: (diff) => set({ latestDiff: diff }),
+  setPendingProposal: (proposal) => set({ pendingProposal: proposal }),
+  clearProposal: () => set({ pendingProposal: null }),
   setProgress: (phase, message) => set({ progressPhase: phase, progressMessage: message }),
 }))

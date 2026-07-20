@@ -20,6 +20,7 @@ export function DocumentCanvas() {
   const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    if (viewMode === "diff") return
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -36,7 +37,7 @@ export function DocumentCanvas() {
       from_index: oldIndex,
       to_index: newIndex,
     })
-  }, [doc])
+  }, [doc, viewMode])
 
   if (!activeSessionId) {
     return (

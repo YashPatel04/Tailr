@@ -1,8 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query"
-import type { Bullet } from "@/types"
+import type { Bullet, Span } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
-import { EditableField } from "./EditableField"
+import { RichEditableField } from "./RichEditableField"
 import { FormattedText } from "./FormattedText"
 import { useDiff } from "@/components/diff/DiffView"
 import { clsx } from "clsx"
@@ -22,7 +22,7 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
   const diffState = useDiff(id)
   const queryClient = useQueryClient()
 
-  const updateCache = (newText: string) => {
+  const updateCache = (newText: string, newSpans: Span[]) => {
     if (sectionLabel === undefined || entryIndex === undefined || bulletIndex === undefined) return
     const sessionId = useSessionStore.getState().activeSessionId
     const docType = useSessionStore.getState().activeDocType
@@ -35,14 +35,15 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
         const section = newContent.sections.find((s: any) => s.label === sectionLabel)
         if (section && section.entries[entryIndex]?.bullets[bulletIndex]) {
           section.entries[entryIndex].bullets[bulletIndex].text = newText
+          section.entries[entryIndex].bullets[bulletIndex].spans = newSpans
         }
         return { ...old, content: newContent }
       }
     )
   }
 
-  const handleSave = (newText: string) => {
-    updateCache(newText)
+  const handleSave = (newText: string, newSpans: Span[]) => {
+    updateCache(newText, newSpans)
     if (sectionLabel !== undefined && entryIndex !== undefined && bulletIndex !== undefined) {
       queueEdit({
         op: "update_bullet",
@@ -50,6 +51,7 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
         entry_index: entryIndex,
         bullet_index: bulletIndex,
         text: newText,
+        spans: newSpans,
       })
     }
   }
@@ -67,7 +69,7 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
       )}
     >
       {showEditable ? (
-        <EditableField value={text} onSave={handleSave} tag="span" />
+        <RichEditableField value={text} spans={spans} onSave={handleSave} tag="span" />
       ) : (
         <FormattedText text={text} spans={spans} />
       )}

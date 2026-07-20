@@ -3,6 +3,7 @@ import type { Entry } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
 import { EditableField } from "./EditableField"
+import { RichEditableField } from "./RichEditableField"
 import { BulletRenderer } from "./BulletRenderer"
 import { useDiff } from "@/components/diff/DiffView"
 import { clsx } from "clsx"
@@ -65,8 +66,9 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
     })}>
       <div className="flex items-baseline justify-between">
         <span className="font-semibold text-ink dark:text-[#ececec]">
-          <EditableField
+          <RichEditableField
             value={entry.title}
+            spans={[]}
             onSave={(v) => {
               updateCache((e) => { e.title = v })
               queueFieldEdit("title", v)
@@ -74,29 +76,31 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
           />
         </span>
         {entry.dates && (
-          <span className="text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4">
-            <EditableField
-              value={entry.dates}
-              onSave={(v) => {
-                updateCache((e) => { e.dates = v })
-                queueFieldEdit("dates", v)
-              }}
-            />
+          <span className="text-sm text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
+            <span className="italic">
+              <EditableField
+                value={entry.dates}
+                onSave={(v) => {
+                  updateCache((e) => { e.dates = v })
+                  queueFieldEdit("dates", v)
+                }}
+              />
+            </span>
           </span>
         )}
       </div>
       {(entry.role || entry.location) && (
-        <div className="text-sm text-slate dark:text-[#8e8e8e] italic">
+        <div className="text-sm text-slate dark:text-[#8e8e8e] italic flex items-baseline justify-between">
           {entry.role && (
-            <EditableField
+            <RichEditableField
               value={entry.role}
+              spans={[]}
               onSave={(v) => {
                 updateCache((e) => { e.role = v })
                 queueFieldEdit("role", v)
               }}
             />
           )}
-          {entry.role && entry.location && " \u2014 "}
           {entry.location && (
             <EditableField
               value={entry.location}

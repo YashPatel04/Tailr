@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 export function useSessionSSE(sessionId: string | null) {
   const controllerRef = useRef<AbortController | null>(null)
-  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress } = useSessionStore()
+  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal } = useSessionStore()
   const queryClient = useQueryClient()
 
   const sendMessage = useCallback(
@@ -51,6 +51,21 @@ export function useSessionSSE(sessionId: string | null) {
                   break
                 case "writing":
                   setProgress("writing", data.message || "Writing changes...")
+                  break
+                case "proposal":
+                  setStreaming(false)
+                  setProgress("", "")
+                  setViewMode("diff")
+                  if (data.diff) {
+                    setLatestDiff(data.diff)
+                  }
+                  setPendingProposal({
+                    message: data.message || "Proposed changes ready for review",
+                    operations: data.operations || [],
+                    diff: data.diff,
+                    patch_summary: data.patch_summary || "",
+                  })
+                  queryClient.invalidateQueries({ queryKey: ["sessions"] })
                   break
                 case "done":
                   setStreaming(false)

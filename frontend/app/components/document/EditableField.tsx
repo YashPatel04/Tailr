@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useCallback } from "react";
+import { useSessionStore } from "@/stores/sessionStore";
 
 interface EditableFieldProps {
   value: string;
@@ -14,6 +15,8 @@ export function EditableField({ value, onSave, className = "", tag: Tag = "span"
   const ref = useRef<HTMLElement>(null);
 
   const startEdit = useCallback(() => {
+    const mode = useSessionStore.getState().viewMode
+    if (mode === "diff") return
     setDraft(value);
     setEditing(true);
     setTimeout(() => {
