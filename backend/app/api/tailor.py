@@ -2,7 +2,7 @@ import json
 import re
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -195,6 +195,7 @@ async def accept_proposal(
     session_id: str,
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
+    operations: list[dict] = Body(..., embed=False),
 ):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
@@ -203,12 +204,10 @@ async def accept_proposal(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    if not session.pending_operations_json:
-        raise HTTPException(status_code=400, detail="No pending proposal to accept")
+    if not operations:
+        raise HTTPException(status_code=400, detail="No operations to apply")
 
-    pending = session.pending_operations_json
-    ops_list = pending.get("ops", [])
-    content_ops_data = pending.get("content_ops", [])
+    ops_list = operations
 
     doc_result = await db.execute(
         select(SessionDocument)
@@ -266,8 +265,6 @@ async def accept_proposal(
     )
     db.add(assistant_msg)
 
-    session.pending_operations_json = None
-    session.pending_diff_json = None
     await db.commit()
 
     return {
@@ -291,16 +288,11 @@ async def decline_proposal(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    op_count = len(session.pending_operations_json.get("ops", [])) if session.pending_operations_json else 0
-
-    session.pending_operations_json = None
-    session.pending_diff_json = None
-
     assistant_msg = ChatMessage(
         id=uuid4(),
         session_id=session.id,
         role="assistant",
-        content=f"Proposal declined ({op_count} changes discarded). How can I help?",
+        content="Proposal declined. How can I help?",
     )
     db.add(assistant_msg)
     await db.commit()

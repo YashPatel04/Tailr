@@ -12,9 +12,12 @@ export function ProposalMessage() {
   if (!pendingProposal) return null
 
   const accept = async () => {
-    if (!activeSessionId) return
+    if (!activeSessionId || !pendingProposal?.operations) return
     try {
-      await apiRequest("POST", `/api/sessions/${activeSessionId}/proposal/accept`)
+      await apiRequest("POST", `/api/sessions/${activeSessionId}/proposal/accept`, {
+        body: JSON.stringify(pendingProposal.operations),
+        headers: { "Content-Type": "application/json" },
+      } as any)
       setViewMode("final")
       setPendingProposal(null)
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
