@@ -1,7 +1,11 @@
 "use client"
 
 import { useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import type { Section } from "@/types"
+import { useSessionStore } from "@/stores/sessionStore"
+import { queueEdit } from "@/lib/editQueue"
+import { EditableField } from "./EditableField"
 import { EntryRenderer } from "./EntryRenderer"
 import { BulletRenderer } from "./BulletRenderer"
 import { SkillRowRenderer } from "./SkillRowRenderer"
@@ -15,12 +19,31 @@ interface SectionRendererProps {
   node?: any
   section?: Section
   texSource?: string | null
+  sectionIndex?: number
 }
 
-export function SectionRenderer({ node, section, texSource }: SectionRendererProps) {
+export function SectionRenderer({ node, section, texSource, sectionIndex }: SectionRendererProps) {
   const [showSource, setShowSource] = useState(false)
   const contextDiff = useDiff(section ? section.id : node?.id)
   const effectiveDiff = contextDiff
+  const queryClient = useQueryClient()
+
+  const updateSectionLabel = (newLabel: string) => {
+    const sessionId = useSessionStore.getState().activeSessionId
+    const docType = useSessionStore.getState().activeDocType
+    if (!sessionId || sectionIndex === undefined) return
+    queryClient.setQueryData(
+      ["sessions", sessionId, "document", docType],
+      (old: any) => {
+        if (!old?.content) return old
+        const newContent = structuredClone(old.content)
+        if (newContent.sections[sectionIndex]) {
+          newContent.sections[sectionIndex].label = newLabel
+        }
+        return { ...old, content: newContent }
+      }
+    )
+  }
 
   if (section) {
     return (
@@ -30,11 +53,15 @@ export function SectionRenderer({ node, section, texSource }: SectionRendererPro
       })}>
         {section.label && (
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3">
-            {section.label}
+            <EditableField
+              value={section.label}
+              tag="span"
+              onSave={updateSectionLabel}
+            />
           </h2>
         )}
-        {section.entries?.map((entry) => (
-          <EntryRenderer key={entry.id} entry={entry} />
+        {section.entries?.map((entry, i) => (
+          <EntryRenderer key={entry.id} entry={entry} sectionLabel={section.label} entryIndex={i} />
         ))}
         {section.skill_rows?.map((row) => (
           <SkillRowRenderer key={row.id} row={row} />

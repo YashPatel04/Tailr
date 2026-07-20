@@ -3,7 +3,7 @@
 import { Search, CheckCircle, Sparkles, Pencil, Check } from "lucide-react"
 import type { ChatMessage } from "@/types"
 
-const PHASE_CONFIG: Record<string, { icon: typeof Search; text: string }> = {
+export const PHASE_CONFIG: Record<string, { icon: typeof Search; text: string }> = {
   researching: { icon: Search, text: "Researching..." },
   research_done: { icon: CheckCircle, text: "Research done" },
   thinking: { icon: Sparkles, text: "Thinking..." },
@@ -12,18 +12,29 @@ const PHASE_CONFIG: Record<string, { icon: typeof Search; text: string }> = {
 }
 
 interface ProgressMessageProps {
-  message: ChatMessage
+  message?: ChatMessage
+  phase?: string
+  text?: string
 }
 
-export function ProgressMessage({ message }: ProgressMessageProps) {
-  const metadata = message.metadata_json as Record<string, unknown> | null
-  const phase = (metadata?.phase as string) || ""
+export function ProgressMessage({ message, phase: phaseProp, text: textProp }: ProgressMessageProps) {
+  let phase = ""
+  let displayText = ""
+
+  if (message) {
+    const metadata = message.metadata_json as Record<string, unknown> | null
+    phase = (metadata?.phase as string) || ""
+    displayText = message.content
+  } else if (phaseProp) {
+    phase = phaseProp
+    displayText = textProp || PHASE_CONFIG[phaseProp]?.text || phaseProp
+  }
 
   if (!phase || !PHASE_CONFIG[phase]) {
     return (
       <div className="flex justify-start">
         <div className="bg-[#f7f7f8] dark:bg-[#2b2b2b] text-ink dark:text-[#ececec] rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[90%] text-sm">
-          {message.content}
+          {displayText || (message?.content ?? "")}
         </div>
       </div>
     )

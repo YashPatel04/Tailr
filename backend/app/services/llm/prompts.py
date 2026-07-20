@@ -7,9 +7,14 @@ from app.models.resume_schema import ResumeContent
 
 
 MODE_INSTRUCTIONS = {
-    "polish": "Make micro-edits only. Do not reorder sections. Keep changes minimal and focused on better wording.",
-    "refine": "You may reorder sections and reorganize content. Use `ask` if information is missing.",
-    "rewrite": "Restructure aggressively while preserving facts. Reorder, rephrase, and reorganize as needed.",
+    "polish": (
+        "SURGICAL micro-edits — only change what needs changing. "
+        "If a bullet is already strong and relevant, leave it alone. "
+        "Do NOT reorder sections. Aim for 3-7 targeted operations. "
+        "Keep changes minimal: word choice, phrasing, small additions."
+    ),
+    "refine": "You may reorder sections and reorganize content. Focus on impactful changes; skip unchanged content. Use `ask` if information is missing.",
+    "rewrite": "Restructure aggressively while preserving facts. Reorder, rephrase, and reorganize as needed. Only emit operations for what changed.",
 }
 
 V3_SYSTEM_PROMPT = """
@@ -65,6 +70,40 @@ Indexing rules:
 
 IMPORTANT: Do NOT include any text outside the JSON. Your entire response must be valid, parseable JSON.
 IMPORTANT: Max 15 operations per response to keep changes focused and reviewable.
+
+CRITICAL — SURGICAL EDITING RULES:
+1. Return ONLY operations that make actual, meaningful changes. If a bullet, entry, or section is fine as-is, DO NOT include an operation for it.
+2. You are a SURGICAL editor, not a rewriter. Return 3-15 operations max. If you find yourself returning 30+ operations, you are doing it wrong.
+3. Only use `update_bullet` when you CHANGE the bullet text. Never re-emit a bullet with identical text.
+4. Use `add_section` to add new relevant sections, `add_bullet` to add new bullets to existing entries.
+5. The resume content above shows the CURRENT state. Only operations you return will be applied. Unchanged content stays as-is automatically.
+
+DO NOT:
+- Return the entire document as operations
+- Regenerate untouched bullets just to "confirm" them
+- Recreate sections that don't need changes
+- Return 50+ operations duplicating the entire resume
+
+BAD response pattern (DO NOT do this):
+{{
+  "operations": [
+    {{"op": "update_bullet", ..., "text": "Same text as original, unchanged"}},  ← SKIP THIS!
+    {{"op": "update_bullet", ..., "text": "Another unchanged bullet"}},           ← SKIP THIS!
+    ... 40+ more unchanged bullets ...
+  ]
+}}
+
+GOOD response pattern (DO THIS):
+{{
+  "operations": [
+    {{"op": "update_bullet", ..., "text": "Reworded bullet targeting Microsoft's engineering culture"}},
+    {{"op": "add_bullet", ..., "text": "New AZ-900 certification bullet for Azure relevance"}},
+    {{"op": "add_section", ..., "label": "Relevant Skills"}},
+    {{"op": "update_basics_field", "field": "summary", "value": "Summary rewritten for Microsoft role"}}
+  ]
+}}
+
+Make 3-15 targeted changes. Do NOT rewrite the entire resume. Every operation must change something.
 """
 
 

@@ -27,7 +27,7 @@
 - [x] 4.3 In `DocumentCanvas.tsx`, read `viewMode` and `latestDiff` from store; when `viewMode === "diff"` and `latestDiff` exists, wrap children in `<DiffView>`
 - [x] 4.4 Pass `diffState` from `useDiff(node.id)` to `SectionRenderer`, `EntryRenderer`, and `BulletRenderer`
 - [x] 4.5 Add conditional styling (e.g. bg-green-100 for added, bg-red-100 for removed) in renderers when `diffState` is set
-- [ ] 4.6 Verify: after a tailor run, toggle to Changes tab and see highlighted diffs
+- [x] 4.6 Verify: after a tailor run, toggle to Changes tab and see highlighted diffs — ChangesSummary panel renders added/removed/modified changes with old/new values; handles both `kind` and `type` field names from SSE events
 
 ## 5. Fix empty state message (Bug #5)
 
@@ -36,7 +36,11 @@
 - [x] 5.3 If no master resume: keep the existing "Upload your master resume" UI
 - [x] 5.4 Verify: with a master resume uploaded, the welcome page shows the welcome-back variant
 
-## 6. Fix dark mode user message bubble (Bug #6)
+## 7. Fix canvas: render name/contact header from basics (Bug #7)
+
+- [x] 7.1 Create `ResumeHeader.tsx` component rendering name, location, phone, email, and profiles from `Basics`
+- [x] 7.2 Wire into `DocumentCanvas.tsx` — render `<ResumeHeader>` before sections for new ResumeContent, and render name from `documentModel.metadata.name` for legacy documents
+- [x] 7.3 Verify: canvas shows name and contact info at top before the first section
 
 - [x] 6.1 In `ChatMessage.tsx`, change user message `dark:bg-[#212121]` to `dark:bg-[#40414f]`
 - [ ] 6.2 Verify: in dark mode, user messages have a visible bubble distinct from the panel background
