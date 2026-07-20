@@ -1,8 +1,8 @@
 import hashlib
 import os
 import re
-import subprocess
-import tempfile
+import json
+import urllib.request
 
 from app.config import settings
 
@@ -16,50 +16,21 @@ class CompileError(Exception):
 
 
 class LatexCompiler:
-    def __init__(self, container_name: str = "resume_builder-latex-1"):
-        self.container_name = container_name
-        self.work_dir = settings.LATEX_WORK_DIR
+    def __init__(self, service_url: str = "http://latex:9777/compile"):
+        self.service_url = service_url
 
     def compile(self, tex_source: str, document_id: str) -> bytes:
-        doc_dir = os.path.join(self.work_dir, document_id)
-        os.makedirs(doc_dir, exist_ok=True)
-
-        tex_path = os.path.join(doc_dir, "resume.tex")
-        with open(tex_path, "w") as f:
-            f.write(tex_source)
-
-        cmd = [
-            "docker", "exec", self.container_name,
-            "latexmk", "-pdf",
-            "-interaction=nonstopmode",
-            "-halt-on-error",
-            f"-outdir=/work/{document_id}",
-            f"/work/{document_id}/resume.tex",
-        ]
-
+        data = json.dumps({"tex_source": tex_source, "document_id": document_id}).encode("utf-8")
+        req = urllib.request.Request(self.service_url, data=data, method="POST",
+                                       headers={"Content-Type": "application/json"})
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-
-            pdf_path = os.path.join(doc_dir, "resume.pdf")
-            if os.path.exists(pdf_path):
-                with open(pdf_path, "rb") as f:
-                    return f.read()
-
-            error = self._parse_error(result.stdout + result.stderr)
-            raise CompileError(
-                message=error.get("message", "Compilation failed"),
-                line=error.get("line"),
-                context=error.get("context"),
-            )
-
-        except subprocess.TimeoutExpired:
-            raise CompileError(message="Compilation timed out after 30 seconds")
-
-    def _parse_error(self, output: str) -> dict:
-        match = re.search(r"!(.*?)\n", output)
-        message = match.group(1).strip() if match else "Unknown error"
-
-        line_match = re.search(r"l\.(\d+)", output)
-        line = int(line_match.group(1)) if line_match else None
-
-        return {"message": message, "line": line, "context": output[-500:]}
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                if resp.status == 200:
+                    return resp.read()
+                error_body = resp.read().decode("utf-8", errors="replace")
+                raise CompileError(message=f"Compilation failed: {error_body[:300]}")
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8", errors="replace")
+            raise CompileError(message=error_body[:300])
+        except Exception as e:
+            raise CompileError(message=str(e))

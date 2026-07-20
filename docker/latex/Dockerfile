@@ -4,4 +4,8 @@ RUN mkdir -p /work && chmod 777 /work
 
 WORKDIR /work
 
-CMD ["sleep", "infinity"]
+COPY compile_server.py /compile_server.py
+
+EXPOSE 9777
+
+CMD ["python3", "/compile_server.py"]

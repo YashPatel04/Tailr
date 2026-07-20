@@ -27,7 +27,7 @@ services:
       context: ./docker/latex
     volumes:
       - latex_work:/work
-    command: sleep infinity
+    command: ["python3", "/compile_server.py"]
 
   backend:
     build:

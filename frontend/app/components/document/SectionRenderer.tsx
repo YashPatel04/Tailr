@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Section } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
 import { EditableField } from "./EditableField"
 import { EntryRenderer } from "./EntryRenderer"
+import { SortableEntry } from "./SortableEntry"
 import { BulletRenderer } from "./BulletRenderer"
 import { SkillRowRenderer } from "./SkillRowRenderer"
 import { FormattedText } from "./FormattedText"
@@ -14,6 +15,8 @@ import { OpaqueNodeRenderer } from "./OpaqueNodeRenderer"
 import { RawTexPanel } from "./RawTexPanel"
 import { useDiff } from "@/components/diff/DiffView"
 import { clsx } from "clsx"
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 interface SectionRendererProps {
   node?: any
@@ -27,6 +30,25 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
   const contextDiff = useDiff(section ? section.id : node?.id)
   const effectiveDiff = contextDiff
   const queryClient = useQueryClient()
+  const viewMode = useSessionStore((s) => s.viewMode)
+
+  const handleEntryDragEnd = useCallback((event: DragEndEvent) => {
+    if (viewMode === "diff" || !section) return
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = section.entries.findIndex((e) => e.id === active.id)
+    const newIndex = section.entries.findIndex((e) => e.id === over.id)
+
+    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+
+    queueEdit({
+      op: "move_entry",
+      section_label: section.label,
+      from_index: oldIndex,
+      to_index: newIndex,
+    })
+  }, [section, viewMode])
 
   const updateSectionLabel = (newLabel: string) => {
     const sessionId = useSessionStore.getState().activeSessionId
@@ -60,9 +82,15 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
             />
           </h2>
         )}
-        {section.entries?.map((entry, i) => (
-          <EntryRenderer key={entry.id} entry={entry} sectionLabel={section.label} entryIndex={i} />
-        ))}
+        {section.entries && section.entries.length > 0 && (
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleEntryDragEnd}>
+            <SortableContext items={section.entries.map(e => e.id)} strategy={verticalListSortingStrategy}>
+              {section.entries.map((entry, i) => (
+                <SortableEntry key={entry.id} entry={entry} sectionLabel={section.label} entryIndex={i} />
+              ))}
+            </SortableContext>
+          </DndContext>
+        )}
         {section.skill_rows?.map((row) => (
           <SkillRowRenderer key={row.id} row={row} />
         ))}

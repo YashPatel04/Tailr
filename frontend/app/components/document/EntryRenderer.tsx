@@ -5,8 +5,18 @@ import { queueEdit } from "@/lib/editQueue"
 import { EditableField } from "./EditableField"
 import { RichEditableField } from "./RichEditableField"
 import { BulletRenderer } from "./BulletRenderer"
+import { SortableBullet } from "./SortableBullet"
 import { useDiff } from "@/components/diff/DiffView"
 import { clsx } from "clsx"
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+
+function reorder(length: number, from: number, to: number): number[] {
+  const arr = Array.from({ length }, (_, i) => i)
+  const [moved] = arr.splice(from, 1)
+  arr.splice(to, 0, moved)
+  return arr
+}
 
 interface EntryRendererProps {
   node?: any
@@ -28,6 +38,7 @@ export function EntryRenderer({ node, entry, sectionLabel, entryIndex }: EntryRe
 function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; sectionLabel?: string; entryIndex?: number }) {
   const diffState = useDiff(entry.id)
   const queryClient = useQueryClient()
+  const viewMode = useSessionStore((s) => s.viewMode)
 
   const updateCache = (updater: (entry: any) => void) => {
     if (sectionLabel === undefined || entryIndex === undefined) return
@@ -60,7 +71,7 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
   }
 
   return (
-    <div className={clsx("mb-3", {
+    <div className={clsx("mb-3 group", {
       "bg-green-50 dark:bg-green-900/20 rounded-md p-2 -mx-2": diffState === "added",
       "bg-red-50 dark:bg-red-900/20 rounded-md p-2 -mx-2": diffState === "removed",
     })}>
@@ -113,7 +124,7 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
         </div>
       )}
       {entry.organization && (
-        <div className="text-sm text-slate dark:text-[#8e8e8e]">
+        <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-between">
           <EditableField
             value={entry.organization}
             onSave={(v) => {
@@ -121,19 +132,78 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
               queueFieldEdit("organization", v)
             }}
           />
+          {entry.url && (
+            <a href={entry.url} target="_blank" rel="noopener noreferrer"
+               className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0 ml-4">
+              {entry.url.replace(/^https?:\/\//, '').replace(/\/$/, '').substring(0, 30)}
+            </a>
+          )}
         </div>
       )}
-      <ul>
-        {entry.bullets?.map((bullet, i) => (
-          <BulletRenderer
-            key={bullet.id}
-            bullet={bullet}
-            sectionLabel={sectionLabel}
-            entryIndex={entryIndex}
-            bulletIndex={i}
-          />
-        ))}
-      </ul>
+      <div className="text-xs text-slate dark:text-[#8e8e8e] mt-1 flex items-center gap-1">
+        <span className="text-slate dark:text-[#8e8e8e] shrink-0">🔗</span>
+        <EditableField
+          value={entry.url || ""}
+          onSave={(v) => {
+            updateCache((e) => { e.url = v || null })
+            queueFieldEdit("url", v || null)
+          }}
+        />
+      </div>
+      {sectionLabel && entryIndex !== undefined ? (
+        <DndContext collisionDetection={closestCenter} onDragEnd={(event: DragEndEvent) => {
+          const { active, over } = event
+          if (!over || active.id === over.id) return
+          const oldIdx = entry.bullets.findIndex(b => b.id === active.id)
+          const newIdx = entry.bullets.findIndex(b => b.id === over.id)
+          if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return
+          queueEdit({ op: "reorder_bullets", section_label: sectionLabel, entry_index: entryIndex, order: reorder(entry.bullets.length, oldIdx, newIdx) })
+          updateCache((e) => {
+            const reordered = [...e.bullets]
+            const [moved] = reordered.splice(oldIdx, 1)
+            reordered.splice(newIdx, 0, moved)
+            e.bullets = reordered
+          })
+        }}>
+          <SortableContext items={entry.bullets.map(b => b.id)} strategy={verticalListSortingStrategy}>
+            {entry.bullets?.map((bullet, i) => (
+              <SortableBullet key={bullet.id} bullet={bullet} sectionLabel={sectionLabel} entryIndex={entryIndex} bulletIndex={i} />
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <ul>
+          {entry.bullets?.map((bullet, i) => (
+            <BulletRenderer
+              key={bullet.id}
+              bullet={bullet}
+              sectionLabel={sectionLabel}
+              entryIndex={entryIndex}
+              bulletIndex={i}
+            />
+          ))}
+        </ul>
+      )}
+      {sectionLabel && entryIndex !== undefined && viewMode !== "diff" && (
+        <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => {
+              const newBullet = { id: crypto.randomUUID(), text: "New bullet point", spans: [] }
+              queueEdit({
+                op: "add_bullet",
+                section_label: sectionLabel,
+                entry_index: entryIndex,
+                after_index: (entry.bullets?.length || 0) - 1,
+                text: "New bullet point",
+                spans: [],
+              })
+              updateCache((e) => { e.bullets = [...(e.bullets || []), newBullet] })
+            }}
+            className="text-xs text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded px-1 py-0.5"
+            title="Add bullet"
+          >+ Bullet</button>
+        </div>
+      )}
     </div>
   )
 }
