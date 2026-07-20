@@ -109,7 +109,22 @@ Tailored versions are isolated from the master resume by default. Each patch ope
 
 - **[Risk] LLM API key exposure** — If the database is compromised, plaintext API keys are exposed. Mitigation: AES-GCM encryption at rest using the app's SECRET_KEY. Keys are decrypted only at request time and never returned to the client in full (last 4 chars only for display).
 
+## Frontend Architecture Decisions
+
+### Decision 9: Custom React component tree for document rendering
+
+The document canvas SHALL use a custom React component tree that maps directly to the backend document model. Each semantic node type (`section`, `entry`, `bullet`, `text`, `opaque`) has a dedicated renderer component. This gives full control over margin proofreading marks, transitions, and raw .tex toggles, and avoids pulling in heavy rich-text editor dependencies.
+
+- SectionRenderer → renders `<section>` with serif heading
+- EntryRenderer → renders title/dates/organization lines
+- BulletRenderer → renders `<li>` with formatted text
+- FormattedText → splits text by span annotations and applies bold/italic/underline/code
+- OpaqueNodeRenderer → renders non-editable template-specific content
+
+### Decision 10: Client-side search index for MVP
+
+The search modal SHALL build a client-side index from already-loaded session data. It filters chats, companies, and tags in memory using case-insensitive substring matching. A server-side search endpoint is deferred; the sidebar loads all user sessions on app open (expected to be modest for MVP), so client-side search is fast and simple.
+
 ## Open Questions
 
-- **Rendering engine for interactive sections**: Should the document canvas use a custom React component tree that maps directly to the document model, or a lightweight rich text renderer (e.g., Slate.js, TipTap) adapted for read-mostly display with inline editing? The custom component approach gives more control over the proofreading mark rendering.
-- **Search modal backend**: Should search be a client-side index (built from loaded session data) or a server-side search endpoint (hitting PostgreSQL with `ILIKE` or full-text search)? Client-side is faster for modest datasets; server-side scales better. Start with client-side for MVP.
+None remaining — all architecture decisions required for the MVP build are resolved above.

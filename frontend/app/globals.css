@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper text-ink antialiased;
+}
+
+/* ── Dark mode ── */
+.dark body {
+  @apply bg-[#1e1e1e] text-[#ececec];
+}
+
+.dark .bg-paper {
+  background-color: #1e1e1e;
+}
+
+.dark .bg-paper\/50 {
+  background-color: rgba(30, 30, 30, 0.5);
+}
+
+.dark .text-ink {
+  color: #ececec;
+}
+
+.dark .hover\:text-ink:hover {
+  color: #ececec;
+}
+
+.dark .text-slate {
+  color: #8e8e8e;
+}
+
+/* ── Dark mode: canvas matches sidebar tone, slightly darker ── */
+.dark .bg-canvas {
+  background-color: #212121;
+}
+
+/* ── Dark mode: subtle borders ── */
+.dark .border-muted {
+  border-color: rgba(142, 142, 142, 0.1);
+}
+
+/* ── Dark mode: inputs ── */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #2b2b2b;
+  color: #ececec;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgba(142, 142, 142, 0.5);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #10a37f;
+}
+
+/* ── Dark mode: border-slate/20 (legacy) ── */
+.dark .border-slate\/20 {
+  border-color: rgba(142, 142, 142, 0.1);
+}
+
+/* ── Dark mode: bg-slate/5, bg-slate/10 ── */
+.dark .bg-slate\/5 {
+  background-color: rgba(142, 142, 142, 0.06);
+}
+
+.dark .bg-slate\/10 {
+  background-color: rgba(142, 142, 142, 0.1);
+}
+
+.dark .hover\:bg-slate\/5:hover {
+  background-color: rgba(142, 142, 142, 0.1);
+}
+
+.dark .hover\:bg-slate\/10:hover {
+  background-color: rgba(142, 142, 142, 0.15);
+}
+
+.dark .hover\:bg-slate\/20:hover {
+  background-color: rgba(142, 142, 142, 0.2);
+}
+
+/* ── Hide textarea scroll buttons ── */
+.chat-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.chat-textarea {
+  scrollbar-width: none;
+}
+
+/* ── Resize handle ── */
+.resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.resize-handle:hover,
+.resize-handle.active {
+  background-color: #10a37f;
+}
+
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: -4px;
+  right: -4px;
+}
+
+@layer utilities {
+  .animate-diff-in {
+    animation: diff-in 200ms ease-out;
+  }
+
+  @keyframes diff-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(142, 142, 142, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(142, 142, 142, 0.3);
+    border-radius: 3px;
+  }
+}

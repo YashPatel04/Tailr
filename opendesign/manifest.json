@@ -1,0 +1,24 @@
+{
+  "generated": "2026-07-19T19:17:48-05:00",
+  "sections": [
+    {
+      "id": "design-systems",
+      "label": "Design Systems",
+      "groups": [
+        {
+          "slug": "resume-tailor",
+          "files": [
+            { "label": "SKILL.md", "path": "design-systems/resume-tailor/SKILL.md" },
+            { "label": "colors_and_type.css", "path": "design-systems/resume-tailor/tokens/colors_and_type.css" },
+            { "label": "README.md", "path": "design-systems/resume-tailor/README.md" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mockups",
+      "label": "Mockups",
+      "groups": []
+    }
+  ]
+}
