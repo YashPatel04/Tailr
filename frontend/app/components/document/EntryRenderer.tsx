@@ -88,16 +88,15 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
         </span>
         <div className="flex items-center gap-1">
           {entry.dates && (
-            <span className="text-sm text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
-              <span className="italic">
-                <EditableField
-                  value={entry.dates}
-                  onSave={(v) => {
-                    updateCache((e) => { e.dates = v })
-                    queueFieldEdit("dates", v)
-                  }}
-                />
-              </span>
+            <span className="text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4">
+              <RichEditableField
+                value={entry.dates}
+                spans={[]}
+                onSave={(v) => {
+                  updateCache((e) => { e.dates = v })
+                  queueFieldEdit("dates", v)
+                }}
+              />
             </span>
           )}
           {sectionLabel !== undefined && entryIndex !== undefined && viewMode !== "diff" && (
@@ -139,8 +138,9 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
             />
           )}
           {entry.location && (
-            <EditableField
+            <RichEditableField
               value={entry.location}
+              spans={[]}
               onSave={(v) => {
                 updateCache((e) => { e.location = v })
                 queueFieldEdit("location", v)
@@ -151,16 +151,18 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
       )}
       {entry.organization && (
         <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-between">
-          <EditableField
+          <RichEditableField
             value={entry.organization}
+            spans={[]}
             onSave={(v) => {
               updateCache((e) => { e.organization = v })
               queueFieldEdit("organization", v)
             }}
           />
           <span className="text-xs text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
-            <EditableField
+            <RichEditableField
               value={entry.url || ""}
+              spans={[]}
               onSave={(v) => {
                 updateCache((e) => { e.url = v || null })
                 queueFieldEdit("url", v || null)
@@ -172,8 +174,9 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
       {!entry.organization && entry.url && (
         <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-end">
           <span className="text-xs text-slate dark:text-[#8e8e8e]">
-            <EditableField
+            <RichEditableField
               value={entry.url}
+              spans={[]}
               onSave={(v) => {
                 updateCache((e) => { e.url = v || null })
                 queueFieldEdit("url", v || null)
@@ -183,10 +186,11 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
         </div>
       )}
       {!entry.organization && !entry.url && sectionLabel !== undefined && entryIndex !== undefined && (
-        <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-[10px] text-slate dark:text-[#8e8e8e]">
-            <EditableField
+        <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-end">
+          <span className="text-[10px] text-slate/50 dark:text-[#8e8e8e]/50 italic cursor-text">
+            <RichEditableField
               value=""
+              spans={[]}
               onSave={(v) => {
                 updateCache((e) => { e.url = v || null })
                 queueFieldEdit("url", v || null)
