@@ -99,7 +99,7 @@ export function FloatingToolbar() {
   }
 
   return (
-    <div className="sticky top-6 ml-4 bg-white dark:bg-[#292a2d] border border-[#dadce0] dark:border-[#5f6368] rounded-xl shadow-md p-1.5 flex flex-col gap-0.5 items-center z-50 w-[44px] flex-shrink-0">
+    <div className="bg-white dark:bg-[#292a2d] border border-[#dadce0] dark:border-[#5f6368] rounded-xl shadow-md p-1.5 flex flex-col gap-0.5 items-center z-50 w-[44px] flex-shrink-0">
       {/* Insert */}
       <div className="relative" ref={insertRef}>
         <button

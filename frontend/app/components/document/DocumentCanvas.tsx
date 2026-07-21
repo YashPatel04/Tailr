@@ -84,7 +84,7 @@ export function DocumentCanvas() {
 
   if (!activeSessionId) {
     return (
-      <div className="flex-1 h-screen overflow-y-auto bg-[#f0f2f5] dark:bg-[#121212]">
+      <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121]">
         <DocumentEmptyState />
       </div>
     )
@@ -129,22 +129,24 @@ export function DocumentCanvas() {
   )
 
   return (
-    <div className="flex-1 h-screen overflow-y-auto bg-[#f0f2f5] dark:bg-[#121212]">
-      <div className="flex justify-center items-start pt-6 min-h-full">
-        <div className="w-[816px] bg-white dark:bg-[#202124] shadow-sm py-[72px] px-[96px] min-h-[1056px] flex-shrink-0 mb-6 relative group/page">
-          <DocumentTabs />
-          <div className="mt-4">
-            {innerContent}
-          </div>
-
-          {/* Bottom inline insert */}
-          {hasContent && viewMode !== "diff" && (
-            <BottomInsert onInsert={handleBottomInsert} />
-          )}
+    <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121]">
+      <div className="mx-auto max-w-[820px] py-10 px-8 min-h-full group/page relative">
+        <DocumentTabs />
+        <div className="mt-4 relative">
+          {innerContent}
         </div>
 
+        {/* Bottom inline insert */}
+        {hasContent && viewMode !== "diff" && (
+          <BottomInsert onInsert={handleBottomInsert} />
+        )}
+
         {/* Floating toolbar */}
-        {hasContent && viewMode !== "diff" && <FloatingToolbar />}
+        {hasContent && viewMode !== "diff" && (
+          <div className="absolute right-[-60px] top-24 z-50">
+            <FloatingToolbar />
+          </div>
+        )}
       </div>
     </div>
   )
