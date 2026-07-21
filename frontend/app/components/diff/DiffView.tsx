@@ -4,14 +4,21 @@ import { createContext, useContext, useMemo, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import type { DiffChangeSet, ResumeContent } from "@/types"
 
-interface DiffContextValue {
-  diff: DiffChangeSet | null
-  getDiffState: (nodeId: string) => string | null
+export interface DiffState {
+  kind: string | null
+  oldVal?: string
+  newVal?: string
+  path?: string
 }
 
-const DiffContext = createContext<DiffContextValue>({ diff: null, getDiffState: () => null })
+interface DiffContextValue {
+  diff: DiffChangeSet | null
+  getDiffState: (nodeId: string) => DiffState
+}
 
-export function useDiff(nodeId: string) {
+const DiffContext = createContext<DiffContextValue>({ diff: null, getDiffState: () => ({ kind: null }) })
+
+export function useDiff(nodeId: string): DiffState {
   const { getDiffState } = useContext(DiffContext)
   return getDiffState(nodeId)
 }
@@ -20,15 +27,20 @@ function buildPathToIdMap(content: ResumeContent): Map<string, string> {
   const map = new Map<string, string>()
   content.sections.forEach((section, si) => {
     map.set(`sections[${si}]`, section.id)
+    map.set(`sections[${si}].${section.label}`, section.id)
     section.entries.forEach((entry, ei) => {
       map.set(`sections[${si}].entries[${ei}]`, entry.id)
+      map.set(`sections[${si}].${section.label}.entries[${ei}]`, entry.id)
       entry.bullets.forEach((bullet, bi) => {
         map.set(`sections[${si}].entries[${ei}].bullets[${bi}]`, bullet.id)
+        map.set(`sections[${si}].${section.label}.entries[${ei}].bullets[${bi}]`, bullet.id)
         map.set(`sections[${si}].entries[${ei}].bullets[${bi}].text`, bullet.id)
+        map.set(`sections[${si}].${section.label}.entries[${ei}].bullets[${bi}].text`, bullet.id)
       })
     })
     section.skill_rows.forEach((row, ri) => {
       map.set(`sections[${si}].skill_rows[${ri}]`, row.id)
+      map.set(`sections[${si}].${section.label}.skill_rows[${ri}]`, row.id)
     })
   })
   return map
@@ -170,22 +182,35 @@ export function DiffView({
   const value = useMemo(() => {
     const pathToIdMap = content ? buildPathToIdMap(content) : new Map<string, string>()
 
+    const findChange = (nodeId: string): any => {
+      const change = diff?.changes?.find((c: any) => {
+        if (c.node_id === nodeId) return true
+        if (c.path) {
+          const mappedId = pathToIdMap.get(c.path)
+          if (mappedId === nodeId) return true
+          for (const [p, id] of pathToIdMap.entries()) {
+            if (id === nodeId && c.path.includes(p)) return true
+          }
+        }
+        return false
+      })
+      return change
+    }
+
     return {
       diff,
-      getDiffState: (nodeId: string) => {
-        const change = diff?.changes?.find((c: any) => {
-          if (c.node_id === nodeId) return true
-          if (c.path) {
-            const mappedId = pathToIdMap.get(c.path)
-            if (mappedId === nodeId) return true
-            const pathSegments = pathToIdMap.entries()
-            for (const [p, id] of pathSegments) {
-              if (id === nodeId && c.path.includes(p)) return true
-            }
-          }
-          return false
-        })
-        return change ? getChangeKind(change) : null
+      getDiffState: (nodeId: string): DiffState => {
+        const change = findChange(nodeId)
+        if (!change) return { kind: null }
+        const kind = getChangeKind(change)
+        const oldVal = getOldValue(change)
+        const newVal = getNewValue(change)
+        return {
+          kind,
+          oldVal: typeof oldVal === "string" ? oldVal : undefined,
+          newVal: typeof newVal === "string" ? newVal : undefined,
+          path: getChangePath(change),
+        }
       },
     }
   }, [diff, content])

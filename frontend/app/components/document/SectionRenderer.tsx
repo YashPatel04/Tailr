@@ -14,6 +14,7 @@ import { FormattedText } from "./FormattedText"
 import { OpaqueNodeRenderer } from "./OpaqueNodeRenderer"
 import { RawTexPanel } from "./RawTexPanel"
 import { useDiff } from "@/components/diff/DiffView"
+import { diffBorderClass, diffGutterClass, diffGutter } from "@/lib/wordDiff"
 import { clsx } from "clsx"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -87,18 +88,10 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
 
   if (section) {
     return (
-      <section className={clsx("mb-8 group/section relative", {
-        "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-3": effectiveDiff === "added",
-        "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-3": effectiveDiff === "removed",
-        "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-3": effectiveDiff === "modified",
-      })}>
-        {effectiveDiff && (
-          <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", {
-            "text-[#137333] dark:text-[#81c995]": effectiveDiff === "added",
-            "text-[#c5221f] dark:text-[#f28b82]": effectiveDiff === "removed",
-            "text-[#e37400] dark:text-[#fdd663]": effectiveDiff === "modified",
-          })}>
-            {effectiveDiff === "added" ? "+" : effectiveDiff === "removed" ? "\u2013" : "~"}
+      <section className={clsx("mb-8 group/section relative", diffBorderClass(effectiveDiff.kind))}>
+        {effectiveDiff.kind && (
+          <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", diffGutterClass(effectiveDiff.kind))}>
+            {diffGutter(effectiveDiff.kind)}
           </span>
         )}
         {section.label && (
@@ -140,18 +133,10 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
   }
 
   return (
-    <section className={clsx("mb-8 relative", {
-      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-3": effectiveDiff === "added",
-      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-3": effectiveDiff === "removed",
-      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-3": effectiveDiff === "modified",
-    })}>
-      {effectiveDiff && (
-        <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", {
-          "text-[#137333] dark:text-[#81c995]": effectiveDiff === "added",
-          "text-[#c5221f] dark:text-[#f28b82]": effectiveDiff === "removed",
-          "text-[#e37400] dark:text-[#fdd663]": effectiveDiff === "modified",
-        })}>
-          {effectiveDiff === "added" ? "+" : effectiveDiff === "removed" ? "\u2013" : "~"}
+    <section className={clsx("mb-8 relative", diffBorderClass(effectiveDiff.kind))}>
+      {effectiveDiff.kind && (
+        <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", diffGutterClass(effectiveDiff.kind))}>
+          {diffGutter(effectiveDiff.kind)}
         </span>
       )}
       {node.type === "section" && node.label && (

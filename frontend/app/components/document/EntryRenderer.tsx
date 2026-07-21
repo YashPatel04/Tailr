@@ -7,6 +7,7 @@ import { RichEditableField } from "./RichEditableField"
 import { BulletRenderer } from "./BulletRenderer"
 import { SortableBullet } from "./SortableBullet"
 import { useDiff } from "@/components/diff/DiffView"
+import { diffBorderClass, diffGutterClass, diffGutter } from "@/lib/wordDiff"
 import { clsx } from "clsx"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -71,18 +72,10 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
   }
 
   return (
-    <div className={clsx("mb-3 group relative", {
-      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-2": diffState === "added",
-      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-2": diffState === "removed",
-      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-2": diffState === "modified",
-    })}>
-      {diffState && (
-        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", {
-          "text-[#137333] dark:text-[#81c995]": diffState === "added",
-          "text-[#c5221f] dark:text-[#f28b82]": diffState === "removed",
-          "text-[#e37400] dark:text-[#fdd663]": diffState === "modified",
-        })}>
-          {diffState === "added" ? "+" : diffState === "removed" ? "\u2013" : "~"}
+    <div className={clsx("mb-3 group relative", diffBorderClass(diffState.kind))}>
+      {diffState.kind && (
+        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", diffGutterClass(diffState.kind))}>
+          {diffGutter(diffState.kind)}
         </span>
       )}
       <div className="flex items-baseline justify-between">
@@ -271,18 +264,10 @@ function EntryRendererLegacy({ node }: { node: any }) {
   const diffState = useDiff(node.id)
 
   return (
-    <div className={clsx("mb-3 relative", {
-      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-2": diffState === "added",
-      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-2": diffState === "removed",
-      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-2": diffState === "modified",
-    })}>
-      {diffState && (
-        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", {
-          "text-[#137333] dark:text-[#81c995]": diffState === "added",
-          "text-[#c5221f] dark:text-[#f28b82]": diffState === "removed",
-          "text-[#e37400] dark:text-[#fdd663]": diffState === "modified",
-        })}>
-          {diffState === "added" ? "+" : diffState === "removed" ? "\u2013" : "~"}
+    <div className={clsx("mb-3 relative", diffBorderClass(diffState.kind))}>
+      {diffState.kind && (
+        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", diffGutterClass(diffState.kind))}>
+          {diffGutter(diffState.kind)}
         </span>
       )}
       <div className="flex items-baseline justify-between">
