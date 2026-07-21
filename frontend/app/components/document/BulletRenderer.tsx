@@ -89,13 +89,23 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
   return (
     <li
       className={clsx(
-        "text-base text-ink dark:text-[#ececec] leading-relaxed ml-4 list-disc marker:text-slate dark:marker:text-[#8e8e8e] mb-1 group",
+        "text-base text-ink dark:text-[#ececec] leading-relaxed ml-4 list-disc marker:text-slate dark:marker:text-[#8e8e8e] mb-1 group relative",
         {
-          "bg-green-50 dark:bg-green-900/20 rounded px-1": diffState === "added",
-          "bg-red-50 dark:bg-red-900/20 rounded px-1": diffState === "removed",
+          "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-2": diffState === "added",
+          "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-2": diffState === "removed",
+          "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-2": diffState === "modified",
         }
       )}
     >
+      {diffState && (
+        <span className={clsx("absolute -left-4 top-0 text-xs font-bold font-mono", {
+          "text-[#137333] dark:text-[#81c995]": diffState === "added",
+          "text-[#c5221f] dark:text-[#f28b82]": diffState === "removed",
+          "text-[#e37400] dark:text-[#fdd663]": diffState === "modified",
+        })}>
+          {diffState === "added" ? "+" : diffState === "removed" ? "\u2013" : "~"}
+        </span>
+      )}
       {showEditable ? (
         <RichEditableField value={text} spans={spans} onSave={handleSave} tag="span" />
       ) : (

@@ -71,10 +71,20 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
   }
 
   return (
-    <div className={clsx("mb-3 group", {
-      "bg-green-50 dark:bg-green-900/20 rounded-md p-2 -mx-2": diffState === "added",
-      "bg-red-50 dark:bg-red-900/20 rounded-md p-2 -mx-2": diffState === "removed",
+    <div className={clsx("mb-3 group relative", {
+      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-2": diffState === "added",
+      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-2": diffState === "removed",
+      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-2": diffState === "modified",
     })}>
+      {diffState && (
+        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", {
+          "text-[#137333] dark:text-[#81c995]": diffState === "added",
+          "text-[#c5221f] dark:text-[#f28b82]": diffState === "removed",
+          "text-[#e37400] dark:text-[#fdd663]": diffState === "modified",
+        })}>
+          {diffState === "added" ? "+" : diffState === "removed" ? "\u2013" : "~"}
+        </span>
+      )}
       <div className="flex items-baseline justify-between">
         <span className="font-semibold text-ink dark:text-[#ececec]">
           <RichEditableField
@@ -261,10 +271,20 @@ function EntryRendererLegacy({ node }: { node: any }) {
   const diffState = useDiff(node.id)
 
   return (
-    <div className={clsx("mb-3", {
-      "bg-green-50 dark:bg-green-900/20 rounded-md p-2 -mx-2": diffState === "added",
-      "bg-red-50 dark:bg-red-900/20 rounded-md p-2 -mx-2": diffState === "removed",
+    <div className={clsx("mb-3 relative", {
+      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-2": diffState === "added",
+      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-2": diffState === "removed",
+      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-2": diffState === "modified",
     })}>
+      {diffState && (
+        <span className={clsx("absolute -left-2.5 top-0 text-xs font-bold font-mono", {
+          "text-[#137333] dark:text-[#81c995]": diffState === "added",
+          "text-[#c5221f] dark:text-[#f28b82]": diffState === "removed",
+          "text-[#e37400] dark:text-[#fdd663]": diffState === "modified",
+        })}>
+          {diffState === "added" ? "+" : diffState === "removed" ? "\u2013" : "~"}
+        </span>
+      )}
       <div className="flex items-baseline justify-between">
         <span className="font-semibold text-ink dark:text-[#ececec]">{node.title}</span>
         {node.dates && (

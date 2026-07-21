@@ -1,6 +1,18 @@
 {
-  "generated": "2026-07-19T19:17:48-05:00",
+  "generated": "2026-07-20T22:30:00-05:00",
   "sections": [
+    {
+      "id": "mockups",
+      "label": "Mockups",
+      "groups": [
+        {
+          "slug": "canvas-toolbar",
+          "files": [
+            { "label": "Canvas Toolbar (Google Docs)", "path": "mockups/canvas-toolbar/index.html" }
+          ]
+        }
+      ]
+    },
     {
       "id": "design-systems",
       "label": "Design Systems",
@@ -9,16 +21,10 @@
           "slug": "resume-tailor",
           "files": [
             { "label": "SKILL.md", "path": "design-systems/resume-tailor/SKILL.md" },
-            { "label": "colors_and_type.css", "path": "design-systems/resume-tailor/tokens/colors_and_type.css" },
-            { "label": "README.md", "path": "design-systems/resume-tailor/README.md" }
+            { "label": "colors_and_type.css", "path": "design-systems/resume-tailor/tokens/colors_and_type.css" }
           ]
         }
       ]
-    },
-    {
-      "id": "mockups",
-      "label": "Mockups",
-      "groups": []
     }
   ]
 }

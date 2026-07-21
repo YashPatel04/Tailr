@@ -87,10 +87,20 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
 
   if (section) {
     return (
-      <section className={clsx("mb-8 group/section", {
-        "bg-green-50 dark:bg-green-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "added",
-        "bg-red-50 dark:bg-red-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "removed",
+      <section className={clsx("mb-8 group/section relative", {
+        "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-3": effectiveDiff === "added",
+        "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-3": effectiveDiff === "removed",
+        "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-3": effectiveDiff === "modified",
       })}>
+        {effectiveDiff && (
+          <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", {
+            "text-[#137333] dark:text-[#81c995]": effectiveDiff === "added",
+            "text-[#c5221f] dark:text-[#f28b82]": effectiveDiff === "removed",
+            "text-[#e37400] dark:text-[#fdd663]": effectiveDiff === "modified",
+          })}>
+            {effectiveDiff === "added" ? "+" : effectiveDiff === "removed" ? "\u2013" : "~"}
+          </span>
+        )}
         {section.label && (
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex items-center justify-between">
             <EditableField
@@ -130,10 +140,20 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
   }
 
   return (
-    <section className={clsx("mb-8", {
-      "bg-green-50 dark:bg-green-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "added",
-      "bg-red-50 dark:bg-red-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "removed",
+    <section className={clsx("mb-8 relative", {
+      "border-l-[3px] border-[#137333] dark:border-[#81c995] pl-3": effectiveDiff === "added",
+      "border-l-[3px] border-[#c5221f] dark:border-[#f28b82] pl-3": effectiveDiff === "removed",
+      "border-l-[3px] border-[#e37400] dark:border-[#fdd663] pl-3": effectiveDiff === "modified",
     })}>
+      {effectiveDiff && (
+        <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", {
+          "text-[#137333] dark:text-[#81c995]": effectiveDiff === "added",
+          "text-[#c5221f] dark:text-[#f28b82]": effectiveDiff === "removed",
+          "text-[#e37400] dark:text-[#fdd663]": effectiveDiff === "modified",
+        })}>
+          {effectiveDiff === "added" ? "+" : effectiveDiff === "removed" ? "\u2013" : "~"}
+        </span>
+      )}
       {node.type === "section" && node.label && (
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex-1">
