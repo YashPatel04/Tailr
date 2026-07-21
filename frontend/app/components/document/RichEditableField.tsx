@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useCallback } from "react"
-import { Bold, Italic, Underline, Code } from "lucide-react"
+import { Bold, Italic, Underline, Code, Link } from "lucide-react"
 import type { Span } from "@/types"
 
 interface RichEditableFieldProps {
@@ -62,7 +62,40 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
     ta.focus()
   }, [draftSpans])
 
+  const addLink = useCallback(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    if (start === end) return
+
+    const url = window.prompt("Enter URL (https://...):", "https://")
+    if (!url) return
+
+    const existingIdx = draftSpans.findIndex(s => s.start === start && s.end === end)
+    if (existingIdx >= 0) {
+      const existingSpans = [...draftSpans]
+      existingSpans[existingIdx] = { ...existingSpans[existingIdx], link_url: url }
+      setDraftSpans(existingSpans)
+    } else {
+      setDraftSpans([...draftSpans, { start, end, formats: [], link_url: url }])
+    }
+    ta.focus()
+  }, [draftSpans])
+
   const renderFormatted = () => {
+    if (!spans.length && !value) return value
+    // Check if any span has a link_url
+    const linkSpan = spans.find(s => s.link_url)
+    if (linkSpan) {
+      return (
+        <a href={linkSpan.link_url!} target="_blank" rel="noopener noreferrer"
+           className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+           onClick={(e) => e.stopPropagation()}>
+          {value}
+        </a>
+      )
+    }
     if (!spans.length) return value
     return (
       <span>
@@ -82,6 +115,11 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
   }
 
   if (editing) {
+    const hasSelectedText = (() => {
+      const ta = textareaRef.current
+      return ta ? ta.selectionStart !== ta.selectionEnd : false
+    })()
+
     return (
       <div className="relative">
         <div className="flex gap-1 mb-1 bg-white dark:bg-[#2d2d2d] border border-blue-400 rounded-t px-1 py-0.5">
@@ -89,6 +127,8 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
           <button onClick={() => toggleFormat("italic")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Italic (Ctrl+I)"><Italic size={14} /></button>
           <button onClick={() => toggleFormat("underline")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Underline (Ctrl+U)"><Underline size={14} /></button>
           <button onClick={() => toggleFormat("code")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Code"><Code size={14} /></button>
+          <button onClick={addLink} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Add link (select text first)"><Link size={14} /></button>
+          <span className="text-[10px] text-slate dark:text-[#8e8e8e] ml-auto self-center hidden sm:inline">Ctrl+K</span>
         </div>
         <textarea
           ref={textareaRef}
@@ -101,6 +141,7 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
             if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); toggleFormat("bold") }
             if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); toggleFormat("italic") }
             if ((e.ctrlKey || e.metaKey) && e.key === "u") { e.preventDefault(); toggleFormat("underline") }
+            if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); addLink() }
           }}
           className={`border border-blue-400 border-t-0 rounded-b px-1 py-0.5 bg-white dark:bg-[#2d2d2d] text-inherit outline-none w-full min-h-[2em] resize-y ${className}`}
           autoFocus
@@ -114,7 +155,7 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
     <Tag
       onClick={startEdit}
       className={`cursor-text hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-0.5 -mx-0.5 transition-colors ${className}`}
-      title="Click to edit (select text for bold/italic)"
+      title="Click to edit (select text for bold/italic/link)"
     >
       {renderFormatted()}
     </Tag>

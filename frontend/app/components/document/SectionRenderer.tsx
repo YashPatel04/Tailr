@@ -67,19 +67,44 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
     )
   }
 
+  const deleteSection = () => {
+    if (!section || sectionIndex === undefined) return
+    const sessionId = useSessionStore.getState().activeSessionId
+    const docType = useSessionStore.getState().activeDocType
+    queueEdit({ op: "delete_section", section_label: section.label })
+    if (sessionId) {
+      queryClient.setQueryData(
+        ["sessions", sessionId, "document", docType],
+        (old: any) => {
+          if (!old?.content) return old
+          const newContent = structuredClone(old.content)
+          newContent.sections = newContent.sections.filter((_: any, i: number) => i !== sectionIndex)
+          return { ...old, content: newContent }
+        }
+      )
+    }
+  }
+
   if (section) {
     return (
-      <section className={clsx("mb-8", {
+      <section className={clsx("mb-8 group/section", {
         "bg-green-50 dark:bg-green-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "added",
         "bg-red-50 dark:bg-red-900/20 rounded-lg p-3 -mx-3": effectiveDiff === "removed",
       })}>
         {section.label && (
-          <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3">
+          <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex items-center justify-between">
             <EditableField
               value={section.label}
               tag="span"
               onSave={updateSectionLabel}
             />
+            {viewMode !== "diff" && sectionIndex !== undefined && (
+              <button
+                onClick={(e) => { e.stopPropagation(); deleteSection() }}
+                className="opacity-0 group-hover/section:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded px-1 text-xs transition-opacity ml-2 shrink-0"
+                title="Delete section"
+              >× Delete</button>
+            )}
           </h2>
         )}
         {section.entries && section.entries.length > 0 && (

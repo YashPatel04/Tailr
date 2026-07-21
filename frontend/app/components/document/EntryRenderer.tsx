@@ -86,19 +86,45 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
             }}
           />
         </span>
-        {entry.dates && (
-          <span className="text-sm text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
-            <span className="italic">
-              <EditableField
-                value={entry.dates}
-                onSave={(v) => {
-                  updateCache((e) => { e.dates = v })
-                  queueFieldEdit("dates", v)
-                }}
-              />
+        <div className="flex items-center gap-1">
+          {entry.dates && (
+            <span className="text-sm text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
+              <span className="italic">
+                <EditableField
+                  value={entry.dates}
+                  onSave={(v) => {
+                    updateCache((e) => { e.dates = v })
+                    queueFieldEdit("dates", v)
+                  }}
+                />
+              </span>
             </span>
-          </span>
-        )}
+          )}
+          {sectionLabel !== undefined && entryIndex !== undefined && viewMode !== "diff" && (
+            <button
+              onClick={() => {
+                queueEdit({ op: "delete_entry", section_label: sectionLabel, entry_index: entryIndex })
+                updateCache(() => {}) // will be filtered by path
+                const sessionId = useSessionStore.getState().activeSessionId
+                const docType = useSessionStore.getState().activeDocType
+                if (sessionId) {
+                  queryClient.setQueryData(
+                    ["sessions", sessionId, "document", docType],
+                    (old: any) => {
+                      if (!old?.content) return old
+                      const newContent = structuredClone(old.content)
+                      const sec = newContent.sections.find((s: any) => s.label === sectionLabel)
+                      if (sec) sec.entries = sec.entries.filter((_: any, i: number) => i !== entryIndex)
+                      return { ...old, content: newContent }
+                    }
+                  )
+                }
+              }}
+              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded px-1 text-xs transition-opacity ml-1 shrink-0"
+              title="Delete entry"
+            >×</button>
+          )}
+        </div>
       </div>
       {(entry.role || entry.location) && (
         <div className="text-sm text-slate dark:text-[#8e8e8e] italic flex items-baseline justify-between">
@@ -132,24 +158,43 @@ function EntryRendererNew({ entry, sectionLabel, entryIndex }: { entry: Entry; s
               queueFieldEdit("organization", v)
             }}
           />
-          {entry.url && (
-            <a href={entry.url} target="_blank" rel="noopener noreferrer"
-               className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0 ml-4">
-              {entry.url.replace(/^https?:\/\//, '').replace(/\/$/, '').substring(0, 30)}
-            </a>
-          )}
+          <span className="text-xs text-slate dark:text-[#8e8e8e] flex-shrink-0 ml-4">
+            <EditableField
+              value={entry.url || ""}
+              onSave={(v) => {
+                updateCache((e) => { e.url = v || null })
+                queueFieldEdit("url", v || null)
+              }}
+            />
+          </span>
         </div>
       )}
-      <div className="text-xs text-slate dark:text-[#8e8e8e] mt-1 flex items-center gap-1">
-        <span className="text-slate dark:text-[#8e8e8e] shrink-0">🔗</span>
-        <EditableField
-          value={entry.url || ""}
-          onSave={(v) => {
-            updateCache((e) => { e.url = v || null })
-            queueFieldEdit("url", v || null)
-          }}
-        />
-      </div>
+      {!entry.organization && entry.url && (
+        <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-end">
+          <span className="text-xs text-slate dark:text-[#8e8e8e]">
+            <EditableField
+              value={entry.url}
+              onSave={(v) => {
+                updateCache((e) => { e.url = v || null })
+                queueFieldEdit("url", v || null)
+              }}
+            />
+          </span>
+        </div>
+      )}
+      {!entry.organization && !entry.url && sectionLabel !== undefined && entryIndex !== undefined && (
+        <div className="text-sm text-slate dark:text-[#8e8e8e] flex items-baseline justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px] text-slate dark:text-[#8e8e8e]">
+            <EditableField
+              value=""
+              onSave={(v) => {
+                updateCache((e) => { e.url = v || null })
+                queueFieldEdit("url", v || null)
+              }}
+            />
+          </span>
+        </div>
+      )}
       {sectionLabel && entryIndex !== undefined ? (
         <DndContext collisionDetection={closestCenter} onDragEnd={(event: DragEndEvent) => {
           const { active, over } = event
