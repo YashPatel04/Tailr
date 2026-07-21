@@ -131,8 +131,8 @@ export function DocumentCanvas() {
 
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121]">
-      <div className="flex justify-center items-start min-h-full">
-        <div className="w-[820px] flex-shrink-0 py-10 px-8 group/page min-h-full">
+      <div className="mx-auto flex items-start min-h-full" style={{ maxWidth: "880px" }}>
+        <div className="w-[820px] flex-shrink-0 py-10 px-8 group/page">
           <DocumentTopBar />
           <DocumentTabs />
           <div className="mt-4 relative">
@@ -145,9 +145,9 @@ export function DocumentCanvas() {
           )}
         </div>
 
-        {/* Floating toolbar — sticky on right side */}
+        {/* Floating toolbar */}
         {hasContent && viewMode !== "diff" && (
-          <div className="sticky top-12 ml-3 z-50">
+          <div className="sticky top-4 ml-4 z-50 flex-shrink-0">
             <FloatingToolbar />
           </div>
         )}
