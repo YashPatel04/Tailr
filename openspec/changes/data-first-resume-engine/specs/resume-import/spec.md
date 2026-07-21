@@ -54,3 +54,18 @@ If import fails after retries, the system SHALL return a descriptive error to th
 #### Scenario: Import fails after 2 LLM retries
 - **WHEN** the LLM produces invalid JSON on the first attempt and both retries also fail validation
 - **THEN** the system returns an error with the validation details, preserves the original .tex, and offers the user options to retry with a corrected prompt or start with a blank structured resume
+
+### Requirement: Fallback regex extraction when LLM import is unavailable
+When the LLM-based import fails or no LLM provider is configured, the system SHALL extract basic section structure from the .tex file using regex. Section labels SHALL be extracted from `\section*{...}` commands. Section body text SHALL be captured as raw content. The document name SHALL be extracted from the `\LARGE\textbf{...}` header pattern when present.
+
+#### Scenario: LLM import fails, fallback produces sections
+- **WHEN** a .tex file is uploaded but the LLM provider is not configured or the import call fails
+- **THEN** the system extracts section labels (EDUCATION, EXPERIENCE, etc.) via regex and creates a ResumeContent with sections containing raw body text as entry titles
+
+#### Scenario: Fallback extracts author name
+- **WHEN** a .tex file contains `{\LARGE \textbf{YASH PATEL}}` in the center block
+- **THEN** the extracted ResumeContent has basics.name = "YASH PATEL"
+
+#### Scenario: Fallback marks content as fallback_extraction
+- **WHEN** content is extracted via regex fallback
+- **THEN** the ResumeContent metadata contains `{"fallback_extraction": true}` indicating the content needs LLM refinement for proper structured entries

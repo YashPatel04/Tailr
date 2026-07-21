@@ -283,6 +283,48 @@ Instead of "ent-3 moved from position 2 to 3", the diff produces:
 
 Implemented via `deepdiff` or a simple recursive dict comparison. The frontend maps paths back to rendered elements for highlighting.
 
+### Decision 9: LLM proposal flow (accept/decline, not auto-apply)
+
+Instead of auto-applying LLM edits, the chat endpoint emits an SSE `proposal` event with the proposed operations and computed diff. The frontend stores the proposal in sessionStore (`pendingProposal`), renders a `ProposalMessage` component in the chat rail with Accept/Decline buttons, and auto-opens the diff view on the canvas.
+
+- **POST /api/sessions/{id}/chat**: LLM response → compute diff → emit `proposal` SSE event (don't apply yet)
+- **POST /api/sessions/{id}/proposal/accept**: Receives operations list in request body, applies via ContentApplier, creates new SessionDocument version + Patch + chat message
+- **POST /api/sessions/{id}/proposal/decline**: Clears proposal state, records declined message
+
+**Why not auto-apply:** Users wanted to review changes before they land, similar to Claude Code's confirmation pattern. The canvas auto-opens the diff view showing exactly what will change (old→new values, color-coded). This prevents unwanted edits and gives users control.
+
+**Alternatives considered:**
+- Auto-apply with undo: undo is complex (multiple document versions); user review is simpler and preferred
+- Server-stored pending ops: DB persistence issues with async SSE generators; passing ops in request body is more reliable
+
+### Decision 10: Rich text editing with span formatting toolbar
+
+A `RichEditableField` component replaces plain `EditableField` for text that supports formatting spans. It provides a toolbar with Bold/Italic/Underline/Code buttons that appear on click. Selected text can be formatted via toolbar buttons or keyboard shortcuts (Ctrl+B/I/U). The component tracks span offsets during editing and passes both text and spans to the onSave callback.
+
+**Why not a full rich-text editor (Slate/ProseMirror):** The formatting needs are minimal (4 inline styles + links). A custom component with textarea + span tracking is ~150 lines vs 100KB+ for a rich-text library. Span offsets are simple to compute from textarea selection ranges.
+
+**Alternatives considered:**
+- Slate.js: heavy dependency, complex API, overkill for 4 inline styles
+- contentEditable: browser inconsistencies make span tracking unreliable across browsers
+
+### Decision 11: Drag-and-drop reordering at three levels
+
+Sections, entries within sections, and bullets within entries are reorderable via @dnd-kit/core + @dnd-kit/sortable. Each draggable unit has a GripVertical icon handle (hidden until hover, hidden in diff mode). On drag end, the appropriate move/reorder operation is queued via editQueue.
+
+- **Sections**: SortableSection wrapper in DocumentCanvas
+- **Entries**: SortableEntry wrapper in SectionRenderer
+- **Bullets**: SortableBullet wrapper in EntryRenderer
+
+Drag handles are hidden in diff/changes view mode. All reorders are optimistic (immediate UI update + debounced API call).
+
+**Why @dnd-kit:** Mature React dnd library with accessibility support, smooth animations, and sortable presets. Unlike react-beautiful-dnd, it's actively maintained and supports React 18+.
+
+### Decision 12: PDF compilation via HTTP microservice
+
+The latex container runs a Python HTTP server (`compile_server.py`) on port 9777 instead of `sleep infinity`. The `LatexCompiler` class sends an HTTP POST with tex_source + document_id and receives the compiled PDF bytes. This replaces the previous `docker exec latexmk` approach which required the Docker socket to be mounted in the backend container.
+
+**Why not docker exec:** Docker CLI is not available inside the backend container, and mounting /var/run/docker.sock is a security risk. An HTTP service is lightweight (~50 lines of Python stdlib), uses the shared latex_work volume, and requires no new dependencies.
+
 ## Risks / Trade-offs
 
 - **[Risk] LLM import produces incorrect or incomplete extractions.** Mitigation: Pydantic validation catches missing required fields. Side-by-side comparison lets the user review. Import is one-time — if it's wrong, the user re-imports with a corrected prompt.
@@ -291,6 +333,7 @@ Implemented via `deepdiff` or a simple recursive dict comparison. The frontend m
 - **[Risk] Span format filter produces unbalanced LaTeX braces.** Mitigation: The `span_format` Jinja2 filter uses a stack-based approach to wrap text segments and close all open groups. Unit test with edge cases (overlapping spans, empty spans, spans at boundaries).
 - **[Risk] Path-based op addressing breaks if content is concurrently modified.** Mitigation: Same optimistic-update + conflict-resolution pattern from the current design (Decision 8 of document-model-overlay). Paths are validated before application; if a path no longer exists (e.g., entry was deleted), the op is rejected and surfaced.
 - **[Trade-off] Section order is positional, not ID-based.** Moving a section changes indices of all subsequent sections. This is correct behavior — resume section order is a user choice, not a fixed property.
+- **[Risk] LaTeX compilation service is single-process.** The compile_server.py uses Python's HTTPServer which handles one request at a time. Mitigation: Acceptable for MVP (one user at a time). Can be replaced with gunicorn or a multi-threaded server if needed.
 
 ## Migration Plan
 
@@ -298,7 +341,7 @@ Implemented via `deepdiff` or a simple recursive dict comparison. The frontend m
 2. **API**: Session creation (`POST /api/sessions`) calls LLM import on master resume `.tex`, stores `ResumeContent` in `content_json`. Reads return `content_json` if present, else fall back to legacy `document_model_json`.
 3. **Frontend**: `DocumentCanvas` checks response shape — if `content_json` is present, render from schema; if only `document_model_json`, render from legacy converter (to be deleted after migration).
 4. **Rollback**: Revert API to read `document_model_json`. No data loss — legacy column preserved. Re-deploy old parser stack.
-5. **Cleanup**: After all active sessions have `content_json`, drop `document_model_json` column and delete parser stack files. Target: 2 sprints.
+5. **Cleanup**: After all active sessions have `content_json`, drop `document_model_json` column and delete parser stack files. Target: 2 sprints. **Note:** The LaTeX compile container now runs `compile_server.py` (Python HTTP on port 9777) instead of `sleep infinity` to serve PDF compilation requests.
 
 ## Open Questions
 

@@ -58,3 +58,18 @@ The generated `.tex` SHALL be compilable by the existing Dockerized `texlive-ful
 #### Scenario: Compilation error on malformed template output
 - **WHEN** the Jinja2 template produces LaTeX with a syntax error (unbalanced braces)
 - **THEN** the compilation endpoint catches the error, parses the latexmk output for line numbers, and returns a descriptive error message
+
+### Requirement: PDF compilation via HTTP compile service
+The system SHALL compile generated .tex to PDF by sending an HTTP POST to a compile service running on the latex container (`http://latex:9777/compile`). The request SHALL contain the tex_source and a document_id. The response SHALL be the compiled PDF bytes. The compile service SHALL run latexmk with nonstopmode and a 60-second timeout.
+
+#### Scenario: Compile generated .tex to PDF via HTTP service
+- **WHEN** a user requests PDF export and the backend sends tex_source to the compile service
+- **THEN** the compile service runs `latexmk -pdf` and returns a valid PDF
+
+#### Scenario: Compilation error returns descriptive message
+- **WHEN** the generated .tex contains a syntax error and latexmk fails
+- **THEN** the compile service returns an HTTP error with the compilation error details
+
+#### Scenario: Compilation times out
+- **WHEN** latexmk takes longer than 60 seconds to compile
+- **THEN** the compile service returns a timeout error and the backend surfaces it to the user

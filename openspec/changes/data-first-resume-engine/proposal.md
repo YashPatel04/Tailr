@@ -13,6 +13,14 @@ The recognizer-based LaTeX parser guesses semantics from layout tokens (`\hfill`
 - Simplified LLM editing contract: structured content paths instead of Region tree node IDs
 - Simplified diff: field-level changes with human-readable paths instead of node-ID tracking
 - Simplified validation: Pydantic model validation replaces manual ID-existence and type checks
+- New LLM proposal flow: SSE `proposal` event instead of auto-apply; Accept/Decline endpoints let user review changes before applying
+- New ResumeHeader component rendering name, email, phone, and profiles at the top of the canvas
+- New fallback regex-based extraction from .tex when LLM import is unavailable (provides basic section structure)
+- New rich text editing: RichEditableField with bold/italic/underline/code formatting toolbar and keyboard shortcuts (Ctrl+B/I/U)
+- New drag-and-drop reordering via @dnd-kit at section, entry, and bullet levels
+- New add/remove bullet buttons on every entry for quick content editing
+- New PDF compilation via HTTP microservice on the latex container (replaces docker exec)
+- New optimistic editing with debounced edit queue and React Query cache updates
 
 ## Capabilities
 
@@ -36,9 +44,9 @@ The recognizer-based LaTeX parser guesses semantics from layout tokens (`\hfill`
 ## Impact
 
 - **Backend code deleted**: `backend/app/services/latex/lexer.py`, `extractor_v2.py`, `extractor_context.py`, `pipeline_v2.py`, `region_model.py`, `serializer_v2.py`, `recognizers/` (entire directory), `backend/app/services/editing/applier_v2.py`, `ops_v2.py`, `diff_v2.py`
-- **Backend code added**: `backend/app/models/resume_schema.py`, `backend/app/services/importers/tex_llm_importer.py`, `backend/app/services/rendering/` (Jinja2 templates + renderer), `backend/app/services/editing/content_ops.py`
+- **Backend code added**: `backend/app/models/resume_schema.py`, `backend/app/services/importers/tex_llm_importer.py`, `backend/app/services/rendering/` (Jinja2 templates + renderer), `backend/app/services/editing/content_ops.py`, `backend/app/services/latex/compile_server.py` (HTTP compile service)
 - **Backend code modified**: `backend/app/api/tailor.py`, `backend/app/api/sessions.py`, `backend/app/api/document.py`, `backend/app/services/llm/prompts.py`
 - **Frontend code deleted**: `_convert_document_model` in sessions.py response layer
-- **Frontend code modified**: `DocumentCanvas`, `SectionRenderer`, `EntryRenderer`, `BulletRenderer`, `SkillRowRenderer` — consume `ResumeSchema` shape directly
+- **Frontend code modified**: `DocumentCanvas`, `SectionRenderer`, `EntryRenderer`, `BulletRenderer`, `SkillRowRenderer` — consume `ResumeSchema` shape directly; `ResumeHeader`, `RichEditableField`, `EditableField`, `SortableSection`, `SortableEntry`, `SortableBullet`, `ProposalMessage`, `editQueue`, `DiffView`, `ChatMessageList`, `ProgressMessage`
 - **Database**: `SessionDocument.document_model_json` → `content_json` (migration needed). Historical sessions with old-format `document_model_json` preserved but no longer used.
-- **No new dependencies**: Jinja2 already available in Python stdlib-style via FastAPI ecosystem; Pydantic already in use.
+- **New dependencies**: `jinja2` (Jinja2 templates), `deepdiff` (content diffs), `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (drag-and-drop)
