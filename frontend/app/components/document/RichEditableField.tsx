@@ -1,7 +1,10 @@
 "use client"
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Bold, Italic, Underline, Code, Link } from "lucide-react"
 import type { Span } from "@/types"
+import { registerFormatTarget, unregisterFormatTarget } from "@/lib/formatTarget"
+
+let nextRteId = 0
 
 interface RichEditableFieldProps {
   value: string
@@ -16,6 +19,7 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
   const [draft, setDraft] = useState(value)
   const [draftSpans, setDraftSpans] = useState<Span[]>(spans)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const rteId = useRef(`rte-${nextRteId++}`)
 
   const startEdit = useCallback(() => {
     setDraft(value)
@@ -83,6 +87,15 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
     ta.focus()
   }, [draftSpans])
 
+  const handleFocus = useCallback(() => {
+    registerFormatTarget(rteId.current, { toggleFormat, addLink })
+  }, [toggleFormat, addLink])
+
+  const handleBlur = useCallback(() => {
+    setTimeout(() => unregisterFormatTarget(rteId.current), 200)
+    commit()
+  }, [commit])
+
   const renderFormatted = () => {
     if (!spans.length && !value) return value
     // Check if any span has a link_url
@@ -134,7 +147,9 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
           ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          data-rte-id={rteId.current}
           onKeyDown={(e) => {
             if (e.key === "Escape") { setDraft(value); setDraftSpans(structuredClone(spans)); setEditing(false) }
             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit() }

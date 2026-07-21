@@ -1,49 +1,19 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useSessionDocument } from "@/hooks/queries"
-import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
 import type { ResumeContent } from "@/types"
+import { applyFormatAction } from "@/lib/formatTarget"
 
 export function FloatingToolbar() {
-  const { activeSessionId, activeDocType, viewMode, setViewMode, pendingProposal } = useSessionStore()
+  const { activeSessionId, activeDocType } = useSessionStore()
   const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
   const queryClient = useQueryClient()
   const [insertOpen, setInsertOpen] = useState(false)
-  const [exportOpen, setExportOpen] = useState(false)
   const insertRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (insertRef.current && !insertRef.current.contains(e.target as Node)) {
-        setInsertOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClick)
-    return () => document.removeEventListener("mousedown", handleClick)
-  }, [])
-
-  const handleExport = async (format: string) => {
-    if (!activeSessionId) return
-    setExportOpen(false)
-    try {
-      const blob = await apiRequest<Blob>("GET", `/api/sessions/${activeSessionId}/export?format=${format}`, undefined, { rawResponse: true })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `resume.${format}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      toast.success(`Exported as ${format}`)
-    } catch (err: any) {
-      toast.error(err.message || "Export failed")
-    }
-  }
 
   const handleInsert = (action: string) => {
     setInsertOpen(false)
@@ -59,7 +29,7 @@ export function FloatingToolbar() {
         }).then(() => {
           queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
           toast.success("Section added")
-        }).catch((e) => toast.error("Failed to add section"))
+        }).catch(() => toast.error("Failed to add section"))
         break
       case "entry": {
         const lastSectionIdx = sectionCount - 1
@@ -74,7 +44,7 @@ export function FloatingToolbar() {
         }).then(() => {
           queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
           toast.success("Entry added")
-        }).catch((e) => toast.error("Failed to add entry"))
+        }).catch(() => toast.error("Failed to add entry"))
         break
       }
       case "bullet": {
@@ -90,7 +60,7 @@ export function FloatingToolbar() {
         }).then(() => {
           queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
           toast.success("Bullet added")
-        }).catch((e) => toast.error("Failed to add bullet"))
+        }).catch(() => toast.error("Failed to add bullet"))
         break
       }
       default:
@@ -99,7 +69,7 @@ export function FloatingToolbar() {
   }
 
   return (
-    <div className="bg-white dark:bg-[#292a2d] border border-[#dadce0] dark:border-[#5f6368] rounded-xl shadow-md p-1.5 flex flex-col gap-0.5 items-center z-50 w-[44px] flex-shrink-0">
+    <div className="sticky top-16 bg-white dark:bg-[#292a2d] border border-[#dadce0] dark:border-[#5f6368] rounded-xl shadow-md p-1.5 flex flex-col gap-0.5 items-center z-50 w-[44px] flex-shrink-0">
       {/* Insert */}
       <div className="relative" ref={insertRef}>
         <button
@@ -137,20 +107,36 @@ export function FloatingToolbar() {
       {/* Separator */}
       <div className="w-5 h-px bg-[#dadce0] dark:bg-[#5f6368] my-1" />
 
-      {/* Bold */}
-      <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]" title="Bold (Ctrl+B)">
+      {/* Bold — wires to active RichEditableField */}
+      <button
+        onMouseDown={(e) => { e.preventDefault(); applyFormatAction("bold") }}
+        className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]"
+        title="Bold (Ctrl+B)"
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 19V5h4a4 4 0 010 8 4 4 0 010 6ZM11 8.5h2.5a2 2 0 010 3H11ZM11 13h2.5a2 2 0 010 3H11Z"/></svg>
       </button>
       {/* Italic */}
-      <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]" title="Italic (Ctrl+I)">
+      <button
+        onMouseDown={(e) => { e.preventDefault(); applyFormatAction("italic") }}
+        className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]"
+        title="Italic (Ctrl+I)"
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M10 5L14 5L9 19L5 19Z"/></svg>
       </button>
       {/* Underline */}
-      <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]" title="Underline (Ctrl+U)">
+      <button
+        onMouseDown={(e) => { e.preventDefault(); applyFormatAction("underline") }}
+        className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]"
+        title="Underline (Ctrl+U)"
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3v7a6 6 0 0012 0V3h2v7a8 8 0 01-16 0V3ZM4 21h16v2H4Z"/></svg>
       </button>
       {/* Link */}
-      <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]" title="Link (Ctrl+K)">
+      <button
+        onMouseDown={(e) => { e.preventDefault(); applyFormatAction("link") }}
+        className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]"
+        title="Link (Ctrl+K)"
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
       </button>
 
@@ -165,56 +151,6 @@ export function FloatingToolbar() {
       <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]" title="Redo (Ctrl+Shift+Z)">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3L21 13"/></svg>
       </button>
-
-      {/* Separator */}
-      <div className="w-5 h-px bg-[#dadce0] dark:bg-[#5f6368] my-1" />
-
-      {/* View: Final */}
-      <button
-        onClick={() => setViewMode("final")}
-        className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${viewMode === "final" ? "text-[#1a73e8] dark:text-[#8ab4f8] bg-[#d3e3fd] dark:bg-[#394457]" : "text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#e8eaed] dark:hover:bg-[#3c4043]"}`}
-        title="Final view"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-      </button>
-      {/* View: Diff */}
-      <button
-        onClick={() => setViewMode("diff")}
-        className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${viewMode === "diff" ? "text-[#1a73e8] dark:text-[#8ab4f8] bg-[#d3e3fd] dark:bg-[#394457]" : "text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#e8eaed] dark:hover:bg-[#3c4043]"}`}
-        title="Changes"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="6" y1="3" x2="6" y2="15"/><polyline points="2 11 6 15 10 11"/><line x1="18" y1="21" x2="18" y2="9"/><polyline points="14 13 18 9 22 13"/></svg>
-      </button>
-
-      {/* Separator */}
-      <div className="w-5 h-px bg-[#dadce0] dark:bg-[#5f6368] my-1" />
-
-      {/* Export */}
-      <div className="relative">
-        <button
-          onClick={() => setExportOpen(!exportOpen)}
-          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#e8eaed] dark:hover:bg-[#3c4043] transition-colors text-[#5f6368] dark:text-[#9aa0a6]"
-          title="Export"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-        {exportOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
-            <div className="absolute right-full mr-2 top-0 min-w-[100px] bg-white dark:bg-[#202124] border border-[#dadce0] dark:border-[#5f6368] rounded-lg shadow-lg py-1 z-[60]">
-              {["pdf", "docx", "txt", "tex"].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => handleExport(f)}
-                  className="block w-full px-3 py-1.5 text-left text-xs text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] uppercase transition-colors"
-                >
-                  .{f}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
     </div>
   )
 }

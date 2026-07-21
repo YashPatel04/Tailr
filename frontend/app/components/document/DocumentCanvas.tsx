@@ -9,6 +9,7 @@ import { queueEdit } from "@/lib/editQueue"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DocumentEmptyState } from "./DocumentEmptyState"
+import { DocumentTopBar } from "./DocumentTopBar"
 import { FloatingToolbar } from "./FloatingToolbar"
 import { DocumentTabs } from "./DocumentTabs"
 import { SectionRenderer } from "./SectionRenderer"
@@ -130,20 +131,23 @@ export function DocumentCanvas() {
 
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121]">
-      <div className="mx-auto max-w-[820px] py-10 px-8 min-h-full group/page relative">
-        <DocumentTabs />
-        <div className="mt-4 relative">
-          {innerContent}
+      <div className="flex justify-center items-start min-h-full">
+        <div className="w-[820px] flex-shrink-0 py-10 px-8 group/page min-h-full">
+          <DocumentTopBar />
+          <DocumentTabs />
+          <div className="mt-4 relative">
+            {innerContent}
+          </div>
+
+          {/* Bottom inline insert */}
+          {hasContent && viewMode !== "diff" && (
+            <BottomInsert onInsert={handleBottomInsert} />
+          )}
         </div>
 
-        {/* Bottom inline insert */}
+        {/* Floating toolbar — sticky on right side */}
         {hasContent && viewMode !== "diff" && (
-          <BottomInsert onInsert={handleBottomInsert} />
-        )}
-
-        {/* Floating toolbar */}
-        {hasContent && viewMode !== "diff" && (
-          <div className="absolute right-[-60px] top-24 z-50">
+          <div className="sticky top-12 ml-3 z-50">
             <FloatingToolbar />
           </div>
         )}
