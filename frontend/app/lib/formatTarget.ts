@@ -1,7 +1,7 @@
 type FormatAction = "bold" | "italic" | "underline" | "link"
 
 interface FormatTarget {
-  toggleFormat: (format: "bold" | "italic" | "underline" | "code") => void
+  toggleFormat: (format: "bold" | "italic" | "underline") => void
   addLink: () => void
 }
 

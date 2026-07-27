@@ -3,15 +3,25 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
-import { SectionRenderer } from "./SectionRenderer"
+import { SkillRowRenderer } from "./SkillRowRenderer"
 import { useSessionStore } from "@/stores/sessionStore"
-import type { Section } from "@/types"
+import type { SkillRow } from "@/types"
 
-export function SortableSection({ section, index }: { section: Section; index: number }) {
+export function SortableSkillRow({
+  row,
+  sectionIndex,
+  rowIndex,
+  sectionLabel,
+}: {
+  row: SkillRow
+  sectionIndex: number
+  rowIndex: number
+  sectionLabel: string
+}) {
   const viewMode = useSessionStore((s) => s.viewMode)
   const editingFieldId = useSessionStore((s) => s.editingFieldId)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: section.id,
+    id: row.id,
     disabled: viewMode === "diff" || editingFieldId !== null,
   })
 
@@ -21,18 +31,23 @@ export function SortableSection({ section, index }: { section: Section; index: n
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={`transition-transform duration-200 ease-in-out ${isDragging ? "opacity-50 z-10" : ""}`}
     >
-      <div className="flex items-start gap-2 group">
+      <div className="flex items-start gap-1 group">
         {viewMode !== "diff" && editingFieldId === null && (
           <button
             {...attributes}
             {...listeners}
-            className="mt-2 opacity-0 group-hover:opacity-100 cursor-grab text-slate hover:text-ink transition-opacity"
+            className="mt-0.5 opacity-0 group-hover:opacity-100 cursor-grab text-slate hover:text-ink transition-opacity"
           >
-            <GripVertical size={16} />
+            <GripVertical size={14} />
           </button>
         )}
         <div className="flex-1">
-          <SectionRenderer section={section} sectionIndex={index} />
+          <SkillRowRenderer
+            row={row}
+            sectionIndex={sectionIndex}
+            rowIndex={rowIndex}
+            sectionLabel={sectionLabel}
+          />
         </div>
       </div>
     </div>

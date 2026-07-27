@@ -1,27 +1,36 @@
 "use client"
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { EntryRenderer } from "./EntryRenderer";
-import { useSessionStore } from "@/stores/sessionStore";
-import type { Entry } from "@/types";
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { GripVertical } from "lucide-react"
+import { EntryRenderer } from "./EntryRenderer"
+import { useSessionStore } from "@/stores/sessionStore"
+import type { Entry } from "@/types"
 
-export function SortableEntry({ entry, sectionLabel, entryIndex }: { entry: Entry; sectionLabel: string; entryIndex: number }) {
+export function SortableEntry({
+  entry,
+  sectionLabel,
+  entryIndex,
+}: {
+  entry: Entry
+  sectionLabel: string
+  entryIndex: number
+}) {
   const viewMode = useSessionStore((s) => s.viewMode)
+  const editingFieldId = useSessionStore((s) => s.editingFieldId)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: entry.id,
-    disabled: viewMode === "diff",
-  });
+    disabled: viewMode === "diff" || editingFieldId !== null,
+  })
 
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? "opacity-50" : ""}
+      className={`transition-transform duration-200 ease-in-out ${isDragging ? "opacity-50 z-10" : ""}`}
     >
       <div className="flex items-start gap-1 group">
-        {viewMode !== "diff" && (
+        {viewMode !== "diff" && editingFieldId === null && (
           <button
             {...attributes}
             {...listeners}
@@ -35,5 +44,5 @@ export function SortableEntry({ entry, sectionLabel, entryIndex }: { entry: Entr
         </div>
       </div>
     </div>
-  );
+  )
 }

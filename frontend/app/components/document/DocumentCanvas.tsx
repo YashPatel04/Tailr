@@ -19,6 +19,7 @@ import { DiffView } from "@/components/diff/DiffView"
 import { DiffActions } from "@/components/diff/DiffActions"
 import { toast } from "@/components/ui/Toaster"
 import { Mail, Loader2 } from "lucide-react"
+import { InlineFormatToolbar } from "./InlineFormatToolbar"
 
 export function DocumentCanvas() {
   const { activeSessionId, activeDocType, viewMode, latestDiff } = useSessionStore()
@@ -271,6 +272,7 @@ export function DocumentCanvas() {
 
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121] scrollbar-thin">
+      <InlineFormatToolbar />
       <div className="mx-auto min-h-full" style={{ maxWidth: "960px" }}>
         <div className="py-10 px-8 group/page">
           <DocumentTopBar />

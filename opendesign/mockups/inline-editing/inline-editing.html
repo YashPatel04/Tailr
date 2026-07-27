@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inline Text Editing — Resume Canvas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --paper: #ffffff;
+      --ink: #0d0d0d;
+      --slate: #6b6e7b;
+      --brass: #10a37f;
+      --brass-hover: #0d8c6d;
+      --canvas: #f7f7f8;
+      --border: #e5e5e5;
+      --brass-light: #ecfdf5;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --radius: 6px;
+      --transition: 150ms ease;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Layout ── */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: #171717;
+      color: #ececec;
+      padding: 16px 0;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-brand {
+      padding: 0 16px 16px;
+      border-bottom: 1px solid #2b2b2b;
+      font-weight: 600;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-brand .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brass);
+    }
+
+    .sidebar-section {
+      padding: 16px 16px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8e8e8e;
+    }
+
+    .sidebar-item {
+      padding: 6px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-item:hover { background: #212121; }
+    .sidebar-item.active { background: #2b2b2b; color: #fff; }
+
+    .sidebar-item .icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.5;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      height: 48px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .topbar-tabs {
+      display: flex;
+      gap: 2px;
+      background: var(--canvas);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .topbar-tab {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      color: var(--slate);
+    }
+
+    .topbar-tab.active {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .topbar-spacer { flex: 1; }
+
+    .topbar-status {
+      font-size: 12px;
+      color: var(--slate);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--brass);
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .topbar-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      color: var(--ink);
+      transition: all var(--transition);
+    }
+
+    .topbar-btn:hover { background: var(--canvas); }
+    .topbar-btn.primary {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    .topbar-btn.primary:hover { opacity: 0.9; }
+
+    /* ── Canvas ── */
+    .canvas-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px 0;
+    }
+
+    .canvas-scroll::-webkit-scrollbar { width: 6px; }
+    .canvas-scroll::-webkit-scrollbar-thumb {
+      background: rgba(142,142,142,0.3);
+      border-radius: 3px;
+    }
+
+    .page {
+      width: 816px;
+      min-height: 1056px;
+      margin: 0 auto;
+      background: var(--paper);
+      box-shadow: var(--shadow-md);
+      border-radius: 2px;
+      padding: 64px 72px;
+      position: relative;
+    }
+
+    /* ── Resume Content ── */
+    .resume-name {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
+    .resume-contact {
+      font-size: 13px;
+      color: var(--slate);
+      margin-bottom: 32px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .resume-contact span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .resume-section {
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--brass);
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .entry {
+      margin-bottom: 16px;
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 2px;
+    }
+
+    .entry-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .entry-dates {
+      font-size: 13px;
+      color: var(--slate);
+      white-space: nowrap;
+    }
+
+    .entry-subtitle {
+      font-size: 13px;
+      color: var(--slate);
+      margin-bottom: 6px;
+    }
+
+    .entry-bullets {
+      list-style: none;
+      padding: 0;
+    }
+
+    .entry-bullets li {
+      font-size: 13.5px;
+      line-height: 1.55;
+      padding-left: 14px;
+      position: relative;
+      margin-bottom: 3px;
+    }
+
+    .entry-bullets li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--slate);
+      opacity: 0.5;
+    }
+
+    .skills-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 24px;
+    }
+
+    .skill-row {
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .skill-row .label {
+      font-weight: 600;
+    }
+
+    /* ── Inline Editing Styles ── */
+    [data-editable] {
+      position: relative;
+      cursor: text;
+      border-radius: 3px;
+      transition: background var(--transition), box-shadow var(--transition);
+      outline: none;
+      min-height: 1em;
+    }
+
+    [data-editable]:hover:not(.is-editing) {
+      background: rgba(16, 163, 127, 0.04);
+    }
+
+    [data-editable].is-selected:not(.is-editing) {
+      box-shadow: 0 0 0 2px var(--brass);
+      background: rgba(16, 163, 127, 0.04);
+    }
+
+    [data-editable].is-editing {
+      cursor: text;
+      background: transparent;
+    }
+
+    [data-editable].is-editing::selection {
+      background: rgba(16, 163, 127, 0.2);
+    }
+
+    /* Custom caret color */
+    [data-editable].is-editing {
+      caret-color: var(--ink);
+    }
+
+    /* ── Drag Handle ── */
+    .drag-handle {
+      position: absolute;
+      left: -28px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: grab;
+      opacity: 0;
+      transition: opacity var(--transition), background var(--transition);
+      color: var(--slate);
+    }
+
+    [data-editable]:hover > .drag-handle,
+    [data-editable].is-selected > .drag-handle {
+      opacity: 1;
+    }
+
+    .drag-handle:hover {
+      background: var(--canvas);
+    }
+
+    .drag-handle svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ── Formatting Toolbar ── */
+    .format-toolbar {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .format-toolbar.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .format-toolbar::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: #1e1e1e;
+      clip-path: polygon(50% 100%, 0 0, 100% 0);
+    }
+
+    .fmt-btn {
+      width: 32px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #e0e0e0;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 80ms ease;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .fmt-btn:hover {
+      background: #3c3c3c;
+      color: #fff;
+    }
+
+    .fmt-btn.active {
+      background: var(--brass);
+      color: #fff;
+    }
+
+    .fmt-divider {
+      width: 1px;
+      height: 20px;
+      background: #3c3c3c;
+      margin: 0 2px;
+    }
+
+    .fmt-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ── Link Input ── */
+    .link-input-bar {
+      position: fixed;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 6px 8px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1001;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .link-input-bar.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .link-input-bar input {
+      width: 260px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #3c3c3c;
+      background: #2a2a2a;
+      color: #ececec;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .link-input-bar input:focus {
+      border-color: var(--brass);
+    }
+
+    .link-input-bar input::placeholder {
+      color: #666;
+    }
+
+    .link-apply-btn {
+      padding: 5px 12px;
+      border-radius: 5px;
+      background: var(--brass);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .link-apply-btn:hover { opacity: 0.9; }
+
+    .link-cancel-btn {
+      padding: 5px 8px;
+      border-radius: 5px;
+      background: transparent;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .link-cancel-btn:hover { color: #fff; }
+
+    /* ── State Indicator ── */
+    .state-panel {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e1e1e;
+      color: #ececec;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-lg);
+      font-size: 12px;
+      z-index: 100;
+      min-width: 220px;
+    }
+
+    .state-panel h4 {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #8e8e8e;
+      margin-bottom: 10px;
+    }
+
+    .state-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .state-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .state-dot.idle { background: #666; }
+    .state-dot.selected { background: var(--brass); }
+    .state-dot.editing { background: var(--brass); }
+
+    .state-label {
+      color: #ccc;
+    }
+
+    .state-label strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .state-keys {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #333;
+      font-size: 11px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    .state-keys kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: #333;
+      color: #ccc;
+      font-family: inherit;
+      font-size: 10px;
+      margin-right: 2px;
+    }
+
+    /* ── Annotation markers ── */
+    .annotation-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--brass);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity var(--transition);
+      pointer-events: none;
+    }
+
+    [data-editable]:hover > .annotation-badge,
+    [data-editable].is-selected > .annotation-badge,
+    [data-editable].is-editing > .annotation-badge {
+      opacity: 1;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .sidebar { display: none; }
+      .page { width: 100%; margin: 0 16px; }
+    }
+
+    /* ── Typing animation for demo ── */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .demo-caret {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: var(--ink);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+      margin: 0 -1px;
+    }
+
+    /* ── Tooltip ── */
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e1e1e;
+      color: #ececec;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 100ms ease;
+    }
+
+    [data-editable]:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* ── Inline format rendering ── */
+    .fmt-bold { font-weight: 700; }
+    .fmt-italic { font-style: italic; }
+    .fmt-underline { text-decoration: underline; text-underline-offset: 2px; }
+    .fmt-link {
+      color: var(--brass);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    /* ── Section entry hover ── */
+    .entry:hover .entry-header [data-editable]:not(.is-editing):not(.is-selected) {
+      background: rgba(16, 163, 127, 0.03);
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <span class="dot"></span>
+        ResumeBuilder
+      </div>
+      <div class="sidebar-section">Documents</div>
+      <div class="sidebar-item active">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="1.5"/><line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/><line x1="5.5" y1="10.5" x2="8" y2="10.5"/></svg>
+        Software Engineer Resume
+      </div>
+      <div class="sidebar-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="1.5"/><line x1="5.5" y1="5.5" x2="10.5" y2="5.5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/><line x1="5.5" y1="10.5" x2="8" y2="10.5"/></svg>
+        Cover Letter
+      </div>
+      <div class="sidebar-section" style="margin-top: 16px;">Templates</div>
+      <div class="sidebar-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="2" y1="6" x2="14" y2="6"/></svg>
+        Minimal
+      </div>
+      <div class="sidebar-item">
+        <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><line x1="2" y1="6" x2="14" y2="6"/></svg>
+        Professional
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div class="topbar-tabs">
+          <div class="topbar-tab active">Resume</div>
+          <div class="topbar-tab">Cover Letter</div>
+        </div>
+        <div class="topbar-spacer"></div>
+        <div class="topbar-status">
+          <span class="dot"></span>
+          All changes saved
+        </div>
+        <div class="topbar-actions">
+          <button class="topbar-btn">Export PDF</button>
+          <button class="topbar-btn primary">Share</button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="canvas-scroll">
+        <div class="page" id="resume">
+
+          <!-- Name -->
+          <div style="position: relative; margin-bottom: 6px;">
+            <div class="drag-handle" style="left: -28px; top: 4px; transform: none;">
+              <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="13" r="1.2"/><circle cx="11" cy="13" r="1.2"/></svg>
+            </div>
+            <div class="resume-name" contenteditable="false" data-editable="true" data-field="name" spellcheck="false">Alex Chen</div>
+          </div>
+
+          <!-- Contact -->
+          <div class="resume-contact" contenteditable="false" data-editable="true" data-field="contact" spellcheck="false">
+            <span>San Francisco, CA</span>
+            <span>alex.chen@email.com</span>
+            <span>(415) 555-0132</span>
+            <span>linkedin.com/in/alexchen</span>
+          </div>
+
+          <!-- Experience Section -->
+          <div class="resume-section">
+            <div class="section-label">Experience</div>
+
+            <!-- Entry 1 -->
+            <div class="entry">
+              <div class="entry-header">
+                <div style="position: relative; flex: 1;">
+                  <div class="drag-handle">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="13" r="1.2"/><circle cx="11" cy="13" r="1.2"/></svg>
+                  </div>
+                  <div class="entry-title" contenteditable="false" data-editable="true" data-field="title" spellcheck="false">Senior Software Engineer</div>
+                </div>
+                <div class="entry-dates" contenteditable="false" data-editable="true" data-field="dates" spellcheck="false">Jan 2022 — Present</div>
+              </div>
+              <div class="entry-subtitle" contenteditable="false" data-editable="true" data-field="org" spellcheck="false">Stripe · Payments Platform</div>
+              <ul class="entry-bullets">
+                <li contenteditable="false" data-editable="true" data-field="bullet" spellcheck="false">Led migration of payment processing pipeline from monolithic architecture to microservices, reducing latency by <span class="fmt-bold">40%</span> and improving system reliability to <span class="fmt-bold">99.99%</span> uptime</li>
+                <li contenteditable="false" data-editable="true" data-field="bullet" spellcheck="false">Designed and implemented a real-time fraud detection system using <span class="fmt-italic">machine learning models</span> that processes <span class="fmt-bold">2M+ transactions daily</span> with sub-100ms response times</li>
+                <li contenteditable="false" data-editable="true" data-field="bullet" spellcheck="false">Mentored a team of 5 junior engineers, establishing code review practices and technical documentation standards across the organization</li>
+              </ul>
+            </div>
+
+            <!-- Entry 2 -->
+            <div class="entry">
+              <div class="entry-header">
+                <div style="position: relative; flex: 1;">
+                  <div class="drag-handle">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="13" r="1.2"/><circle cx="11" cy="13" r="1.2"/></svg>
+                  </div>
+                  <div class="entry-title" contenteditable="false" data-editable="true" data-field="title" spellcheck="false">Software Engineer</div>
+                </div>
+                <div class="entry-dates" contenteditable="false" data-editable="true" data-field="dates" spellcheck="false">Jun 2019 — Dec 2021</div>
+              </div>
+              <div class="entry-subtitle" contenteditable="false" data-editable="true" data-field="org" spellcheck="false">Figma · Collaborative Design Tools</div>
+              <ul class="entry-bullets">
+                <li contenteditable="false" data-editable="true" data-field="bullet" spellcheck="false">Built the collaborative editing engine powering real-time design collaboration for <span class="fmt-bold">4M+ users</span>, implementing conflict-free replicated data types (CRDTs)</li>
+                <li contenteditable="false" data-editable="true" data-field="bullet" spellcheck="false">Optimized canvas rendering performance by implementing viewport-based culling and WebGL acceleration, achieving <span class="fmt-underline">60fps interaction</span> on complex designs</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Skills Section -->
+          <div class="resume-section">
+            <div class="section-label">Skills</div>
+            <div class="skills-grid">
+              <div class="skill-row" contenteditable="false" data-editable="true" data-field="skill" spellcheck="false"><span class="label">Languages:</span> TypeScript, Python, Go, Rust</div>
+              <div class="skill-row" contenteditable="false" data-editable="true" data-field="skill" spellcheck="false"><span class="label">Frameworks:</span> React, Next.js, Node.js, FastAPI</div>
+              <div class="skill-row" contenteditable="false" data-editable="true" data-field="skill" spellcheck="false"><span class="label">Infrastructure:</span> AWS, Kubernetes, Terraform, PostgreSQL</div>
+            </div>
+          </div>
+
+          <!-- Education Section -->
+          <div class="resume-section">
+            <div class="section-label">Education</div>
+            <div class="entry">
+              <div class="entry-header">
+                <div style="position: relative; flex: 1;">
+                  <div class="drag-handle">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="3" r="1.2"/><circle cx="11" cy="3" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="13" r="1.2"/><circle cx="11" cy="13" r="1.2"/></svg>
+                  </div>
+                  <div class="entry-title" contenteditable="false" data-editable="true" data-field="title" spellcheck="false">Bachelor of Science in Computer Science</div>
+                </div>
+                <div class="entry-dates" contenteditable="false" data-editable="true" data-field="dates" spellcheck="false">2015 — 2019</div>
+              </div>
+              <div class="entry-subtitle" contenteditable="false" data-editable="true" data-field="org" spellcheck="false">University of California, Berkeley</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formatting Toolbar -->
+  <div class="format-toolbar" id="formatToolbar">
+    <button class="fmt-btn" data-action="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+    <button class="fmt-btn" data-action="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+    <button class="fmt-btn" data-action="underline" title="Underline (Ctrl+U)"><span style="text-decoration: underline;">U</span></button>
+    <div class="fmt-divider"></div>
+    <button class="fmt-btn" data-action="link" title="Link (Ctrl+K)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6.5 9.5a3 3 0 004.24 0l2-2a3 3 0 00-4.24-4.24l-1.5 1.5"/><path d="M9.5 6.5a3 3 0 00-4.24 0l-2 2a3 3 0 004.24 4.24l1.5-1.5"/></svg>
+    </button>
+  </div>
+
+  <!-- Link Input -->
+  <div class="link-input-bar" id="linkInputBar">
+    <input type="url" id="linkUrlInput" placeholder="Paste or type a URL..." />
+    <button class="link-apply-btn" id="linkApplyBtn">Apply</button>
+    <button class="link-cancel-btn" id="linkCancelBtn">Cancel</button>
+  </div>
+
+  <!-- State Panel -->
+  <div class="state-panel">
+    <h4>Current State</h4>
+    <div class="state-row">
+      <div class="state-dot idle" id="dotIdle"></div>
+      <div class="state-label" id="labelIdle"><strong>Normal</strong> — text is idle</div>
+    </div>
+    <div class="state-row">
+      <div class="state-dot selected" id="dotSelected"></div>
+      <div class="state-label" id="labelSelected">Selected — outline shown</div>
+    </div>
+    <div class="state-row">
+      <div class="state-dot editing" id="dotEditing"></div>
+      <div class="state-label" id="labelEditing">Editing — caret active</div>
+    </div>
+    <div class="state-keys">
+      <kbd>Click</kbd> place cursor &nbsp; <kbd>Double-click</kbd> select word<br/>
+      <kbd>Esc</kbd> exit editing &nbsp; <kbd>Ctrl+B</kbd> bold<br/>
+      <kbd>Ctrl+I</kbd> italic &nbsp; <kbd>Ctrl+U</kbd> underline<br/>
+      <kbd>Ctrl+K</kbd> link &nbsp; <kbd>Ctrl+Z</kbd> undo
+    </div>
+  </div>
+
+  <script>
+    const editables = document.querySelectorAll('[data-editable]');
+    const toolbar = document.getElementById('formatToolbar');
+    const linkBar = document.getElementById('linkInputBar');
+    const linkInput = document.getElementById('linkUrlInput');
+    let activeEl = null;
+    let undoStack = [];
+    let redoStack = [];
+
+    // ── State management ──
+    function setState(el, state) {
+      editables.forEach(e => {
+        e.classList.remove('is-selected', 'is-editing');
+        e.removeAttribute('contenteditable');
+      });
+
+      // Update state panel
+      const dotIdle = document.getElementById('dotIdle');
+      const dotSelected = document.getElementById('dotSelected');
+      const dotEditing = document.getElementById('dotEditing');
+      const labelIdle = document.getElementById('labelIdle');
+      const labelSelected = document.getElementById('labelSelected');
+      const labelEditing = document.getElementById('labelEditing');
+
+      dotIdle.style.background = '#666';
+      dotSelected.style.background = '#666';
+      dotEditing.style.background = '#666';
+      labelIdle.innerHTML = 'Normal — text is idle';
+      labelSelected.innerHTML = 'Selected — outline shown';
+      labelEditing.innerHTML = 'Editing — caret active';
+
+      if (state === 'idle') {
+        dotIdle.style.background = 'var(--brass)';
+        labelIdle.innerHTML = '<strong>Normal</strong> — text is idle';
+        activeEl = null;
+        hideToolbar();
+        hideLinkBar();
+      } else if (state === 'selected' && el) {
+        el.classList.add('is-selected');
+        dotSelected.style.background = 'var(--brass)';
+        labelSelected.innerHTML = '<strong>Selected</strong> — outline shown';
+        activeEl = el;
+      } else if (state === 'editing' && el) {
+        el.classList.add('is-editing');
+        el.setAttribute('contenteditable', 'true');
+        el.focus();
+        dotEditing.style.background = 'var(--brass)';
+        labelEditing.innerHTML = '<strong>Editing</strong> — caret active';
+        activeEl = el;
+      }
+    }
+
+    // ── Toolbar positioning ──
+    function showToolbar() {
+      if (!activeEl) return;
+      const rect = activeEl.getBoundingClientRect();
+      toolbar.style.left = rect.left + rect.width / 2 - 100 + 'px';
+      toolbar.style.top = rect.top - 44 + 'px';
+      toolbar.classList.add('visible');
+    }
+
+    function hideToolbar() {
+      toolbar.classList.remove('visible');
+    }
+
+    function showLinkBar() {
+      if (!activeEl) return;
+      const rect = activeEl.getBoundingClientRect();
+      linkBar.style.left = rect.left + rect.width / 2 - 170 + 'px';
+      linkBar.style.top = rect.top - 48 + 'px';
+      linkBar.classList.add('visible');
+      linkInput.value = '';
+      setTimeout(() => linkInput.focus(), 50);
+    }
+
+    function hideLinkBar() {
+      linkBar.classList.remove('visible');
+    }
+
+    // ── Click handling ──
+    editables.forEach(el => {
+      el.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+      });
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        if (activeEl === el && el.classList.contains('is-editing')) {
+          // Already editing — let the click place the caret naturally
+          return;
+        }
+
+        if (activeEl === el && el.classList.contains('is-selected')) {
+          // Second click: enter editing
+          setState(el, 'editing');
+          showToolbar();
+          // Place caret at click position
+          placeCaretAtPoint(e.clientX, e.clientY);
+          return;
+        }
+
+        // First click: select
+        setState(el, 'selected');
+        showToolbar();
+      });
+
+      el.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        setState(el, 'editing');
+        showToolbar();
+        // Select word at click position
+        selectWordAtPoint(e.clientX, e.clientY);
+      });
+
+      el.addEventListener('input', () => {
+        // Could trigger save queue here
+      });
+
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setState(el, 'idle');
+        }
+
+        // Ctrl/Cmd + Z: Undo
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          document.execCommand('undo');
+        }
+
+        // Ctrl/Cmd + Shift + Z: Redo
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) {
+          e.preventDefault();
+          document.execCommand('redo');
+        }
+
+        // Ctrl/Cmd + A: Select all within field
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+          e.preventDefault();
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        // Ctrl/Cmd + B: Bold
+        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+          e.preventDefault();
+          toggleFormat('bold');
+        }
+
+        // Ctrl/Cmd + I: Italic
+        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+          e.preventDefault();
+          toggleFormat('italic');
+        }
+
+        // Ctrl/Cmd + U: Underline
+        if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+          e.preventDefault();
+          toggleFormat('underline');
+        }
+
+        // Ctrl/Cmd + K: Link
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          showLinkBar();
+        }
+
+        // Enter (without shift): save and exit for single-line fields
+        if (e.key === 'Enter' && !e.shiftKey) {
+          const field = el.dataset.field;
+          if (field !== 'bullet') {
+            e.preventDefault();
+            setState(el, 'idle');
+          }
+        }
+      });
+    });
+
+    // ── Click outside to save ──
+    document.addEventListener('click', (e) => {
+      if (activeEl && !activeEl.contains(e.target) && !toolbar.contains(e.target) && !linkBar.contains(e.target)) {
+        setState(activeEl, 'idle');
+      }
+    });
+
+    // ── Format buttons ──
+    toolbar.querySelectorAll('.fmt-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const action = btn.dataset.action;
+        if (action === 'link') {
+          showLinkBar();
+        } else {
+          toggleFormat(action);
+        }
+      });
+    });
+
+    function toggleFormat(type) {
+      if (!activeEl || !activeEl.classList.contains('is-editing')) return;
+
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+
+      // Check if format already exists
+      const parentTag = type === 'bold' ? 'B' : type === 'italic' ? 'I' : 'U';
+      let parent = sel.anchorNode.parentElement;
+      let hasFormat = false;
+      while (parent && parent !== activeEl) {
+        if (parent.tagName === parentTag) {
+          hasFormat = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+
+      if (hasFormat) {
+        // Remove format
+        document.execCommand('removeFormat');
+      } else {
+        // Apply format
+        if (type === 'bold') document.execCommand('bold');
+        else if (type === 'italic') document.execCommand('italic');
+        else if (type === 'underline') document.execCommand('underline');
+      }
+
+      updateToolbarState();
+    }
+
+    function updateToolbarState() {
+      toolbar.querySelectorAll('.fmt-btn').forEach(btn => {
+        const action = btn.dataset.action;
+        if (action === 'link') return;
+        const isActive = document.queryCommandState(action);
+        btn.classList.toggle('active', isActive);
+      });
+    }
+
+    // ── Caret placement ──
+    function placeCaretAtPoint(x, y) {
+      if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(x, y);
+        if (pos) {
+          const range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+          range.collapse(true);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      } else if (document.caretRangeFromPoint) {
+        const range = document.caretRangeFromPoint(x, y);
+        if (range) {
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+    }
+
+    // ── Word selection ──
+    function selectWordAtPoint(x, y) {
+      placeCaretAtPoint(x, y);
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        document.execCommand('selectAll');
+        // More precise: select word
+        const range = sel.getRangeAt(0);
+        range.expand('word');
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+
+    // ── Link application ──
+    document.getElementById('linkApplyBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = linkInput.value.trim();
+      if (url && activeEl) {
+        const sel = window.getSelection();
+        if (sel.rangeCount) {
+          const range = sel.getRangeAt(0);
+          if (!range.collapsed) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'fmt-link';
+            range.surroundContents(a);
+          }
+        }
+      }
+      hideLinkBar();
+      if (activeEl) activeEl.focus();
+    });
+
+    document.getElementById('linkCancelBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideLinkBar();
+      if (activeEl) activeEl.focus();
+    });
+
+    linkInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('linkApplyBtn').click();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        hideLinkBar();
+        if (activeEl) activeEl.focus();
+      }
+    });
+
+    linkInput.addEventListener('click', (e) => e.stopPropagation());
+
+    // ── Selection change for toolbar state ──
+    document.addEventListener('selectionchange', () => {
+      if (activeEl && activeEl.classList.contains('is-editing')) {
+        updateToolbarState();
+      }
+    });
+
+    // ── Initialize ──
+    setState(null, 'idle');
+  </script>
+</body>
+</html>

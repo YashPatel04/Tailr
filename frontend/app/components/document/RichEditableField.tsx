@@ -1,7 +1,9 @@
 "use client"
 import { useState, useRef, useCallback, useEffect } from "react"
-import { Bold, Italic, Underline, Code, Link } from "lucide-react"
 import type { Span } from "@/types"
+import { useSessionStore } from "@/stores/sessionStore"
+import { getSelectionOffsets, placeCaretAtPoint, placeCaretAtEnd } from "@/lib/textSelection"
+import { toggleInlineFormat, setLinkUrl } from "@/lib/inlineFormat"
 import { registerFormatTarget, unregisterFormatTarget } from "@/lib/formatTarget"
 
 let nextRteId = 0
@@ -12,101 +14,206 @@ interface RichEditableFieldProps {
   onSave: (newText: string, newSpans: Span[]) => void
   className?: string
   tag?: "span" | "div" | "h2" | "h1"
+  placeholder?: string
+  isBullet?: boolean
 }
 
-export function RichEditableField({ value, spans = [], onSave, className = "", tag: Tag = "span" }: RichEditableFieldProps) {
+export function RichEditableField({
+  value,
+  spans = [],
+  onSave,
+  className = "",
+  tag: Tag = "span",
+  placeholder,
+  isBullet = false,
+}: RichEditableFieldProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
   const [draftSpans, setDraftSpans] = useState<Span[]>(spans)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useRef<HTMLElement>(null)
   const rteId = useRef(`rte-${nextRteId++}`)
+  const clickPosRef = useRef<{ x: number; y: number } | null>(null)
 
-  const startEdit = useCallback(() => {
-    setDraft(value)
-    setDraftSpans(structuredClone(spans))
-    setEditing(true)
-    setTimeout(() => textareaRef.current?.focus(), 0)
-  }, [value, spans])
+  const viewMode = useSessionStore((s) => s.viewMode)
+  const setEditingFieldId = useSessionStore((s) => s.setEditingFieldId)
+
+  const enterEditing = useCallback(
+    (x?: number, y?: number) => {
+      setEditing(true)
+      setEditingFieldId(rteId.current)
+      requestAnimationFrame(() => {
+        containerRef.current?.focus()
+        registerFormatTarget(rteId.current, { toggleFormat, addLink })
+        if (x !== undefined && y !== undefined) {
+          const placed = placeCaretAtPoint(containerRef.current!, x, y)
+          if (!placed) {
+            placeCaretAtEnd(containerRef.current!)
+          }
+        } else {
+          placeCaretAtEnd(containerRef.current!)
+        }
+      })
+    },
+    [setEditingFieldId]
+  )
 
   const commit = useCallback(() => {
+    const newValue = containerRef.current?.textContent ?? draft
     setEditing(false)
-    if (draft.trim() !== value || JSON.stringify(draftSpans) !== JSON.stringify(spans)) {
-      onSave(draft.trim(), draftSpans)
+    setEditingFieldId(null)
+    unregisterFormatTarget(rteId.current)
+    if (newValue !== value || JSON.stringify(draftSpans) !== JSON.stringify(spans)) {
+      onSave(newValue, draftSpans)
     }
-  }, [draft, draftSpans, value, spans, onSave])
+  }, [draft, draftSpans, value, spans, onSave, setEditingFieldId])
 
-  const toggleFormat = useCallback((format: Span["formats"][number]) => {
-    const ta = textareaRef.current
-    if (!ta) return
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    if (start === end) return
-
-    const existingIdx = draftSpans.findIndex(s => s.start === start && s.end === end)
-    if (existingIdx >= 0) {
-      const existingSpans = [...draftSpans]
-      const existingSpan = { ...existingSpans[existingIdx] }
-      if ((existingSpan.formats as string[]).includes(format)) {
-        existingSpan.formats = existingSpan.formats.filter(f => f !== format) as Span["formats"]
-        if (existingSpan.formats.length === 0) {
-          existingSpans.splice(existingIdx, 1)
-          setDraftSpans(existingSpans)
-        } else {
-          existingSpans[existingIdx] = existingSpan
-          setDraftSpans(existingSpans)
-        }
-      } else {
-        existingSpan.formats = [...existingSpan.formats, format]
-        existingSpans[existingIdx] = existingSpan
-        setDraftSpans(existingSpans)
-      }
-    } else {
-      setDraftSpans([...draftSpans, { start, end, formats: [format], link_url: null }])
-    }
-    ta.focus()
-  }, [draftSpans])
+  const toggleFormat = useCallback(
+    (format: "bold" | "italic" | "underline") => {
+      if (!editing) return
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0 || !containerRef.current?.contains(sel.anchorNode)) return
+      const offsets = getSelectionOffsets(containerRef.current)
+      if (!offsets || offsets.start === offsets.end) return
+      setDraftSpans((prev) => toggleInlineFormat(prev, offsets.start, offsets.end, format))
+    },
+    [editing]
+  )
 
   const addLink = useCallback(() => {
-    const ta = textareaRef.current
-    if (!ta) return
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    if (start === end) return
-
+    if (!editing) return
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0 || !containerRef.current?.contains(sel.anchorNode)) return
+    const offsets = getSelectionOffsets(containerRef.current)
+    if (!offsets || offsets.start === offsets.end) return
     const url = window.prompt("Enter URL (https://...):", "https://")
     if (!url) return
+    setDraftSpans((prev) => setLinkUrl(prev, offsets.start, offsets.end, url))
+    containerRef.current?.focus()
+  }, [editing])
 
-    const existingIdx = draftSpans.findIndex(s => s.start === start && s.end === end)
-    if (existingIdx >= 0) {
-      const existingSpans = [...draftSpans]
-      existingSpans[existingIdx] = { ...existingSpans[existingIdx], link_url: url }
-      setDraftSpans(existingSpans)
-    } else {
-      setDraftSpans([...draftSpans, { start, end, formats: [], link_url: url }])
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (viewMode === "diff") return
+      if (editing) return
+      clickPosRef.current = { x: e.clientX, y: e.clientY }
+    },
+    [viewMode, editing]
+  )
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (viewMode === "diff") return
+      if (editing) return
+      e.stopPropagation()
+      const pos = clickPosRef.current
+      clickPosRef.current = null
+      enterEditing(pos?.x ?? e.clientX, pos?.y ?? e.clientY)
+    },
+    [viewMode, editing, enterEditing]
+  )
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (viewMode === "diff") return
+      e.stopPropagation()
+      enterEditing(e.clientX, e.clientY)
+    },
+    [viewMode, enterEditing]
+  )
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        if (editing) {
+          containerRef.current!.textContent = value
+          setDraftSpans(structuredClone(spans))
+          commit()
+        }
+      }
+      if (e.key === "Enter" && editing && !e.shiftKey && !isBullet) {
+        e.preventDefault()
+        commit()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "a" && editing) {
+        e.preventDefault()
+        const range = document.createRange()
+        range.selectNodeContents(containerRef.current!)
+        const sel = window.getSelection()
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault()
+        toggleFormat("bold")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "i") {
+        e.preventDefault()
+        toggleFormat("italic")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "u") {
+        e.preventDefault()
+        toggleFormat("underline")
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault()
+        addLink()
+      }
+    },
+    [editing, value, spans, isBullet, commit, toggleFormat, addLink]
+  )
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      if (!editing) return
+      if (containerRef.current?.contains(e.relatedTarget as Node)) return
+      if ((e.relatedTarget as HTMLElement)?.closest("[data-inline-toolbar]")) return
+      commit()
+    },
+    [editing, commit]
+  )
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      if (!editing) return
+      e.preventDefault()
+      const text = e.clipboardData.getData("text/plain")
+      document.execCommand("insertText", false, text)
+    },
+    [editing]
+  )
+
+  useEffect(() => {
+    if (!editing) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement)?.closest("[data-inline-toolbar]")
+      ) {
+        commit()
+      }
     }
-    ta.focus()
-  }, [draftSpans])
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [editing, commit])
 
-  const handleFocus = useCallback(() => {
-    registerFormatTarget(rteId.current, { toggleFormat, addLink })
-  }, [toggleFormat, addLink])
+  useEffect(() => {
+    if (value === " " && placeholder && !editing) {
+      enterEditing()
+    }
+  }, [value, placeholder, editing, enterEditing])
 
-  const handleBlur = useCallback(() => {
-    setTimeout(() => unregisterFormatTarget(rteId.current), 200)
-    commit()
-  }, [commit])
+  const isEmpty = !value || !value.trim()
+  const isLink = spans.some((s) => s.link_url)
 
   const renderFormatted = () => {
     if (!spans.length && !value) return value
-    // Check if any span has a link_url
-    const linkSpan = spans.find(s => s.link_url)
-    if (linkSpan) {
+    if (isLink) {
       return (
-        <a href={linkSpan.link_url!} target="_blank" rel="noopener noreferrer"
-           className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-           onClick={(e) => e.stopPropagation()}>
+        <span className="text-brass hover:underline cursor-pointer">
           {value}
-        </a>
+        </span>
       )
     }
     if (!spans.length) return value
@@ -114,65 +221,55 @@ export function RichEditableField({ value, spans = [], onSave, className = "", t
       <span>
         {Array.from(value).map((char, i) => {
           const activeFormats = spans
-            .filter(s => i >= s.start && i < s.end)
-            .flatMap(s => s.formats)
+            .filter((s) => i >= s.start && i < s.end)
+            .flatMap((s) => s.formats)
           const cls: string[] = []
           if (activeFormats.includes("bold")) cls.push("font-bold")
           if (activeFormats.includes("italic")) cls.push("italic")
           if (activeFormats.includes("underline")) cls.push("underline")
-          if (activeFormats.includes("code")) cls.push("font-mono text-sm bg-slate/10 px-0.5 rounded")
-          return <span key={i} className={cls.length > 0 ? cls.join(" ") : undefined}>{char}</span>
+          return (
+            <span key={i} className={cls.length > 0 ? cls.join(" ") : undefined}>
+              {char}
+            </span>
+          )
         })}
       </span>
     )
   }
 
-  if (editing) {
-    const hasSelectedText = (() => {
-      const ta = textareaRef.current
-      return ta ? ta.selectionStart !== ta.selectionEnd : false
-    })()
+  const stateClass = editing
+    ? "caret-brass"
+    : "hover:bg-brass/5"
 
-    return (
-      <div className="relative">
-        <div className="flex gap-1 mb-1 bg-white dark:bg-[#2d2d2d] border border-blue-400 rounded-t px-1 py-0.5">
-          <button onClick={() => toggleFormat("bold")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Bold (Ctrl+B)"><Bold size={14} /></button>
-          <button onClick={() => toggleFormat("italic")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Italic (Ctrl+I)"><Italic size={14} /></button>
-          <button onClick={() => toggleFormat("underline")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Underline (Ctrl+U)"><Underline size={14} /></button>
-          <button onClick={() => toggleFormat("code")} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Code"><Code size={14} /></button>
-          <button onClick={addLink} className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded" title="Add link (select text first)"><Link size={14} /></button>
-          <span className="text-[10px] text-slate dark:text-[#8e8e8e] ml-auto self-center hidden sm:inline">Ctrl+K</span>
-        </div>
-        <textarea
-          ref={textareaRef}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          data-rte-id={rteId.current}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") { setDraft(value); setDraftSpans(structuredClone(spans)); setEditing(false) }
-            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commit() }
-            if ((e.ctrlKey || e.metaKey) && e.key === "b") { e.preventDefault(); toggleFormat("bold") }
-            if ((e.ctrlKey || e.metaKey) && e.key === "i") { e.preventDefault(); toggleFormat("italic") }
-            if ((e.ctrlKey || e.metaKey) && e.key === "u") { e.preventDefault(); toggleFormat("underline") }
-            if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); addLink() }
-          }}
-          className={`border border-blue-400 border-t-0 rounded-b px-1 py-0.5 bg-white dark:bg-[#2d2d2d] text-inherit outline-none w-full min-h-[2em] resize-y ${className}`}
-          autoFocus
-          rows={2}
-        />
-      </div>
-    )
-  }
+  const draggable = !editing
 
   return (
     <Tag
-      onClick={startEdit}
-      className={`cursor-text hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded px-0.5 -mx-0.5 transition-colors ${className}`}
-      title="Click to edit (select text for bold/italic/link)"
+      ref={containerRef as any}
+      contentEditable={editing}
+      suppressContentEditableWarning
+      data-rte-id={rteId.current}
+      data-field-id={rteId.current}
+      className={`cursor-text rounded px-0.5 -mx-0.5 transition-colors outline-none ${stateClass} ${className}`}
+      onMouseDown={handleMouseDown}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      onInput={() => setDraft(containerRef.current?.textContent ?? "")}
+      onPaste={handlePaste}
+      data-drag-disabled={!draggable}
     >
-      {renderFormatted()}
+      {isEmpty && placeholder && !editing ? (
+        <span className="text-brass italic cursor-pointer hover:bg-brass/10 rounded px-1 -mx-1 transition-colors">
+          + {placeholder}
+        </span>
+      ) : editing ? (
+        draft
+      ) : (
+        renderFormatted()
+      )}
     </Tag>
   )
 }

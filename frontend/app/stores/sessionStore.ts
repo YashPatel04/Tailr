@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { SessionDocument } from "@/types"
+import type { SaveStatus } from "@/lib/editQueue"
 
 export interface PendingProposal {
   message: string
@@ -19,6 +20,8 @@ interface SessionState {
   pendingProposal: PendingProposal | null
   progressPhase: string
   progressMessage: string
+  saveStatus: SaveStatus
+  editingFieldId: string | null
   setActiveSession: (id: string | null) => void
   setDocType: (type: "resume" | "cover_letter") => void
   setViewMode: (mode: "diff" | "final") => void
@@ -29,6 +32,8 @@ interface SessionState {
   setPendingProposal: (proposal: PendingProposal | null) => void
   clearProposal: () => void
   setProgress: (phase: string, message: string) => void
+  setSaveStatus: (status: SaveStatus) => void
+  setEditingFieldId: (id: string | null) => void
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -42,14 +47,17 @@ export const useSessionStore = create<SessionState>((set) => ({
   pendingProposal: null,
   progressPhase: "",
   progressMessage: "",
-  setActiveSession: (id) => set({
-    activeSessionId: id,
-    pendingProposal: null,
-    latestDiff: null,
-    viewMode: "final",
-    progressPhase: "",
-    progressMessage: "",
-  }),
+  saveStatus: "idle",
+  editingFieldId: null,
+  setActiveSession: (id) =>
+    set({
+      activeSessionId: id,
+      pendingProposal: null,
+      latestDiff: null,
+      viewMode: "final",
+      progressPhase: "",
+      progressMessage: "",
+    }),
   setDocType: (type) => set({ activeDocType: type }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setSetupOpen: (open) => set({ setupOpen: open }),
@@ -59,4 +67,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   setPendingProposal: (proposal) => set({ pendingProposal: proposal }),
   clearProposal: () => set({ pendingProposal: null }),
   setProgress: (phase, message) => set({ progressPhase: phase, progressMessage: message }),
+  setSaveStatus: (status) => set({ saveStatus: status }),
+  setEditingFieldId: (id) => set({ editingFieldId: id }),
 }))
