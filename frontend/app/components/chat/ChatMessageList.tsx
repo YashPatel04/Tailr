@@ -5,7 +5,7 @@ import { useSessionMessages } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
 import { ChatMessage } from "./ChatMessage"
 import { ProgressMessage } from "./ProgressMessage"
-import { ProposalMessage } from "./ProposalMessage"
+import { EnhancedProposal } from "./EnhancedProposal"
 
 export function ChatMessageList() {
   const { activeSessionId, isStreaming, progressPhase, progressMessage, pendingProposal } = useSessionStore()
@@ -25,7 +25,7 @@ export function ChatMessageList() {
         <ProgressMessage phase={progressPhase} text={progressMessage} />
       )}
       {!isStreaming && pendingProposal && (
-        <ProposalMessage />
+        <EnhancedProposal />
       )}
       <div ref={bottomRef} />
     </div>

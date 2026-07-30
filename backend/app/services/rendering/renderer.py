@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Sequence
 from typing import Any
 
@@ -16,6 +17,26 @@ FORMAT_OPEN = {
 }
 FORMAT_CLOSE = "}"
 FMT_ORDER = ["bold", "italic", "underline", "code"]
+
+TEX_ESCAPE_PATTERN = re.compile(r"([\\{}&#$^_~%])")
+TEX_ESCAPE_REPL: dict[str, str] = {
+    "\\": "\\textbackslash{}",
+    "{": "\\{",
+    "}": "\\}",
+    "$": "\\$",
+    "&": "\\&",
+    "#": "\\#",
+    "^": "\\^{}",
+    "_": "\\_",
+    "~": "\\textasciitilde{}",
+    "%": "\\%",
+}
+
+
+def tex_escape(text: str) -> str:
+    if not text:
+        return text
+    return TEX_ESCAPE_PATTERN.sub(lambda m: TEX_ESCAPE_REPL[m.group()], text)
 
 
 def _normalize_span(span: Any) -> dict[str, Any]:
@@ -34,8 +55,10 @@ def _normalize_span(span: Any) -> dict[str, Any]:
 
 
 def span_format_filter(text: str, spans: Sequence[Any]) -> str:
-    if not spans or not text:
+    if not text:
         return text
+    if not spans:
+        return tex_escape(text)
 
     spans_list = [_normalize_span(s) for s in spans]
     n = len(text)
@@ -69,10 +92,12 @@ def span_format_filter(text: str, spans: Sequence[Any]) -> str:
     result_parts: list[str] = []
     for start, end, fmts, link in segments:
         seg_text = text[start:end]
-        wrapped = seg_text
+        escaped = tex_escape(seg_text)
+        wrapped = escaped
 
         if link:
-            wrapped = f"\\href{{{link}}}{{{wrapped}}}"
+            escaped_link = tex_escape(link)
+            wrapped = f"\\href{{{escaped_link}}}{{{wrapped}}}"
 
         for fmt in FMT_ORDER:
             if fmt in fmts:
@@ -91,6 +116,7 @@ class ResumeRenderer:
             autoescape=False,
         )
         self.env.filters["span_format"] = span_format_filter
+        self.env.filters["tex_escape"] = tex_escape
 
     def render_tex(self, content: ResumeContent) -> str:
         template = self.env.get_template("resume.tex.j2")

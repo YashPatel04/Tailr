@@ -174,13 +174,14 @@ class TestEntry:
             organization="Acme Corp",
             dates="2020–2024",
             location="Remote",
-            url="https://acme.com",
+            urls={"https://acme.com": "Acme Corp"},
             bullets=[Bullet(text="Built things")],
             metadata={"pinned": True},
         )
         assert e.role == "Backend Lead"
         assert len(e.bullets) == 1
         assert e.metadata["pinned"] is True
+        assert e.urls["https://acme.com"] == "Acme Corp"
 
     def test_entry_missing_title(self):
         with pytest.raises(ValidationError):

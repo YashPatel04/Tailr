@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
@@ -13,6 +14,8 @@ from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import ChatMessage, LLMProvider, MasterResume, Session, SessionDocument
 from app.services.research.extractor import fetch_jd_text
+from app.services.llm.factory import get_adapter
+from app.services.llm.prompts import build_cover_letter_prompt
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 master_router = APIRouter(prefix="/api/master-resume", tags=["master-resume"])
@@ -28,6 +31,93 @@ class SessionCreate(BaseModel):
     tailoring_mode: str = "polish"
     llm_provider_id: str | None = None
     notes: str | None = None
+
+
+class AnalyzeRequest(BaseModel):
+    job_description: str | None = None
+    job_description_url: str | None = None
+
+
+EXTRACT_FIELDS_PROMPT = """\
+Extract the company name and job title from this job description. \
+Return ONLY a JSON object with keys "company_name" and "role_title". \
+If you cannot determine either field, set its value to null.
+
+Example response: {{"company_name": "Google", "role_title": "Product Manager"}}
+
+Job Description:
+{jd_text}"""
+
+
+@router.post("/analyze")
+async def analyze_jd(body: AnalyzeRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+    if not body.job_description and not body.job_description_url:
+        raise HTTPException(status_code=400, detail="Provide job_description or job_description_url")
+
+    jd_text = body.job_description or ""
+    source_url = body.job_description_url
+
+    if body.job_description_url:
+        try:
+            jd_text = await fetch_jd_text(body.job_description_url)
+        except Exception:
+            return {
+                "extracted": False,
+                "question": "I couldn't access that URL. Could you paste the job description text instead?",
+            }
+
+    if not jd_text.strip():
+        return {
+            "extracted": False,
+            "question": "The job description appears to be empty. Could you paste the text?",
+        }
+
+    p_result = await db.execute(
+        select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+    )
+    provider = p_result.scalar_one_or_none()
+    if not provider:
+        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        provider = p_result.scalars().first()
+    if not provider:
+        raise HTTPException(status_code=400, detail="Configure an LLM provider first")
+
+    adapter = get_adapter(provider)
+    messages = [
+        {"role": "system", "content": "You are a job description parser. Return only valid JSON."},
+        {"role": "user", "content": EXTRACT_FIELDS_PROMPT.format(jd_text=jd_text[:5000])},
+    ]
+    response = await adapter.chat(messages, stream=False)
+    raw = response.content if hasattr(response, "content") else ""
+
+    import json as _json
+    cleaned = raw.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+
+    try:
+        data = _json.loads(cleaned)
+        company = data.get("company_name")
+        role = data.get("role_title")
+    except Exception:
+        return {
+            "extracted": False,
+            "question": "I had trouble reading the job description. Could you tell me the company name and role title?",
+        }
+
+    if not company and not role:
+        return {
+            "extracted": False,
+            "question": "I couldn't find the company name or role title in this posting. Could you provide them?",
+        }
+
+    return {
+        "extracted": True,
+        "company_name": company or "",
+        "role_title": role or "",
+        "source_url": source_url,
+        "jd_text": jd_text[:500],
+    }
 
 
 class SessionUpdate(BaseModel):
@@ -129,71 +219,12 @@ async def create_session(body: SessionCreate, current_user: CurrentUser, db: Asy
     db.add(session)
     await db.flush()
 
-    doc_model_dict = {"type": "root", "id": str(master.id), "children": []}
-
-    content_dict = None
-    try:
-        from app.services.importers.tex_llm_importer import import_from_tex
-        from app.services.llm.factory import get_adapter
-        from app.models.models import LLMProvider as LLMProv
-        import_result = await db.execute(
-            select(LLMProv).where(LLMProv.user_id == current_user.id, LLMProv.is_default == True)
-        )
-        llm_prov = import_result.scalar_one_or_none()
-        if not llm_prov:
-            import_result = await db.execute(
-                select(LLMProv).where(LLMProv.user_id == current_user.id)
-            )
-            llm_prov = import_result.scalars().first()
-        if llm_prov:
-            adapter = get_adapter(llm_prov)
-            resume_content = await import_from_tex(master.tex_source, adapter)
-            content_dict = resume_content.model_dump(mode='json')
-    except Exception:
-        pass
-
-    if not content_dict:
-        # Fallback: basic regex extraction so canvas shows something
-        import re
-        sections = []
-        tex = master.tex_source or ""
-        # Extract section labels and their content with a simple regex
-        sec_pattern = re.compile(
-            r'\\section\*\{([^}]*)\}\s*(.*?)(?=\\section\*\{|\\end\{document\})',
-            re.DOTALL,
-        )
-        for m in sec_pattern.finditer(tex):
-            label = m.group(1).strip()
-            body = m.group(2).strip()
-            sections.append({
-                "id": str(uuid4()),
-                "label": label,
-                "entries": [{
-                    "id": str(uuid4()),
-                    "title": body[:200],
-                    "bullets": [],
-                }],
-                "skill_rows": [],
-                "metadata": {},
-            })
-        name = "Resume"
-        name_match = re.search(r'\{\\LARGE\s*\\textbf\{([^}]*)\}', tex)
-        if name_match:
-            name = name_match.group(1).strip()
-        content_dict = {
-            "basics": {"name": name},
-            "sections": sections,
-            "metadata": {"fallback_extraction": True},
-        }
-
     initial_doc = SessionDocument(
         id=uuid4(),
         session_id=session.id,
         doc_type="resume",
         version=0,
-        document_model_json=doc_model_dict,
-        content_json=content_dict,
-        tex_source=master.tex_source,
+        content_json=master.content_json,
         parent_doc_id=None,
     )
     db.add(initial_doc)
@@ -260,6 +291,14 @@ async def get_session(session_id: str, current_user: CurrentUser, db: AsyncSessi
     )
     latest_doc = doc_result.scalar_one_or_none()
 
+    cover_result = await db.execute(
+        select(SessionDocument)
+        .where(SessionDocument.session_id == session.id, SessionDocument.doc_type == "cover_letter")
+        .order_by(SessionDocument.version.desc())
+        .limit(1)
+    )
+    cover_doc = cover_result.scalar_one_or_none()
+
     return {
         **_session_to_dict(session),
         "latest_document": {
@@ -267,10 +306,14 @@ async def get_session(session_id: str, current_user: CurrentUser, db: AsyncSessi
             "version": latest_doc.version if latest_doc else 0,
             "document_type": latest_doc.doc_type if latest_doc else "resume",
             "content": latest_doc.content_json if latest_doc and latest_doc.content_json else ({"basics": {"name": "Unknown"}, "sections": [], "metadata": {}} if latest_doc else None),
-            "document_model_json": latest_doc.document_model_json if latest_doc else None,
-            "tex_source": latest_doc.tex_source if latest_doc else None,
             "parent_doc_id": str(latest_doc.parent_doc_id) if latest_doc and latest_doc.parent_doc_id else None,
         } if latest_doc else None,
+        "cover_letter_document": {
+            "id": str(cover_doc.id) if cover_doc else None,
+            "version": cover_doc.version if cover_doc else 0,
+            "content": cover_doc.content_json if cover_doc and cover_doc.content_json else None,
+        } if cover_doc else None,
+        "has_cover_letter": cover_doc is not None,
     }
 
 
@@ -414,38 +457,38 @@ async def upload_master_resume(
     )
     master = result.scalar_one_or_none()
 
+    from app.services.llm.factory import get_adapter
+    from app.services.importers.tex_llm_importer import import_from_tex
+
+    p_result = await db.execute(
+        select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+    )
+    provider = p_result.scalar_one_or_none()
+    if not provider:
+        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        provider = p_result.scalars().first()
+
+    if not provider:
+        raise HTTPException(status_code=400, detail="Configure an LLM provider to import resume")
+
+    try:
+        adapter = get_adapter(provider)
+        resume_content = await import_from_tex(tex_source, adapter)
+        content_json = resume_content.model_dump(mode='json')
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Failed to parse resume: {e}")
+
     if master:
-        master.tex_source = tex_source
+        master.content_json = content_json
     else:
         master = MasterResume(
             id=uuid4(),
             user_id=current_user.id,
             filename="resume.tex",
             original_format="tex",
-            tex_source=tex_source,
+            content_json=content_json,
         )
         db.add(master)
-
-    content_json = None
-    try:
-        from app.services.llm.factory import get_adapter
-        from app.services.importers.tex_llm_importer import import_from_tex
-
-        p_result = await db.execute(
-            select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
-        )
-        provider = p_result.scalar_one_or_none()
-        if not provider:
-            p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
-            provider = p_result.scalars().first()
-
-        if provider:
-            adapter = get_adapter(provider)
-            resume_content = await import_from_tex(tex_source, adapter)
-            content_json = resume_content.model_dump(mode='json')
-            master.content_json = content_json
-    except Exception as e:
-        logging.warning(f"LLM import failed for master resume: {e}")
 
     await db.commit()
     await db.refresh(master)
@@ -453,7 +496,7 @@ async def upload_master_resume(
     return {
         "id": str(master.id),
         "content_json": content_json,
-        "import_status": "imported" if content_json else "raw_only",
+        "import_status": "imported",
     }
 
 
@@ -469,7 +512,6 @@ async def import_master_resume_sse(
         try:
             from app.services.llm.factory import get_adapter
             from app.services.importers.tex_llm_importer import import_from_tex
-            from app.services.rendering.renderer import ResumeRenderer
 
             p_result = await db.execute(
                 select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
@@ -489,15 +531,8 @@ async def import_master_resume_sse(
 
             content = await import_from_tex(tex_source, adapter)
 
-            yield await _emit("validating", {"message": "Validating extracted content..."})
-
-            renderer = ResumeRenderer()
-            generated_tex = renderer.render_tex(content)
-
             yield await _emit("import_done", {
                 "content": content.model_dump(mode='json'),
-                "original_tex": tex_source,
-                "generated_tex": generated_tex,
             })
 
         except Exception as e:
@@ -519,9 +554,7 @@ async def get_master_resume(current_user: CurrentUser, db: AsyncSession = Depend
         "id": str(master.id),
         "filename": master.filename,
         "original_format": master.original_format,
-        "tex_source": master.tex_source,
         "content_json": master.content_json,
-        "vocabulary_map_json": master.vocabulary_map_json,
         "page_count": master.page_count,
         "created_at": str(master.created_at),
     }
@@ -547,3 +580,76 @@ async def delete_master_resume(current_user: CurrentUser, db: AsyncSession = Dep
     await db.delete(master)
     await db.commit()
     return {"detail": "ok"}
+
+
+class CoverLetterResponse(BaseModel):
+    cover_letter: str
+
+
+@router.post("/{session_id}/generate-cover-letter")
+async def generate_cover_letter(
+    session_id: str,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
+    )
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    master_result = await db.execute(
+        select(MasterResume).where(MasterResume.user_id == current_user.id)
+    )
+    master = master_result.scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=400, detail="Upload a master resume first")
+
+    provider_id = session.llm_provider_id
+    if not provider_id:
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+        )
+        default_provider = p_result.scalar_one_or_none()
+        if not default_provider:
+            p_result = await db.execute(
+                select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+            )
+            default_provider = p_result.scalars().first()
+        if not default_provider:
+            raise HTTPException(status_code=400, detail="Configure an LLM provider first")
+        provider_id = default_provider.id
+
+    p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
+    provider = p_result.scalar_one_or_none()
+    if not provider:
+        raise HTTPException(status_code=400, detail="LLM provider not found")
+
+    job_desc = session.job_description or ""
+    company = session.company_name or ""
+    role = session.role_title or ""
+
+    from app.models.resume_schema import ResumeContent
+    from app.services.rendering.renderer import ResumeRenderer
+    content = ResumeContent.model_validate(master.content_json)
+    renderer = ResumeRenderer()
+    master_tex = renderer.render_tex(content)
+
+    messages = build_cover_letter_prompt(master_tex, job_desc, company, role)
+    adapter = get_adapter(provider)
+    response = await adapter.chat(messages, stream=False)
+    raw_content = response.content if hasattr(response, "content") else ""
+
+    cover_doc = SessionDocument(
+        id=uuid4(),
+        session_id=session.id,
+        doc_type="cover_letter",
+        version=1,
+        content_json={"text": raw_content, "type": "cover_letter"},
+        is_final=False,
+    )
+    db.add(cover_doc)
+    await db.commit()
+
+    return CoverLetterResponse(cover_letter=raw_content)

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Tailor — Tailor your resume to every job</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../design-systems/resume-tailor/tokens/landing.css">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--landing-font);
+    background: var(--landing-bg);
+    color: var(--landing-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── NAV ─── */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 56px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  .nav.scrolled { border-bottom-color: var(--landing-border); }
+  .nav-left { display: flex; align-items: center; gap: 2rem; }
+  .nav-logo {
+    font-size: 1rem; font-weight: 600; letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .nav-logo-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--landing-accent);
+  }
+  .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+  .nav-links a {
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--landing-ink); }
+  .nav-right { display: flex; align-items: center; gap: 1rem; }
+  .nav-signin {
+    font-size: var(--landing-text-xs); font-weight: 500; color: var(--landing-ink);
+    padding: 0.5rem 1rem; border-radius: var(--landing-radius-md);
+    transition: background 0.15s;
+  }
+  .nav-signin:hover { background: #f4f4f5; }
+  .btn {
+    font-family: var(--landing-font); font-size: var(--landing-text-xs); font-weight: 500;
+    padding: 0.5rem 1.25rem; border-radius: var(--landing-radius-md); border: none;
+    cursor: pointer; transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--landing-ink); color: #fff;
+  }
+  .btn-primary:hover { background: #222; }
+  .btn-large {
+    font-size: var(--landing-text-sm); padding: 0.75rem 1.75rem;
+    border-radius: var(--landing-radius-md);
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    padding: var(--landing-section-gap) 2rem;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .section-subtle { background: var(--landing-bg-subtle); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh; display: flex; align-items: center;
+    padding: 5rem 2rem 3rem; max-width: 1200px; margin: 0 auto;
+    gap: 4rem;
+  }
+  .hero-left { flex: 1 1 50%; }
+  .hero-left h1 {
+    font-size: var(--landing-text-hero); font-weight: 600; line-height: 1.08;
+    letter-spacing: -0.03em; margin-bottom: 1.25rem;
+    max-width: 580px;
+  }
+  .hero-sub {
+    font-size: var(--landing-text-body); color: var(--landing-slate);
+    line-height: 1.6; margin-bottom: 2.5rem; max-width: 460px;
+  }
+  .hero-flow {
+    display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  }
+  .hero-flow-step {
+    font-size: var(--landing-text-xs); font-weight: 500;
+    padding: 0.5rem 1rem; border: 1px solid var(--landing-border);
+    border-radius: var(--landing-radius-md);
+    color: var(--landing-slate); background: var(--landing-bg);
+  }
+  .hero-flow-arrow { color: var(--landing-border); font-size: 1.25rem; user-select: none; }
+
+  .hero-right { flex: 1 1 50%; position: relative; }
+  .hero-window {
+    background: var(--landing-bg); border: 1px solid var(--landing-border);
+    border-radius: var(--landing-radius-lg);
+    box-shadow: var(--landing-shadow-window); overflow: hidden;
+  }
+  .hero-window-titlebar {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1rem; border-bottom: 1px solid var(--landing-border);
+    background: #fafafa;
+  }
+  .hero-window-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
+  .hero-window-dot:nth-child(1) { background: #ff5f57; }
+  .hero-window-dot:nth-child(2) { background: #febc2e; }
+  .hero-window-dot:nth-child(3) { background: #28c840; }
+  .hero-window-title {
+    flex: 1; text-align: center;
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    font-weight: 400;
+  }
+  .hero-window-body { padding: 2rem 1.5rem; }
+
+  .hw-file-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem; border-bottom: 1px solid var(--landing-border);
+  }
+  .hw-file-icon {
+    width: 40px; height: 40px; border-radius: var(--landing-radius-sm);
+    background: #f4f4f5; display: flex; align-items: center; justify-content: center;
+  }
+  .hw-file-icon svg { width: 20px; height: 20px; color: var(--landing-slate); }
+  .hw-file-name { font-size: var(--landing-text-sm); font-weight: 500; }
+  .hw-file-meta { font-size: var(--landing-text-xs); color: var(--landing-slate); margin-top: 2px; }
+
+  .hw-step {
+    margin-bottom: 1rem; opacity: 0.6; transition: opacity 0.4s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .hw-step.active { opacity: 1; }
+  .hw-step-check {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--landing-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0;
+    transition: all 0.3s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  .hw-step.active .hw-step-check,
+  .hw-step.done .hw-step-check {
+    border-color: var(--landing-accent); background: var(--landing-accent); color: #fff;
+  }
+  .hw-step-label {
+    font-size: var(--landing-text-sm); font-weight: 500;
+    transition: color 0.3s;
+  }
+  .hw-step.active .hw-step-label { color: var(--landing-ink); }
+  .hw-progress {
+    height: 3px; background: #f4f4f5; border-radius: 2px;
+    margin: 1.25rem 0; overflow: hidden;
+  }
+  .hw-progress-bar {
+    height: 100%; background: var(--landing-accent); border-radius: 2px;
+    width: 0%; transition: width 1.5s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  .hw-progress-bar.animating { width: 85%; }
+  .hw-spinner {
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    font-family: var(--landing-font-mono);
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .hw-spinner-dot { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.2; } 50% { opacity: 1; }
+  }
+
+  /* ─── SECTION 2: PIPELINE ─── */
+  .pipeline-section {
+    min-height: 280vh; position: relative;
+  }
+  .pipeline-sticky {
+    position: sticky; top: 56px;
+    min-height: calc(100vh - 56px); display: flex; align-items: center;
+    padding: 2rem;
+  }
+  .pipeline-inner {
+    max-width: 900px; margin: 0 auto; width: 100%;
+  }
+  .pipeline-heading {
+    font-size: var(--landing-text-h2); font-weight: 500; letter-spacing: -0.02em;
+    margin-bottom: 4rem; line-height: 1.15;
+  }
+  .pipeline-steps { display: flex; flex-direction: column; gap: 1.5rem; }
+  .pipeline-step {
+    display: flex; align-items: flex-start; gap: 1.5rem;
+    padding: 1.5rem; border: 1px solid transparent; border-radius: var(--landing-radius-md);
+    transition: all 0.5s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    opacity: 0.3; transform: translateY(12px);
+  }
+  .pipeline-step.revealed { opacity: 1; transform: translateY(0); }
+  .pipeline-step.revealed.active-step { border-color: var(--landing-border); background: var(--landing-bg); }
+  .pipeline-step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid var(--landing-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--landing-text-sm); font-weight: 600; flex-shrink: 0;
+    transition: all 0.5s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  }
+  .pipeline-step.revealed.active-step .pipeline-step-num {
+    border-color: var(--landing-accent); background: var(--landing-accent); color: #fff;
+  }
+  .pipeline-step-info { flex: 1; }
+  .pipeline-step-title {
+    font-size: var(--landing-text-body); font-weight: 500; margin-bottom: 0.25rem;
+  }
+  .pipeline-step-desc {
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+  }
+  .pipeline-score {
+    font-family: var(--landing-font-mono); font-size: 3rem; font-weight: 500;
+    letter-spacing: -0.02em; transition: color 0.5s;
+    color: var(--landing-slate);
+  }
+  .pipeline-score.improved { color: var(--landing-green); }
+
+  /* ─── SECTION 3: HOW IT WORKS ─── */
+  .how-section { text-align: center; }
+  .how-heading {
+    font-size: var(--landing-text-h2); font-weight: 500; letter-spacing: -0.02em;
+    margin-bottom: 4rem; line-height: 1.15;
+  }
+  .how-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+    max-width: 900px; margin: 0 auto;
+  }
+  .how-step {
+    padding: 2.5rem 1.5rem; border: 1px solid var(--landing-border);
+    border-radius: var(--landing-radius-md); text-align: left;
+    transition: border-color 0.3s;
+  }
+  .how-step-num {
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    font-weight: 500; margin-bottom: 1.5rem;
+    font-family: var(--landing-font-mono);
+  }
+  .how-step-title {
+    font-size: var(--landing-text-body); font-weight: 500; margin-bottom: 0.5rem;
+  }
+  .how-step-desc {
+    font-size: var(--landing-text-xs); color: var(--landing-slate); line-height: 1.6;
+  }
+
+  /* ─── SECTION 4: DIFF ─── */
+  .diff-section { position: relative; }
+  .diff-heading {
+    font-size: var(--landing-text-h2); font-weight: 500; letter-spacing: -0.02em;
+    margin-bottom: 4rem; line-height: 1.15; max-width: 700px;
+  }
+  .diff-panel {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--landing-border); border-radius: var(--landing-radius-lg);
+    overflow: hidden; position: relative;
+  }
+  .diff-col {
+    padding: 2.5rem 2rem; min-height: 420px;
+  }
+  .diff-col:first-child {
+    border-right: 1px solid var(--landing-border); background: #fafbfc;
+  }
+  .diff-col-header {
+    font-size: var(--landing-text-xs); font-weight: 600; color: var(--landing-slate);
+    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2rem;
+    font-family: var(--landing-font-mono);
+  }
+  .diff-line {
+    font-size: var(--landing-text-sm); line-height: 1.7; margin-bottom: 0.75rem;
+    transition: all 0.6s var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    position: relative;
+  }
+  .diff-line.dimmed { color: var(--landing-border); opacity: 0.4; }
+  .diff-line.highlight-new {
+    color: var(--landing-green); padding-left: 1rem;
+    border-left: 3px solid var(--landing-green);
+  }
+  .diff-line.highlight-del {
+    text-decoration: line-through;
+  }
+  .diff-line .keyword {
+    color: var(--landing-accent); font-weight: 500;
+    transition: opacity 0.6s;
+  }
+
+  /* ─── SECTION 5: CTA ─── */
+  .cta-section { text-align: center; padding: calc(var(--landing-section-gap) * 1.5) 2rem; }
+  .cta-label {
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    font-weight: 500; margin-bottom: 1.5rem; font-family: var(--landing-font-mono);
+  }
+  .cta-heading {
+    font-size: var(--landing-text-h1); font-weight: 600; letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+  .cta-sub {
+    font-size: var(--landing-text-body); color: var(--landing-slate); margin-bottom: 2.5rem;
+  }
+  .cta-btn {
+    font-size: var(--landing-text-sm); font-weight: 500;
+    padding: 0.875rem 2.5rem;
+    border-radius: var(--landing-radius-md);
+    background: var(--landing-ink); color: #fff; border: none;
+    cursor: pointer; font-family: var(--landing-font);
+    transition: background 0.15s;
+  }
+  .cta-btn:hover { background: #222; }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    padding: 2rem; text-align: center;
+    font-size: var(--landing-text-xs); color: var(--landing-slate);
+    border-top: 1px solid var(--landing-border);
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .hero { flex-direction: column; gap: 3rem; }
+    .hero-left h1 { font-size: 2.25rem; }
+    .hero-right { width: 100%; }
+    .how-steps { grid-template-columns: 1fr; }
+    .diff-panel { grid-template-columns: 1fr; }
+    .diff-col:first-child { border-right: none; border-bottom: 1px solid var(--landing-border); }
+    .nav-links { display: none; }
+    .section { padding-left: 1rem; padding-right: 1rem; }
+    .pipeline-sticky { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav class="nav" id="nav">
+  <div class="nav-left">
+    <a href="/" class="nav-logo">
+      <span class="nav-logo-dot"></span> Resume Tailor
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#">Docs</a></li>
+      <li><a href="#">GitHub</a></li>
+    </ul>
+  </div>
+  <div class="nav-right">
+    <a href="/login" class="nav-signin">Sign In</a>
+    <a href="/register" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     SECTION 1 — HERO
+     ═══════════════════════════════════════ -->
+<main>
+<div class="hero">
+  <div class="hero-left">
+    <h1>Tailor your resume to every job.</h1>
+    <p class="hero-sub">One upload. One job description. One click.</p>
+    <div class="hero-flow">
+      <span class="hero-flow-step">Upload Resume</span>
+      <span class="hero-flow-arrow">→</span>
+      <span class="hero-flow-step">Paste Job Description</span>
+      <span class="hero-flow-arrow">→</span>
+      <span class="hero-flow-step">Generate Resume</span>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="hero-window">
+      <div class="hero-window-titlebar">
+        <span class="hero-window-dot"></span>
+        <span class="hero-window-dot"></span>
+        <span class="hero-window-dot"></span>
+        <span class="hero-window-title">Tailoring Session</span>
+      </div>
+      <div class="hero-window-body">
+        <div class="hw-file-row">
+          <div class="hw-file-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><path d="M14 2v6h6"/></svg>
+          </div>
+          <div>
+            <div class="hw-file-name">Resume.pdf</div>
+            <div class="hw-file-meta">4 pages · Last edited today</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="hw-step" id="hwStep1">
+            <span class="hw-step-check">✓</span>
+            <span class="hw-step-label">Google SWE Internship — 2026</span>
+          </div>
+          <div class="hw-step" id="hwStep2">
+            <span class="hw-step-check"></span>
+            <span class="hw-step-label">Analyzing job description…</span>
+          </div>
+          <div class="hw-progress" id="hwProgressWrap">
+            <div class="hw-progress-bar" id="hwProgressBar"></div>
+          </div>
+          <div class="hw-step" id="hwStep3">
+            <span class="hw-step-check"></span>
+            <span class="hw-step-label">Matching skills</span>
+          </div>
+          <div class="hw-step" id="hwStep4">
+            <span class="hw-step-check"></span>
+            <span class="hw-step-label">Rewriting experience</span>
+          </div>
+          <div class="hw-step" id="hwStep5">
+            <span class="hw-step-check"></span>
+            <span class="hw-step-label">Generating tailored resume…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SECTION 2 — PIPELINE ANIMATION
+     ═══════════════════════════════════════ -->
+<div class="section pipeline-section" id="features">
+  <div class="pipeline-sticky">
+    <div class="pipeline-inner">
+      <h2 class="pipeline-heading">From job description to tailored resume in under a minute.</h2>
+      <div class="pipeline-steps" id="pipelineSteps">
+        <div class="pipeline-step" data-step="1">
+          <span class="pipeline-step-num">1</span>
+          <div class="pipeline-step-info">
+            <div class="pipeline-step-title">Resume Uploaded</div>
+            <div class="pipeline-step-desc">Your master resume is parsed and structured. Sections, entries, and bullets are identified.</div>
+          </div>
+        </div>
+        <div class="pipeline-step" data-step="2">
+          <span class="pipeline-step-num">2</span>
+          <div class="pipeline-step-info">
+            <div class="pipeline-step-title">Job Description Parsed</div>
+            <div class="pipeline-step-desc">Keywords, requirements, and company context are extracted from the JD.</div>
+          </div>
+        </div>
+        <div class="pipeline-step" data-step="3">
+          <span class="pipeline-step-num">3</span>
+          <div class="pipeline-step-info">
+            <div class="pipeline-step-title">Keywords Detected</div>
+            <div class="pipeline-step-desc">Skills and experiences that match the role are identified. Gaps are flagged for rewording.</div>
+          </div>
+        </div>
+        <div class="pipeline-step" data-step="4">
+          <span class="pipeline-step-num">4</span>
+          <div class="pipeline-step-info">
+            <div class="pipeline-step-title">Experience Rewritten</div>
+            <div class="pipeline-step-desc">Bullets are reworded to emphasize relevant experience. Numbers are quantified. Weak verbs are strengthened.</div>
+          </div>
+        </div>
+        <div class="pipeline-step" data-step="5">
+          <span class="pipeline-step-num">5</span>
+          <div class="pipeline-step-info">
+            <div class="pipeline-step-title">ATS Score</div>
+            <div class="pipeline-step-desc">Your resume's keyword match rate against the job description.</div>
+          </div>
+          <div class="pipeline-score" id="pipelineScore">62</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SECTION 3 — HOW IT WORKS
+     ═══════════════════════════════════════ -->
+<div class="section section-subtle how-section">
+  <h2 class="how-heading">Three steps. No forms. No fluff.</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step-num">01</div>
+      <div class="how-step-title">Upload your resume</div>
+      <div class="how-step-desc">PDF, LaTeX, DOCX, or plain text. We parse it into a structured document you can edit.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-step-num">02</div>
+      <div class="how-step-title">Paste a job description</div>
+      <div class="how-step-desc">Or drop a link. We'll research the company, extract requirements, and find what matters.</div>
+    </div>
+    <div class="how-step">
+      <div class="how-step-num">03</div>
+      <div class="how-step-title">Review and export</div>
+      <div class="how-step-desc">See exactly what changed in a side-by-side diff. Accept, reject, or iterate. Export to PDF.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SECTION 4 — RESUME DIFF
+     ═══════════════════════════════════════ -->
+<div class="section diff-section" id="diffSection">
+  <h2 class="diff-heading">See every change. Accept what works. Iterate on the rest.</h2>
+  <div class="diff-panel">
+    <div class="diff-col" id="diffColOriginal">
+      <div class="diff-col-header">Original</div>
+      <div class="diff-line" data-idx="1">Led team of engineers to build and deploy services</div>
+      <div class="diff-line" data-idx="2">Worked on improving system performance</div>
+      <div class="diff-line" data-idx="3">Used Python and SQL for data processing</div>
+      <div class="diff-line" data-idx="4">Helped with code reviews and mentoring</div>
+      <div class="diff-line" data-idx="5">Participated in on-call rotation</div>
+    </div>
+    <div class="diff-col" id="diffColTailored">
+      <div class="diff-col-header">Tailored <span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--landing-font);color:var(--landing-green);">+3 keywords</span></div>
+      <div class="diff-line" data-idx="1">Led team of <span class="keyword">5 engineers</span> to design and deploy <span class="keyword">12 microservices</span> on <span class="keyword">Kubernetes</span></div>
+      <div class="diff-line" data-idx="2">Reduced P99 latency by <span class="keyword">40%</span> across 3 production services</div>
+      <div class="diff-line" data-idx="3">Built ETL pipelines processing <span class="keyword">2M+ records/day</span> using Python and PostgreSQL</div>
+      <div class="diff-line" data-idx="4">Mentored <span class="keyword">4 junior engineers</span> and led weekly architecture reviews</div>
+      <div class="diff-line" data-idx="5">Maintained <span class="keyword">99.9% uptime SLA</span> across 8 production services</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:3rem;">
+    <p style="font-size:var(--landing-text-xs);color:var(--landing-slate);max-width:420px;margin:0 auto;line-height:1.6;">
+      Your resume never leaves your workspace. No AI-generated experience. Only better wording.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SECTION 5 — FINAL CTA
+     ═══════════════════════════════════════ -->
+<div class="cta-section">
+  <div class="cta-label">Ready?</div>
+  <p class="cta-heading">Tailor your next resume.</p>
+  <p class="cta-sub">Start with your resume and a job description.</p>
+  <a href="/register" class="cta-btn">Upload Resume</a>
+</div>
+
+<footer class="footer">
+  Resume Tailor &copy; 2026
+</footer>
+</main>
+
+<!-- ═══════════════════════════════════════
+     SCROLL ANIMATION LOGIC
+     ═══════════════════════════════════════ -->
+<script>
+(function() {
+  var nav = document.getElementById('nav');
+
+  /* ─── Nav scroll state ─── */
+  window.addEventListener('scroll', function() {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+
+  /* ─── Hero window animation (auto-loop) ─── */
+  var steps = ['hwStep2', 'hwStep3', 'hwStep4', 'hwStep5'];
+  var progressBar = document.getElementById('hwProgressBar');
+  var currentStep = 0;
+
+  function resetHeroSteps() {
+    document.getElementById('hwStep1').classList.add('done');
+    document.getElementById('hwStep1').classList.remove('active');
+    steps.forEach(function(id) {
+      var el = document.getElementById(id);
+      el.classList.remove('active', 'done');
+    });
+    progressBar.classList.remove('animating');
+  }
+
+  function advanceHeroStep() {
+    var prevId = currentStep === 0 ? 'hwStep1' : steps[currentStep - 1];
+    document.getElementById(prevId).classList.remove('active');
+    document.getElementById(prevId).classList.add('done');
+
+    if (currentStep < steps.length) {
+      var el = document.getElementById(steps[currentStep]);
+      el.classList.add('active');
+    }
+
+    if (currentStep === 0) {
+      progressBar.classList.add('animating');
+    }
+
+    currentStep++;
+    if (currentStep > steps.length) {
+      currentStep = 0;
+      progressBar.classList.remove('animating');
+      setTimeout(function() { resetHeroSteps(); }, 500);
+      setTimeout(function() { advanceHeroStep(); }, 800);
+    } else {
+      setTimeout(function() { advanceHeroStep(); }, 1200);
+    }
+  }
+
+  resetHeroSteps();
+  document.getElementById('hwStep1').classList.add('done');
+  setTimeout(function() { advanceHeroStep(); }, 600);
+
+  /* ─── Pipeline steps — IntersectionObserver ─── */
+  var pipelineEl = document.getElementById('pipelineSteps');
+  var pipelineSteps = pipelineEl.querySelectorAll('.pipeline-step');
+  var pipelineScore = document.getElementById('pipelineScore');
+  var pipelineObserved = false;
+  var pipelineStepReveal = 0;
+  var pipelineRevealTimer = null;
+
+  function revealNextStep() {
+    if (pipelineStepReveal >= pipelineSteps.length) return;
+    var step = pipelineSteps[pipelineStepReveal];
+    step.classList.add('revealed');
+    if (pipelineStepReveal < 4) {
+      step.classList.add('active-step');
+    }
+    if (pipelineStepReveal > 0 && pipelineStepReveal < 5) {
+      var prev = pipelineSteps[pipelineStepReveal - 1];
+      prev.classList.remove('active-step');
+    }
+    pipelineStepReveal++;
+    if (pipelineStepReveal === pipelineSteps.length) {
+      setTimeout(function() {
+        pipelineScore.textContent = '94';
+        pipelineScore.classList.add('improved');
+      }, 600);
+    }
+  }
+
+  var pipelineObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !pipelineObserved) {
+        pipelineObserved = true;
+        pipelineRevealTimer = setInterval(function() {
+          revealNextStep();
+          if (pipelineStepReveal >= pipelineSteps.length) {
+            clearInterval(pipelineRevealTimer);
+          }
+        }, 600);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  pipelineObserver.observe(pipelineEl);
+
+  /* ─── Diff section — scroll-reveal ─── */
+  var diffSection = document.getElementById('diffSection');
+  var diffObserved = false;
+  var diffApplied = false;
+
+  var diffObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting && !diffApplied) {
+        diffApplied = true;
+        applyDiffChanges();
+      }
+    });
+  }, { threshold: 0.4 });
+
+  diffObserver.observe(diffSection);
+
+  function applyDiffChanges() {
+    var originalLines = document.querySelectorAll('#diffColOriginal .diff-line');
+    var tailoredLines = document.querySelectorAll('#diffColTailored .diff-line');
+
+    function animateLine(idx) {
+      if (idx >= originalLines.length) return;
+      var orig = originalLines[idx];
+      var tail = tailoredLines[idx];
+      orig.classList.add('dimmed');
+      tail.classList.add('highlight-new');
+      setTimeout(function() { animateLine(idx + 1); }, 300);
+    }
+
+    animateLine(0);
+  }
+
+  /* ─── Pipeline score reset on leave ─── */
+  var pipelineLeaveObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting && pipelineObserved && pipelineStepReveal >= pipelineSteps.length) {
+        setTimeout(function() {
+          pipelineStepReveal = 0;
+          pipelineObserved = false;
+          pipelineScore.textContent = '62';
+          pipelineScore.classList.remove('improved');
+          pipelineSteps.forEach(function(s) {
+            s.classList.remove('revealed', 'active-step');
+          });
+          if (pipelineRevealTimer) clearInterval(pipelineRevealTimer);
+        }, 2000);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  pipelineLeaveObserver.observe(pipelineEl);
+})();
+</script>
+
+</body>
+</html>

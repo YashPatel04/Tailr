@@ -85,7 +85,15 @@ export async function apiRequest<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Request failed" }))
-    throw new Error(err.detail || "Request failed")
+    const detail = err.detail
+    if (typeof detail === "string") {
+      throw new Error(detail)
+    }
+    if (Array.isArray(detail)) {
+      const messages = detail.map((d: any) => d.msg || d.message || JSON.stringify(d))
+      throw new Error(messages.join("; "))
+    }
+    throw new Error(typeof detail === "object" ? JSON.stringify(detail) : "Request failed")
   }
 
   if (res.status === 204) {

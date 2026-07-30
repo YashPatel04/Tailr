@@ -1,15 +1,45 @@
 {
-  "generated": "2026-07-27T00:00:00Z",
+  "generated": "2026-07-27T22:00:00Z",
   "sections": [
     {
       "id": "mockups",
       "label": "Mockups",
       "groups": [
         {
+          "slug": "llm-cowork-redesign",
+          "files": [
+            { "label": "LLM Cowork Redesign", "path": "mockups/llm-cowork-redesign/index.html" }
+          ]
+        },
+        {
           "slug": "inline-editing",
           "files": [
             { "label": "Interactive Prototype", "path": "mockups/inline-editing/inline-editing.html" },
             { "label": "Interaction Spec", "path": "mockups/inline-editing/interaction-spec.html" }
+          ]
+        },
+        {
+          "slug": "canvas-toolbar",
+          "files": [
+            { "label": "Canvas Toolbar", "path": "mockups/canvas-toolbar/index.html" }
+          ]
+        },
+        {
+          "slug": "canvas-topbar",
+          "files": [
+            { "label": "Canvas TopBar", "path": "mockups/canvas-topbar/index.html" }
+          ]
+        },
+        {
+          "slug": "landing-page",
+          "files": [
+            { "label": "Landing Page", "path": "mockups/landing-page/index.html" }
+          ]
+        },
+        {
+          "slug": "toolbar-bezel",
+          "files": [
+            { "label": "Toolbar Bezel", "path": "mockups/toolbar-bezel/index.html" }
           ]
         }
       ]
@@ -17,7 +47,17 @@
     {
       "id": "design-systems",
       "label": "Design Systems",
-      "groups": []
+      "groups": [
+        {
+          "slug": "resume-tailor",
+          "files": [
+            { "label": "SKILL.md", "path": "design-systems/resume-tailor/SKILL.md" },
+            { "label": "README.md", "path": "design-systems/resume-tailor/README.md" },
+            { "label": "Colors & Type", "path": "design-systems/resume-tailor/tokens/colors_and_type.css" },
+            { "label": "Landing Tokens", "path": "design-systems/resume-tailor/tokens/landing.css" }
+          ]
+        }
+      ]
     }
   ]
 }

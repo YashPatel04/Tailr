@@ -12,7 +12,13 @@ async def test_create_session(client: AsyncClient, db_session):
     user = User(id=uuid.uuid4(), email="sess@test.com", password_hash=hash_password("password123456"), is_verified=True)
     db_session.add(user)
 
-    master = MasterResume(id=uuid.uuid4(), user_id=user.id, filename="resume.tex", original_format="tex", tex_source="\\section{Test}")
+    master = MasterResume(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        filename="resume.tex",
+        original_format="tex",
+        content_json={"basics": {"name": "Test"}, "sections": [], "metadata": {}},
+    )
     db_session.add(master)
     await db_session.commit()
 

@@ -7,6 +7,8 @@ export interface PendingProposal {
   operations: any[]
   diff: any
   patch_summary: string
+  explanation?: string
+  reasoning?: string
 }
 
 interface SessionState {
@@ -22,6 +24,8 @@ interface SessionState {
   progressMessage: string
   saveStatus: SaveStatus
   editingFieldId: string | null
+  activeMode: "plan" | "edit"
+  tailoringMode: string
   setActiveSession: (id: string | null) => void
   setDocType: (type: "resume" | "cover_letter") => void
   setViewMode: (mode: "diff" | "final") => void
@@ -34,6 +38,8 @@ interface SessionState {
   setProgress: (phase: string, message: string) => void
   setSaveStatus: (status: SaveStatus) => void
   setEditingFieldId: (id: string | null) => void
+  setActiveMode: (mode: "plan" | "edit") => void
+  setTailoringMode: (mode: string) => void
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -49,6 +55,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   progressMessage: "",
   saveStatus: "idle",
   editingFieldId: null,
+  activeMode: "edit",
+  tailoringMode: "polish",
   setActiveSession: (id) =>
     set({
       activeSessionId: id,
@@ -69,4 +77,6 @@ export const useSessionStore = create<SessionState>((set) => ({
   setProgress: (phase, message) => set({ progressPhase: phase, progressMessage: message }),
   setSaveStatus: (status) => set({ saveStatus: status }),
   setEditingFieldId: (id) => set({ editingFieldId: id }),
+  setActiveMode: (mode) => set({ activeMode: mode }),
+  setTailoringMode: (mode) => set({ tailoringMode: mode }),
 }))

@@ -5,6 +5,8 @@ interface LayoutState {
   setSidebarCollapsed: (collapsed: boolean) => void
   chatRailWidth: number
   setChatRailWidth: (width: number) => void
+  chatRailCollapsed: boolean
+  setChatRailCollapsed: (collapsed: boolean) => void
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
@@ -12,4 +14,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   chatRailWidth: 360,
   setChatRailWidth: (width) => set({ chatRailWidth: width }),
+  chatRailCollapsed: false,
+  setChatRailCollapsed: (collapsed) => set({ chatRailCollapsed: collapsed }),
 }))

@@ -2,21 +2,25 @@
 
 import { useState } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useSessionDocument } from "@/hooks/queries"
 import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
 import { clsx } from "clsx"
+import { DocumentTabs } from "./DocumentTabs"
 
 export function DocumentTopBar() {
   const { activeSessionId, activeDocType, viewMode, setViewMode } = useSessionStore()
-  const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
   const [exportOpen, setExportOpen] = useState(false)
 
   const handleExport = async (format: string) => {
     if (!activeSessionId) return
     setExportOpen(false)
     try {
-      const blob = await apiRequest<Blob>("GET", `/api/sessions/${activeSessionId}/export?format=${format}`, undefined, { rawResponse: true })
+      const blob = await apiRequest<Blob>(
+        "GET",
+        `/api/sessions/${activeSessionId}/export?format=${format}`,
+        undefined,
+        { rawResponse: true }
+      )
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
@@ -31,18 +35,18 @@ export function DocumentTopBar() {
     }
   }
 
+  const showViewMode = activeDocType === "resume"
+
   return (
-    <div className="flex items-center gap-4 mb-4">
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-ink dark:text-[#ececec]">
-          {activeDocType === "resume" ? "Resume" : "Cover Letter"}
-        </h3>
-        {doc && (
-          <span className="text-xs text-slate dark:text-[#8e8e8e]">Version {doc.version}</span>
-        )}
-      </div>
+    <div className="flex items-center gap-2 mb-2 justify-between sticky top-0 bg-canvas/80 dark:bg-[#212121]/80 backdrop-blur-md z-50 py-2">
+      <DocumentTabs />
       <div className="flex items-center gap-2">
-        <div className="flex rounded-lg border border-muted overflow-hidden">
+        <div
+          className={clsx(
+            "flex rounded-lg border border-muted overflow-hidden transition-all duration-300 ease-in-out",
+            showViewMode ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0 border-0 overflow-hidden"
+          )}
+        >
           <button
             onClick={() => setViewMode("diff")}
             className={clsx(
@@ -63,7 +67,7 @@ export function DocumentTopBar() {
                 : "text-slate dark:text-[#8e8e8e] hover:bg-[#f4f4f4] dark:hover:bg-[#3c4043]"
             )}
           >
-            Final
+            Current
           </button>
         </div>
         <div className="relative">

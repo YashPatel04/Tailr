@@ -10,6 +10,7 @@ import { useCurrentUser, useProviders, useMasterResume } from "@/hooks/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
+import type { ResumeContent } from "@/app/types"
 
 /* ── Store ── */
 interface SettingsModalState {
@@ -42,7 +43,9 @@ export function SettingsModal() {
   const { theme, toggle } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (!isOpen || !mounted) return null
 
@@ -130,8 +133,12 @@ function ProfileTab() {
       <h3 className="text-xl font-semibold text-ink dark:text-[#ececec] mb-4">Profile</h3>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-ink dark:text-[#ececec] mb-1">Career context</label>
-          <p className="text-xs text-slate dark:text-[#8e8e8e] mb-2">This is injected into every tailoring prompt.</p>
+          <label className="block text-sm font-medium text-ink dark:text-[#ececec] mb-1">
+            Career context
+          </label>
+          <p className="text-xs text-slate dark:text-[#8e8e8e] mb-2">
+            This is injected into every tailoring prompt.
+          </p>
           <textarea
             value={careerContext}
             onChange={(e) => setCareerContext(e.target.value)}
@@ -230,12 +237,24 @@ function ProvidersTab() {
                 <h4 className="text-sm font-medium text-ink dark:text-[#ececec]">{p.name}</h4>
                 <p className="text-xs text-slate dark:text-[#8e8e8e] mt-0.5">
                   {p.provider_type} / {p.model}
-                  {p.is_default && <span className="ml-2 text-brass text-xs font-medium">Default</span>}
+                  {p.is_default && (
+                    <span className="ml-2 text-brass text-xs font-medium">Default</span>
+                  )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => handleTest(p.id)} className="rounded border border-muted px-2.5 py-1 text-xs text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors">Test</button>
-                <button onClick={() => handleDelete(p.id)} className="rounded border border-danger px-2.5 py-1 text-xs text-danger hover:bg-danger/10 transition-colors">Delete</button>
+                <button
+                  onClick={() => handleTest(p.id)}
+                  className="rounded border border-muted px-2.5 py-1 text-xs text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
+                >
+                  Test
+                </button>
+                <button
+                  onClick={() => handleDelete(p.id)}
+                  className="rounded border border-danger px-2.5 py-1 text-xs text-danger hover:bg-danger/10 transition-colors"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           </div>
@@ -249,42 +268,156 @@ function ProvidersTab() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
           <div className="relative w-full max-w-md rounded-2xl bg-paper dark:bg-[#212121] p-6 shadow-2xl border border-muted">
-            <h2 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-4">Add Provider</h2>
+            <h2 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-4">
+              Add Provider
+            </h2>
             <div className="space-y-3">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
-              <select value={providerType} onChange={(e) => setProviderType(e.target.value)} className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Name"
+                className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+              />
+              <select
+                value={providerType}
+                onChange={(e) => setProviderType(e.target.value)}
+                className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+              >
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
                 <option value="ollama">Ollama</option>
                 <option value="custom">Custom</option>
               </select>
-              <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API key" type="password" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
+              <input
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="API key"
+                type="password"
+                className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+              />
               {(providerType === "ollama" || providerType === "custom") && (
-                <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="Base URL" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
+                <input
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  placeholder="Base URL"
+                  className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+                />
               )}
-              <input value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Model"
+                className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+              />
               <div className="flex items-center gap-2 text-sm text-slate dark:text-[#8e8e8e]">
                 <label className="flex-1">Temperature: {temperature}</label>
-                <input type="range" min="0" max="1" step="0.1" value={temperature} onChange={(e) => setTemperature(parseFloat(e.target.value))} className="flex-1" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  className="flex-1"
+                />
               </div>
               <div>
                 <label className="text-sm text-slate dark:text-[#8e8e8e]">Max tokens</label>
-                <input type="number" value={maxTokens} onChange={(e) => setMaxTokens(parseInt(e.target.value))} className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
+                <input
+                  type="number"
+                  value={maxTokens}
+                  onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                  className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+                />
               </div>
               <label className="flex items-center gap-2 text-sm text-slate dark:text-[#8e8e8e]">
-                <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={isDefault}
+                  onChange={(e) => setIsDefault(e.target.checked)}
+                />
                 Set as default
               </label>
               <div className="flex gap-2 pt-2">
-                <button onClick={handleSave} disabled={saving || !name || !model} className="flex-1 rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !name || !model}
+                  className="flex-1 rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
+                >
                   {saving ? "Saving..." : "Save"}
                 </button>
-                <button onClick={() => setShowForm(false)} className="rounded-lg border border-muted px-4 py-2 text-sm text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors">Cancel</button>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="rounded-lg border border-muted px-4 py-2 text-sm text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── Resume Preview ── */
+function ResumePreview({ content }: { content: ResumeContent }) {
+  return (
+    <div className="space-y-6 text-sm">
+      <div className="text-center">
+        <h2 className="text-xl font-bold text-ink">{content.basics.name}</h2>
+        <div className="text-slate mt-1 space-x-2">
+          {content.basics.email && <span>{content.basics.email}</span>}
+          {content.basics.phone && <span>| {content.basics.phone}</span>}
+          {content.basics.location && <span>| {content.basics.location}</span>}
+        </div>
+        {content.basics.profiles?.map((p, i) => (
+          <div key={i} className="text-slate text-xs">
+            {p.network}: {p.username}
+          </div>
+        ))}
+        {content.basics.summary && (
+          <p className="mt-2 text-ink/80 max-w-xl mx-auto">{content.basics.summary}</p>
+        )}
+      </div>
+
+      {content.sections.map((section) => (
+        <div key={section.id}>
+          <h3 className="text-xs font-bold uppercase tracking-wider text-ink border-b border-muted pb-1 mb-3">
+            {section.label}
+          </h3>
+
+          {section.skill_rows.map((sk) => (
+            <div key={sk.id} className="text-xs mb-1">
+              <span className="font-semibold">{sk.category}:</span> {sk.items}
+            </div>
+          ))}
+
+          {section.entries.map((entry) => (
+            <div key={entry.id} className="mb-4">
+              <div className="flex justify-between items-baseline">
+                <span className="font-semibold text-ink">{entry.title}</span>
+                <span className="text-xs text-slate">{entry.dates}</span>
+              </div>
+              {(entry.role || entry.location) && (
+                <div className="flex justify-between text-xs text-ink/70">
+                  <em>{entry.role}</em>
+                  {entry.location && <em>{entry.location}</em>}
+                </div>
+              )}
+              {entry.organization && <div className="text-xs text-slate">{entry.organization}</div>}
+              {entry.bullets.length > 0 && (
+                <ul className="list-disc list-inside mt-1 space-y-0.5 text-xs text-ink/80">
+                  {entry.bullets.map((bullet) => (
+                    <li key={bullet.id}>{bullet.text}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -320,6 +453,7 @@ function MasterResumeTab() {
     setDeleting(true)
     try {
       await apiRequest("DELETE", "/api/master-resume")
+      queryClient.setQueryData(["master-resume"], null)
       queryClient.invalidateQueries({ queryKey: ["master-resume"] })
       toast.success("Master resume removed")
     } catch (err: any) {
@@ -337,23 +471,43 @@ function MasterResumeTab() {
         <div className="mb-6 rounded-lg border border-muted p-4 space-y-3">
           <p className="text-sm text-ink dark:text-[#ececec] font-medium">{master.filename}</p>
           <p className="text-xs text-slate dark:text-[#8e8e8e]">
-            Format: .{master.original_format} &middot; Created: {new Date(master.created_at).toLocaleDateString()}
+            Format: .{master.original_format} &middot; Created:{" "}
+            {new Date(master.created_at).toLocaleDateString()}
           </p>
           <div className="flex gap-2">
-            <button onClick={() => setViewOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-muted px-3 py-1.5 text-xs font-medium text-slate dark:text-[#8e8e8e] hover:text-ink dark:hover:text-[#ececec] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors">
+            <button
+              onClick={() => setViewOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-muted px-3 py-1.5 text-xs font-medium text-slate dark:text-[#8e8e8e] hover:text-ink dark:hover:text-[#ececec] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
+            >
               View
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="inline-flex items-center gap-1.5 rounded-lg border border-danger/30 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors">
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-danger/30 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors"
+            >
               {deleting ? "Removing..." : "Remove"}
             </button>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-slate dark:text-[#8e8e8e] mb-6">No master resume uploaded yet.</p>
+        <p className="text-sm text-slate dark:text-[#8e8e8e] mb-6">
+          No master resume uploaded yet.
+        </p>
       )}
 
-      <input ref={fileRef} type="file" accept=".tex,.docx,.txt,.pdf" onChange={handleUpload} className="hidden" />
-      <button onClick={() => fileRef.current?.click()} disabled={uploading} className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors">
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".tex,.docx,.txt,.pdf"
+        onChange={handleUpload}
+        className="hidden"
+      />
+      <button
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
+      >
         {uploading ? "Uploading..." : master ? "Replace master resume" : "Upload master resume"}
       </button>
 
@@ -361,13 +515,22 @@ function MasterResumeTab() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
           <div className="bg-paper dark:bg-[#212121] rounded-xl shadow-2xl border border-muted w-full max-w-2xl max-h-[70vh] flex flex-col m-4">
             <div className="flex items-center justify-between px-5 py-3 border-b border-muted">
-              <h4 className="text-sm font-semibold text-ink dark:text-[#ececec]">{master.filename}</h4>
-              <button onClick={() => setViewOpen(false)} className="p-1 rounded-md hover:bg-[#f4f4f4] dark:hover:bg-[#40414f] text-slate dark:text-[#8e8e8e]">
+              <h4 className="text-sm font-semibold text-ink dark:text-[#ececec]">
+                {master.filename}
+              </h4>
+              <button
+                onClick={() => setViewOpen(false)}
+                className="p-1 rounded-md hover:bg-[#f4f4f4] dark:hover:bg-[#40414f] text-slate dark:text-[#8e8e8e]"
+              >
                 <X size={18} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5">
-              <pre className="text-xs text-ink dark:text-[#ececec] whitespace-pre-wrap break-words font-mono">{master.tex_source || "(No text content)"}</pre>
+              {master.content_json ? (
+                <ResumePreview content={master.content_json} />
+              ) : (
+                <p className="text-sm text-slate">No content available</p>
+              )}
             </div>
           </div>
         </div>
@@ -387,16 +550,29 @@ function AccountTab() {
   const queryClient = useQueryClient()
 
   const handleChangePassword = async () => {
-    if (newPw !== confirmPw) { toast.error("Passwords don't match"); return }
-    if (newPw.length < 10) { toast.error("Password must be at least 10 characters"); return }
+    if (newPw !== confirmPw) {
+      toast.error("Passwords don't match")
+      return
+    }
+    if (newPw.length < 10) {
+      toast.error("Password must be at least 10 characters")
+      return
+    }
     setSaving(true)
     try {
-      await apiRequest("POST", "/api/users/me/change-password", { current_password: currentPw, new_password: newPw })
+      await apiRequest("POST", "/api/users/me/change-password", {
+        current_password: currentPw,
+        new_password: newPw,
+      })
       toast.success("Password changed")
-      setCurrentPw(""); setNewPw(""); setConfirmPw("")
+      setCurrentPw("")
+      setNewPw("")
+      setConfirmPw("")
     } catch (err: any) {
       toast.error(err.message || "Failed to change password")
-    } finally { setSaving(false) }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -408,7 +584,9 @@ function AccountTab() {
       window.location.href = "/login"
     } catch (err: any) {
       toast.error(err.message || "Failed to delete account")
-    } finally { setDeleting(false) }
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -417,21 +595,50 @@ function AccountTab() {
       <div className="space-y-8">
         {user?.oauth_provider && (
           <p className="text-sm text-slate dark:text-[#8e8e8e]">
-            Linked account: <span className="text-ink dark:text-[#ececec] font-medium capitalize">{user.oauth_provider}</span>
+            Linked account:{" "}
+            <span className="text-ink dark:text-[#ececec] font-medium capitalize">
+              {user.oauth_provider}
+            </span>
           </p>
         )}
         <div className="space-y-3 max-w-sm">
           <h4 className="text-sm font-semibold text-ink dark:text-[#ececec]">Change password</h4>
-          <input type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="Current password" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
-          <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="New password (min 10)" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
-          <input type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} placeholder="Confirm new password" className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass" />
-          <button onClick={handleChangePassword} disabled={saving || !currentPw || !newPw} className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors">
+          <input
+            type="password"
+            value={currentPw}
+            onChange={(e) => setCurrentPw(e.target.value)}
+            placeholder="Current password"
+            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+          />
+          <input
+            type="password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            placeholder="New password (min 10)"
+            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+          />
+          <input
+            type="password"
+            value={confirmPw}
+            onChange={(e) => setConfirmPw(e.target.value)}
+            placeholder="Confirm new password"
+            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+          />
+          <button
+            onClick={handleChangePassword}
+            disabled={saving || !currentPw || !newPw}
+            className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
+          >
             {saving ? "Saving..." : "Change password"}
           </button>
         </div>
         <div className="border-t border-muted pt-8">
           <h4 className="text-sm font-semibold text-danger mb-2">Danger zone</h4>
-          <button onClick={handleDelete} disabled={deleting} className="rounded-lg border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-lg border border-danger px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 disabled:opacity-50 transition-colors"
+          >
             {deleting ? "Deleting..." : "Delete account"}
           </button>
         </div>

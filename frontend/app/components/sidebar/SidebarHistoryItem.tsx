@@ -26,6 +26,8 @@ export function SidebarHistoryItem({ session }: SidebarHistoryItemProps) {
     e.stopPropagation()
     await apiRequest("PATCH", `/api/sessions/${session.id}`, { is_archived: true })
     queryClient.invalidateQueries({ queryKey: ["sessions"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "grouped"] })
+    queryClient.invalidateQueries({ queryKey: ["companies"] })
   }
 
   const handleDelete = async (e: React.MouseEvent) => {
@@ -33,6 +35,11 @@ export function SidebarHistoryItem({ session }: SidebarHistoryItemProps) {
     if (!confirm("Delete this session?")) return
     await apiRequest("DELETE", `/api/sessions/${session.id}`)
     queryClient.invalidateQueries({ queryKey: ["sessions"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "grouped"] })
+    queryClient.invalidateQueries({ queryKey: ["companies"] })
+    if (isActive) {
+      router.push("/")
+    }
   }
 
   return (
@@ -44,16 +51,14 @@ export function SidebarHistoryItem({ session }: SidebarHistoryItemProps) {
       )}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") handleNavigate() }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") handleNavigate()
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-[#ececec] truncate">
-            {session.role_title}
-          </div>
-          <div className="text-xs text-[#8e8e8e] truncate">
-            {session.company_name}
-          </div>
+          <div className="text-sm font-medium text-[#ececec] truncate">{session.role_title}</div>
+          <div className="text-xs text-[#8e8e8e] truncate">{session.company_name}</div>
         </div>
         <div className="hidden group-hover:flex items-center gap-1 ml-2 flex-shrink-0">
           <button

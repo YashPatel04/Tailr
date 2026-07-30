@@ -12,7 +12,7 @@ ContentOp → ContentApplier (deep-copy + apply) → Pydantic validate → save
 
 ---
 
-## ContentOp Types (All 15)
+## ContentOp Types (All 16)
 
 ### Bullet Operations
 
@@ -27,10 +27,11 @@ ContentOp → ContentApplier (deep-copy + apply) → Pydantic validate → save
 
 | Operation | Parameters | Purpose |
 |-----------|-----------|---------|
-| `add_entry` | `section_label`, `after_index`, `title`, `role?`, `organization?`, `dates?`, `location?`, `url?`, `bullets` | Create a new entry at a position |
+| `add_entry` | `section_label`, `after_index`, `title`, `role?`, `organization?`, `dates?`, `location?`, `urls?`, `bullets` | Create a new entry at a position |
 | `delete_entry` | `section_label`, `entry_index` | Remove an entry |
 | `move_entry` | `section_label`, `from_index`, `to_index` | Reorder entries within a section |
-| `update_field` | `section_label`, `entry_index`, `field` (`"title"`, `"role"`, `"organization"`, `"dates"`, `"location"`, `"url"`), `value` | Change a single field on an entry |
+| `update_field` | `section_label`, `entry_index`, `field` (`"title"`, `"role"`, `"organization"`, `"dates"`, `"location"`), `value` | Change a single field on an entry |
+| `update_entry_urls` | `section_label`, `entry_index`, `urls` (dict[str, str]) | Replace the entry's URLs dict |
 
 ### Section Operations
 
@@ -45,7 +46,9 @@ ContentOp → ContentApplier (deep-copy + apply) → Pydantic validate → save
 | Operation | Parameters | Purpose |
 |-----------|-----------|---------|
 | `update_skill_row` | `section_label`, `skill_row_index`, `category?`, `items?` | Update a skill row's category and/or items |
-| `update_basics_field` | `field` (`"name"`, `"email"`, `"phone"`, `"location"`, `"summary"`), `value` | Change a basics field |
+| `delete_skill_row` | `section_label`, `skill_row_index` | Remove a skill row from a section |
+| `add_skill_row` | `section_label`, `after_index`, `category`, `items` | Insert a new skill row at a position (`after_index=-1` for first) |
+| `update_basics_field` | `field` (`"name"`, `"email"`, `"phone"`, `"location"`, `"summary"`, `"profiles"`), `value` | Change a basics field |
 
 ### LLM Communication
 

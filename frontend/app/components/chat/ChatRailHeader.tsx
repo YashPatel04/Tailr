@@ -1,15 +1,17 @@
 "use client"
 
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, PanelRightClose } from "lucide-react"
 import { useState } from "react"
 import { useSession, useProviders } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useLayoutStore } from "@/stores/layout"
 import { apiRequest } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
 
 export function ChatRailHeader() {
-  const { activeSessionId } = useSessionStore()
+  const { activeSessionId, activeMode } = useSessionStore()
+  const { setChatRailCollapsed } = useLayoutStore()
   const { data: session } = useSession(activeSessionId!)
   const { data: providers } = useProviders()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -28,9 +30,25 @@ export function ChatRailHeader() {
 
   return (
     <div className="flex items-center gap-2 px-4 py-2.5 border-b border-muted flex-shrink-0">
+      <button
+        onClick={() => setChatRailCollapsed(true)}
+        className="p-1 rounded-md hover:bg-[#f4f4f4] dark:hover:bg-[#40414f] text-slate dark:text-[#8e8e8e] transition-colors"
+        title="Collapse chat"
+      >
+        <PanelRightClose size={16} />
+      </button>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-ink dark:text-[#ececec] truncate">
-          {session.company_name}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-ink dark:text-[#ececec] truncate">
+            {session.company_name}
+          </span>
+          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${
+            activeMode === "plan"
+              ? "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
+              : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+          }`}>
+            {activeMode === "plan" ? "Plan" : "Edit"}
+          </span>
         </div>
         <div className="text-xs text-slate dark:text-[#8e8e8e] truncate">
           {session.role_title}

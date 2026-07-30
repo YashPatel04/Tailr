@@ -47,7 +47,7 @@ A single item inside a section: a job, a degree, a project.
 | `organization` | `str \| None` | No | Company or school name |
 | `dates` | `str \| None` | No | Date range (e.g. "June 2026 - Aug 2026") |
 | `location` | `str \| None` | No | Place (e.g. "Austin, TX") |
-| `url` | `str \| None` | No | Clickable link displayed alongside the org |
+| `urls` | `dict[str, str]` | No | Map of URL → display mask (empty dict = no links) |
 | `bullets` | `list[Bullet]` | No | Descriptive bullet points |
 | `metadata` | `dict` | No | Extensibility |
 
@@ -96,6 +96,15 @@ The top-level model. Everything else nests under it.
 
 ## Concrete Example
 
+```
+ResumeContent (snake_case JSONB)
+├── basics: { name, email, phone, location, summary, profiles[] }
+├── sections[]: { id, label, entries[], skill_rows[] }
+│   └── entries[]: { id, title, role, organization, dates, location, urls{}, bullets[], metadata }
+│       └── bullets[]: { id, text, spans[{ start, end, formats[], link_url }] }
+└── metadata: {}
+```
+
 ```json
 {
   "basics": {
@@ -121,7 +130,7 @@ The top-level model. Everything else nests under it.
           "organization": null,
           "dates": "June 2026 – August 2026",
           "location": "Austin, TX",
-          "url": null,
+          "urls": {},
           "bullets": [
             {
               "id": "b1b2b3b4-...",
@@ -165,7 +174,7 @@ The top-level model. Everything else nests under it.
           "organization": "University of Texas at Austin",
           "dates": "2024 – 2026",
           "location": "Austin, TX",
-          "url": null,
+          "urls": {},
           "bullets": [],
           "metadata": {}
         }

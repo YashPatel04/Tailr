@@ -10,45 +10,50 @@
 \pagestyle{empty}
 \begin{document}
 \begin{center}
-    {\LARGE \textbf{ {{- content.basics.name -}} }} \\[4pt]
+    {\LARGE \textbf{ {{- content.basics.name | tex_escape -}} }} \\[4pt]
 {%- if content.basics.location %}
-    {{ content.basics.location }} \\[4pt]
+    {{ content.basics.location | tex_escape }} \\[4pt]
 {%- endif %}
 {%- set contact_parts = [] -%}
 {%- if content.basics.phone -%}
-    {{- contact_parts.append(content.basics.phone) or "" -}}
+    {{- contact_parts.append(content.basics.phone | tex_escape) or "" -}}
 {%- endif -%}
 {%- if content.basics.email -%}
-    {{- contact_parts.append('\href{mailto:' + content.basics.email + '}{' + content.basics.email + '}') or "" -}}
+    {%- set email_escaped = content.basics.email | tex_escape -%}
+    {{- contact_parts.append('\href{mailto:' + email_escaped + '}{' + email_escaped + '}') or "" -}}
 {%- endif -%}
 {%- for profile in content.basics.profiles -%}
-    {{- contact_parts.append('\href{' + profile.url + '}{' + (profile.username or profile.network) + '}') or "" -}}
+    {%- set profile_name_escaped = (profile.username or profile.network) | tex_escape -%}
+    {%- set profile_url_escaped = profile.url | tex_escape -%}
+    {{- contact_parts.append('\href{' + profile_url_escaped + '}{' + profile_name_escaped + '}') or "" -}}
 {%- endfor -%}
 {%- if contact_parts %}
     {{ contact_parts | join(' $|$ ') }} \\[4pt]
 {%- endif %}
 {%- if content.basics.summary %}
-    {{ content.basics.summary }}
+    {{ content.basics.summary | tex_escape }}
 {%- endif %}
 \end{center}
 {% for section in content.sections %}
-\section*{ {{- section.label -}} }
+\section*{ {{- section.label | tex_escape -}} }
 {%- if section.skill_rows %}
 {%- for sk in section.skill_rows %}
-\textbf{ {{- sk.category -}} :} {{ sk.items }} \\
+\textbf{ {{- sk.category | tex_escape -}} :} {{ sk.items | tex_escape }} \\
 {%- endfor %}
 {%- endif %}
 {%- if section.entries %}
 {%- for entry in section.entries %}
-\textbf{ {{- entry.title -}} } \hfill \textbf{ {{- entry.dates or '' -}} }
+\textbf{ {{- entry.title | tex_escape -}} } \hfill \textbf{ {{- entry.dates | tex_escape or '' -}} }
 {%- if entry.role %}
-\textit{ {{- entry.role -}} }{%- if entry.location %} \hfill \textit{ {{- entry.location -}} }{%- endif %}
+\textit{ {{- entry.role | tex_escape -}} }{%- if entry.location %} \hfill \textit{ {{- entry.location | tex_escape -}} }{%- endif %}
 {%- endif %}
 {%- if entry.organization %}
-{{ entry.organization }}
+{{ entry.organization | tex_escape }}
 {%- endif %}
-{%- if entry.url %}
-\href{ {{- entry.url -}} }{ {{- entry.url -}} }
+{%- if entry.urls %}
+{%- for url, mask in entry.urls.items() if url %}
+\href{ {{- url | tex_escape -}} }{ {{- (mask if mask else url) | tex_escape -}} }
+{%- endfor %}
 {%- endif %}
 {%- if entry.bullets %}
 \begin{itemize}[itemsep=-2pt]

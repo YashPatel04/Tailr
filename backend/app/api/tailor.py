@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from uuid import uuid4
 
@@ -15,16 +16,20 @@ from app.models.resume_schema import ResumeContent
 from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
 from app.services.rendering.renderer import ResumeRenderer
 from app.services.llm.factory import get_adapter
-from app.services.llm.prompts import build_tailor_prompt_v3
+from app.services.llm.prompts import build_tailor_prompt_v3, build_plan_mode_prompt
 from app.services.research.summarizer import research_company
 
 router = APIRouter(prefix="/api/sessions", tags=["tailor"])
+logger = logging.getLogger(__name__)
 
 
 class ChatMessageRequest(BaseModel):
     content: str
     role: str = "user"
     doc_type: str = "resume"
+    mode: str = "edit"
+    tailoring_mode: str | None = None
+    proposal_context: str | None = None
 
 
 async def _emit(event_type: str, data: dict) -> str:
@@ -35,7 +40,11 @@ class PatchParseError(Exception):
     pass
 
 
-def _extract_content_ops(text: str) -> list[dict]:
+def _extract_content_ops(text: str) -> tuple[list[dict], str, str]:
+    """Extract operations, explanation, and reasoning from LLM response.
+
+    Returns (ops_list, explanation, reasoning).
+    """
     cleaned = text.strip()
     cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
     cleaned = re.sub(r"\s*```$", "", cleaned)
@@ -44,9 +53,11 @@ def _extract_content_ops(text: str) -> list[dict]:
     except json.JSONDecodeError as e:
         raise PatchParseError(f"Failed to parse JSON: {e}")
     if isinstance(data, list):
-        return data
+        return data, "", ""
     if isinstance(data, dict) and "operations" in data:
-        return data["operations"]
+        explanation = data.get("explanation", "")
+        reasoning = data.get("reasoning", "")
+        return data["operations"], explanation, reasoning
     raise PatchParseError("Response must be a JSON array of operations or object with 'operations' key")
 
 
@@ -65,20 +76,30 @@ async def chat_stream(
         raise HTTPException(status_code=404, detail="Session not found")
 
     user_msg = ChatMessage(
-        id=uuid4(), session_id=session.id, role="user", content=body.content
+        id=uuid4(), session_id=session.id, role="user", content=body.content,
+        metadata_json={"mode": body.mode},
     )
     db.add(user_msg)
     await db.commit()
+    logger.info("[chat] session=%s user_msg saved mode=%s", session_id, body.mode)
+
+    is_plan_mode = body.mode == "plan"
+    if body.tailoring_mode and body.tailoring_mode != session.tailoring_mode:
+        session.tailoring_mode = body.tailoring_mode
+        await db.commit()
 
     async def event_stream():
         try:
             yield await _emit("researching", {"message": f"Researching {session.company_name}..."})
             if not session.research_summary_json:
+                logger.info("[chat] session=%s researching company %s", session_id, session.company_name)
                 research = await research_company(session.company_name)
                 session.research_summary_json = research
                 await db.commit()
+                logger.info("[chat] session=%s research done", session_id)
             else:
                 research = session.research_summary_json
+                logger.info("[chat] session=%s using cached research", session_id)
 
             yield await _emit("research_done", {"summary": research})
 
@@ -100,6 +121,7 @@ async def chat_stream(
                     provider_id = default_provider.id
 
             if not provider_id:
+                logger.warning("[chat] session=%s no LLM provider found", session_id)
                 yield await _emit("error", {"message": "No LLM provider configured"})
                 return
 
@@ -107,6 +129,7 @@ async def chat_stream(
                 select(LLMProvider).where(LLMProvider.id == provider_id)
             )
             provider = p_result.scalar_one_or_none()
+            logger.info("[chat] session=%s provider=%s model=%s", session_id, provider.provider_type, provider.model)
 
             doc_result = await db.execute(
                 select(SessionDocument)
@@ -117,23 +140,57 @@ async def chat_stream(
             current_doc = doc_result.scalar_one_or_none()
 
             if not current_doc:
+                logger.warning("[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type)
                 yield await _emit("error", {"message": "No document found"})
                 return
 
             content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
             content = ResumeContent.model_validate(content_dict)
+            logger.info("[chat] session=%s document loaded, sections=%d", session_id, len(content.sections))
 
-            messages = build_tailor_prompt_v3(session, content, research, current_user.career_context or "")
+            if is_plan_mode:
+                messages = build_plan_mode_prompt(session, content, research, current_user.career_context or "")
+            else:
+                messages = build_tailor_prompt_v3(session, content, research, current_user.career_context or "")
+
+            messages.append({"role": "user", "content": body.content})
+
+            if body.proposal_context:
+                messages.append({"role": "user", "content": body.proposal_context})
             adapter = get_adapter(provider)
 
             yield await _emit("writing", {"message": "Writing changes..."})
 
+            logger.info("[chat] session=%s calling LLM mode=%s...", session_id, body.mode)
             response = await adapter.chat(messages, stream=False)
             raw_content = response.content if hasattr(response, "content") else ""
+            logger.info("[chat] session=%s LLM response length=%d", session_id, len(raw_content))
+
+            if is_plan_mode:
+                assistant_msg = ChatMessage(
+                    id=uuid4(),
+                    session_id=session.id,
+                    role="assistant",
+                    content=raw_content,
+                    metadata_json={"mode": "plan"},
+                )
+                db.add(assistant_msg)
+                await db.commit()
+                logger.info("[chat] session=%s plan mode response saved", session_id)
+                yield await _emit("proposal", {
+                    "message": raw_content,
+                    "operations": [],
+                    "diff": None,
+                    "patch_summary": "",
+                    "mode": "plan",
+                })
+                return
 
             try:
-                ops_list = _extract_content_ops(raw_content)
+                ops_list, explanation, reasoning = _extract_content_ops(raw_content)
+                logger.info("[chat] session=%s extracted %d operations", session_id, len(ops_list))
             except PatchParseError as e:
+                logger.error("[chat] session=%s patch parse error: %s", session_id, e)
                 yield await _emit("error", {"message": f"Invalid operations: {str(e)}"})
                 return
 
@@ -142,6 +199,7 @@ async def chat_stream(
                 applier = ContentApplier()
                 new_content = applier.apply(content, content_ops)
             except Exception as e:
+                logger.warning("[chat] session=%s operations failed, retrying: %s", session_id, e)
                 retry_response = await adapter.chat(
                     [
                         *messages,
@@ -152,10 +210,12 @@ async def chat_stream(
                 )
                 raw_content = retry_response.content if hasattr(retry_response, "content") else ""
                 try:
-                    ops_list = _extract_content_ops(raw_content)
+                    ops_list, explanation, reasoning = _extract_content_ops(raw_content)
                     content_ops = ops_from_list(ops_list)
                     new_content = applier.apply(content, content_ops)
+                    logger.info("[chat] session=%s retry succeeded, %d operations", session_id, len(ops_list))
                 except Exception as e:
+                    logger.error("[chat] session=%s retry also failed: %s", session_id, e)
                     yield await _emit("error", {"message": f"Operations retry failed: {str(e)}"})
                     return
 
@@ -169,14 +229,19 @@ async def chat_stream(
             await db.commit()
 
             op_count = len(ops_list)
+            logger.info("[chat] session=%s proposal ready, %d operations", session_id, op_count)
             yield await _emit("proposal", {
-                "message": f"I'd like to make {op_count} changes to your resume. Review them below.",
+                "message": explanation or f"I'd like to make {op_count} changes to your resume. Review them below.",
                 "operations": ops_list,
                 "diff": diff,
                 "patch_summary": f"{op_count} changes proposed",
+                "explanation": explanation,
+                "reasoning": reasoning,
+                "mode": "edit",
             })
 
         except Exception as e:
+            logger.error("[chat] session=%s unhandled error: %s", session_id, e, exc_info=True)
             yield await _emit("error", {"message": str(e)})
 
     return StreamingResponse(
@@ -225,19 +290,14 @@ async def accept_proposal(
     applier = ContentApplier()
     new_content = applier.apply(content, content_ops)
 
-    renderer = ResumeRenderer()
-    new_tex = renderer.render_tex(new_content)
     stored_model = new_content.model_dump(mode="json")
-    legacy_model = current_doc.document_model_json
 
     new_doc = SessionDocument(
         id=uuid4(),
         session_id=session.id,
         doc_type="resume",
         version=(current_doc.version or 0) + 1,
-        document_model_json=legacy_model,
         content_json=stored_model,
-        tex_source=new_tex,
         parent_doc_id=current_doc.id,
     )
     db.add(new_doc)
@@ -297,4 +357,4 @@ async def decline_proposal(
     db.add(assistant_msg)
     await db.commit()
 
-    return {"status": "declined", "changes_discarded": op_count}
+    return {"status": "declined"}

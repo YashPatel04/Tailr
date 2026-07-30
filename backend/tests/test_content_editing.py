@@ -30,6 +30,7 @@ from app.services.editing.content_ops import (
     ReorderBulletsOp,
     UpdateBasicsFieldOp,
     UpdateBulletOp,
+    UpdateEntryUrlsOp,
     UpdateFieldOp,
     UpdateSkillRowOp,
 )
@@ -228,18 +229,29 @@ class TestContentApplier:
         result = self.applier.apply(content, ops)
         assert result.sections[0].entries[0].dates == "2020–Present"
 
-    def test_update_field_to_none(self):
+    def test_update_entry_urls(self):
         content = _make_sample_content()
         ops = [
-            UpdateFieldOp(
+            UpdateEntryUrlsOp(
                 section_label="Experience",
                 entry_index=0,
-                field="url",
-                value=None,
+                urls={"https://new-url.com": "New Site"},
             )
         ]
         result = self.applier.apply(content, ops)
-        assert result.sections[0].entries[0].url is None
+        assert result.sections[0].entries[0].urls == {"https://new-url.com": "New Site"}
+
+    def test_update_entry_urls_to_empty(self):
+        content = _make_sample_content()
+        ops = [
+            UpdateEntryUrlsOp(
+                section_label="Experience",
+                entry_index=0,
+                urls={},
+            )
+        ]
+        result = self.applier.apply(content, ops)
+        assert result.sections[0].entries[0].urls == {}
 
     def test_add_section(self):
         content = _make_sample_content()

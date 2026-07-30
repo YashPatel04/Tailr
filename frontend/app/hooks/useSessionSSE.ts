@@ -10,11 +10,11 @@ import { useQueryClient } from "@tanstack/react-query"
 
 export function useSessionSSE(sessionId: string | null) {
   const controllerRef = useRef<AbortController | null>(null)
-  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal } = useSessionStore()
+  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, activeMode, tailoringMode } = useSessionStore()
   const queryClient = useQueryClient()
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string, proposalContext?: string) => {
       if (!sessionId) return
 
       controllerRef.current?.abort()
@@ -23,6 +23,14 @@ export function useSessionSSE(sessionId: string | null) {
 
       setStreaming(true)
       setProgress("", "")
+
+      queryClient.setQueryData(
+        ["sessions", sessionId, "messages"],
+        (old: any[] | undefined) => [
+          ...(old || []),
+          { id: `optimistic-${Date.now()}`, role: "user", content, created_at: new Date().toISOString() },
+        ]
+      )
 
       try {
         const csrfToken = await getCsrfToken()
@@ -33,7 +41,13 @@ export function useSessionSSE(sessionId: string | null) {
             Accept: "text/event-stream",
             "X-CSRF-Token": csrfToken,
           },
-          body: JSON.stringify({ content, role: "user" }),
+          body: JSON.stringify({
+            content,
+            role: "user",
+            mode: activeMode,
+            tailoring_mode: tailoringMode,
+            proposal_context: proposalContext,
+          }),
           credentials: "include",
           signal: controller.signal,
           onmessage(event) {
@@ -55,6 +69,10 @@ export function useSessionSSE(sessionId: string | null) {
                 case "proposal":
                   setStreaming(false)
                   setProgress("", "")
+                  if (data.mode === "plan") {
+                    queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                    break
+                  }
                   setViewMode("diff")
                   if (data.diff) {
                     setLatestDiff(data.diff)
@@ -64,8 +82,11 @@ export function useSessionSSE(sessionId: string | null) {
                     operations: data.operations || [],
                     diff: data.diff,
                     patch_summary: data.patch_summary || "",
+                    explanation: data.explanation || "",
+                    reasoning: data.reasoning || "",
                   })
                   queryClient.invalidateQueries({ queryKey: ["sessions"] })
+                  queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
                   break
                 case "done":
                   setStreaming(false)
@@ -101,7 +122,7 @@ export function useSessionSSE(sessionId: string | null) {
         }
       }
     },
-    [sessionId, setStreaming, setLatestDocument, setViewMode, setProgress, queryClient]
+    [sessionId, setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, queryClient, activeMode, tailoringMode]
   )
 
   useEffect(() => {

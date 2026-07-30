@@ -16,7 +16,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        "flex flex-col h-screen bg-[#171717] transition-[width] duration-200 ease-in-out flex-shrink-0",
+        "sticky top-0 flex flex-col h-screen bg-[#171717] transition-[width] duration-200 ease-in-out flex-shrink-0",
         collapsed ? "w-[52px]" : "w-[260px]"
       )}
     >

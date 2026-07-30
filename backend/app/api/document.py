@@ -17,7 +17,6 @@ from app.db import get_db
 from app.models.models import Patch, Session, SessionDocument
 from app.models.resume_schema import ResumeContent
 from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
-from app.services.rendering.renderer import ResumeRenderer
 
 router = APIRouter(prefix="/api/sessions", tags=["document-editing"])
 
@@ -70,17 +69,12 @@ async def edit_document(
     differ = ContentDiffer()
     diff = differ.diff(content, new_content)
 
-    renderer = ResumeRenderer()
-    new_tex = renderer.render_tex(new_content)
-
     new_doc = SessionDocument(
         id=uuid4(),
         session_id=session.id,
         doc_type="resume",
         version=(current_doc.version or 0) + 1,
-        document_model_json=current_doc.document_model_json,
         content_json=new_content.model_dump(mode='json'),
-        tex_source=new_tex,
         parent_doc_id=current_doc.id,
     )
     warnings: list[dict] = []

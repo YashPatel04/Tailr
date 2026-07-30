@@ -9,16 +9,19 @@ import { SettingsModal } from "@/components/settings/SettingsModal"
 import { useLayoutStore } from "@/stores/layout"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, setSidebarCollapsed, chatRailWidth, setChatRailWidth } = useLayoutStore()
+  const { sidebarCollapsed, setSidebarCollapsed, chatRailWidth, setChatRailWidth, chatRailCollapsed, setChatRailCollapsed } =
+    useLayoutStore()
   const [hydrated, setHydrated] = useState(false)
   const [resizing, setResizing] = useState(false)
   const resizeRef = useRef<{ startX: number; startWidth: number }>({ startX: 0, startWidth: 0 })
 
   useEffect(() => {
-    const stored = localStorage.getItem("rt-sidebar-collapsed")
-    if (stored === "true") setSidebarCollapsed(true)
+    const storedSidebar = localStorage.getItem("rt-sidebar-collapsed")
+    if (storedSidebar === "true") setSidebarCollapsed(true)
+    const storedRail = localStorage.getItem("rt-chat-rail-collapsed")
+    if (storedRail === "true") setChatRailCollapsed(true)
     setHydrated(true)
-  }, [setSidebarCollapsed])
+  }, [setSidebarCollapsed, setChatRailCollapsed])
 
   useEffect(() => {
     if (hydrated) {
@@ -26,11 +29,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [sidebarCollapsed, hydrated])
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setResizing(true)
-    resizeRef.current = { startX: e.clientX, startWidth: chatRailWidth }
-  }, [chatRailWidth])
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem("rt-chat-rail-collapsed", String(chatRailCollapsed))
+    }
+  }, [chatRailCollapsed, hydrated])
+
+  const onMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      setResizing(true)
+      resizeRef.current = { startX: e.clientX, startWidth: chatRailWidth }
+    },
+    [chatRailWidth]
+  )
 
   useEffect(() => {
     if (!resizing) return
@@ -53,14 +65,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
       <div className="flex h-screen w-screen overflow-hidden bg-canvas text-ink ">
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-        <main className="flex-1 min-w-0 overflow-hidden">{children}</main>
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+        <main className="flex-1 min-w-0">{children}</main>
         <div
-          className={`resize-handle flex-shrink-0 ${resizing ? "active" : ""}`}
+          className={`resize-handle flex-shrink-0 ${resizing ? "active" : ""} ${chatRailCollapsed ? "hidden" : ""}`}
           onMouseDown={onMouseDown}
         />
-        <div style={{ width: chatRailWidth }} className="flex-shrink-0">
-          <ChatRail width={chatRailWidth} />
+        <div
+          style={{ width: chatRailCollapsed ? 52 : chatRailWidth }}
+          className="flex-shrink-0 transition-[width] duration-200 ease-in-out"
+        >
+          <ChatRail width={chatRailCollapsed ? 52 : chatRailWidth} />
         </div>
         <SearchModal />
         <SettingsModal />

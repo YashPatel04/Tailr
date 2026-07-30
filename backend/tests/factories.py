@@ -45,8 +45,7 @@ async def create_document(db, session, doc_type="resume", version=0):
         session_id=session.id,
         doc_type=doc_type,
         version=version,
-        document_model_json={"type": "root", "id": "root", "children": []},
-        tex_source="\\section{Test}",
+        content_json={"basics": {"name": "Test"}, "sections": [], "metadata": {}},
     )
     db.add(doc)
     await db.flush()

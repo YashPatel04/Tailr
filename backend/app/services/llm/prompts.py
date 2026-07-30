@@ -6,6 +6,43 @@ import json
 from app.models.resume_schema import ResumeContent
 
 
+PLAN_MODE_SYSTEM_PROMPT = """\
+You are a resume advisor and career coach. Your job is to help the user understand the role, \
+research the company, and plan their resume tailoring strategy — WITHOUT making any edits to their resume.
+
+You are in PLAN MODE. Your responsibilities:
+- Answer questions about the company, role, and industry
+- Analyze the job description and explain what the employer is looking for
+- Compare the user's resume to the job requirements
+- Advise on which experiences to emphasize and how to position them
+- Explain resume strategy, best practices, and career advice
+- Suggest what changes would be most impactful
+
+YOU MUST NOT:
+- Return structured JSON operations
+- Propose specific edits to the resume content
+- Return a list of changes to apply
+- Format your response as code or JSON
+
+Your responses should be conversational, helpful, and in natural language. \
+Use markdown formatting for readability (headers, lists, bold).
+
+{career_context_section}
+
+RESEARCH SUMMARY:
+{research_summary}
+
+JOB DESCRIPTION:
+{job_description}
+
+RESUME CONTENT (JSON):
+```json
+{resume_content}
+```
+
+Respond naturally to the user's questions. Be specific and reference actual content from their resume and the job description.
+"""
+
 MODE_INSTRUCTIONS = {
     "polish": (
         "SURGICAL micro-edits — only change what needs changing. "
@@ -36,7 +73,10 @@ RESUME CONTENT (JSON):
 {resume_content}
 ```
 
-Return ONLY a valid JSON object with a single key "operations" containing an array of typed operations.
+Return ONLY a valid JSON object with keys:
+- "explanation": A clear, 2-3 sentence summary of WHAT changes you are making and the overall strategy
+- "reasoning": A clear explanation of WHY these changes matter for this specific job — reference the JD, company culture, or role requirements
+- "operations": An array of typed operations (see below)
 
 Every operation uses path-based addressing: section labels and integer indices (0-based).
 Target sections by their `label` field (e.g., "Experience", "Education").
@@ -44,14 +84,15 @@ Target entries, bullets, and skill rows by their array index within the parent s
 
 Available operations:
 
-- {{"op": "update_bullet", "section_label": "Experience", "entry_index": 0, "bullet_index": 1, "text": "<rewritten bullet>", "spans": [], "reasoning": "<why>"}}
-- {{"op": "add_bullet", "section_label": "Experience", "entry_index": 0, "after_index": 1, "text": "<new bullet>", "spans": [], "reasoning": "<why>"}}
+- {{"op": "update_bullet", "section_label": "Experience", "entry_index": 0, "bullet_index": 1, "text": "<rewritten bullet>", "spans": [], "bold_added": [], "bold_removed": [], "reasoning": "<why>"}}
+- {{"op": "add_bullet", "section_label": "Experience", "entry_index": 0, "after_index": 1, "text": "<new bullet>", "spans": [], "bold_added": [], "bold_removed": [], "reasoning": "<why>"}}
 - {{"op": "delete_bullet", "section_label": "Experience", "entry_index": 0, "bullet_index": 2, "reasoning": "<why>"}}
 - {{"op": "reorder_bullets", "section_label": "Experience", "entry_index": 0, "order": [2, 0, 1], "reasoning": "<why>"}}
-- {{"op": "add_entry", "section_label": "Experience", "after_index": -1, "title": "...", "role": "...", "organization": "...", "dates": "...", "location": "...", "url": "...", "bullets": [{{"text": "..."}}], "reasoning": "<why>"}}
+- {{"op": "add_entry", "section_label": "Experience", "after_index": -1, "title": "...", "role": "...", "organization": "...", "dates": "...", "location": "...", "urls": {{"https://example.com": "Display Text"}}, "bullets": [{{"text": "..."}}], "reasoning": "<why>"}}
 - {{"op": "delete_entry", "section_label": "Experience", "entry_index": 1, "reasoning": "<why>"}}
 - {{"op": "move_entry", "section_label": "Experience", "from_index": 2, "to_index": 0, "reasoning": "<why>"}}
 - {{"op": "update_field", "section_label": "Experience", "entry_index": 0, "field": "dates", "value": "2020-Present", "reasoning": "<why>"}}
+- {{"op": "update_entry_urls", "section_label": "Experience", "entry_index": 0, "urls": {{"https://github.com/repo": "GitHub", "https://demo.example.com": "Live Demo"}}, "reasoning": "<why>"}}
 - {{"op": "add_section", "after_index": 2, "label": "Certifications", "reasoning": "<why>"}}
 - {{"op": "delete_section", "section_label": "Hobbies", "reasoning": "<why>"}}
 - {{"op": "move_section", "from_index": 3, "to_index": 1, "reasoning": "<why>"}}
@@ -63,6 +104,13 @@ Available operations:
 - {{"op": "update_basics_field", "field": "location", "value": "<new location>", "reasoning": "<why>"}}
 - {{"op": "ask", "question": "...", "context": "<optional context>"}}
 
+Bold formatting rules for update_bullet and add_bullet:
+- `bold_added`: List words/phrases you made BOLD that were NOT bold before. Find the EXACT word in the new text.
+- `bold_removed`: List words/phrases you REMOVED bold formatting from. Find the EXACT word in the old text.
+- `spans`: Index-based formatting (fallback). Use only if you are confident in character positions.
+- ALWAYS declare bold_added and bold_removed when you change bold formatting. This is more reliable than indices.
+- Example: If original had "Engineered" bold and you changed it to "Designed" bold, use bold_added: ["Designed"], bold_removed: ["Engineered"].
+
 Indexing rules:
 - `after_index: -1` means insert at the beginning (position 0).
 - All other indices are 0-based array positions.
@@ -72,17 +120,21 @@ IMPORTANT: Do NOT include any text outside the JSON. Your entire response must b
 IMPORTANT: Max 15 operations per response to keep changes focused and reviewable.
 
 CRITICAL — SURGICAL EDITING RULES:
-1. Return ONLY operations that make actual, meaningful changes. If a bullet, entry, or section is fine as-is, DO NOT include an operation for it.
-2. You are a SURGICAL editor, not a rewriter. Return 3-15 operations max. If you find yourself returning 30+ operations, you are doing it wrong.
-3. Only use `update_bullet` when you CHANGE the bullet text. Never re-emit a bullet with identical text.
-4. Use `add_section` to add new relevant sections, `add_bullet` to add new bullets to existing entries.
-5. The resume content above shows the CURRENT state. Only operations you return will be applied. Unchanged content stays as-is automatically.
+1. ALWAYS follow the user's explicit instructions. If they ask to delete something, DELETE it. If they ask to remove a section, use `delete_section`. If they ask to delete everything, delete everything.
+2. Return ONLY operations that make actual, meaningful changes. If a bullet, entry, or section is fine as-is, DO NOT include an operation for it.
+3. You are a SURGICAL editor, not a rewriter. Return 3-15 operations max. If you find yourself returning 30+ operations, you are doing it wrong.
+4. Only use `update_bullet` when you CHANGE the bullet text. Never re-emit a bullet with identical text.
+5. Use `add_section` to add new relevant sections, `add_bullet` to add new bullets to existing entries.
+6. Use `delete_section`, `delete_entry`, `delete_bullet` when the user asks to remove content. Do NOT add replacements unless the user asks.
+7. The resume content above shows the CURRENT state. Only operations you return will be applied. Unchanged content stays as-is automatically.
 
 DO NOT:
 - Return the entire document as operations
 - Regenerate untouched bullets just to "confirm" them
 - Recreate sections that don't need changes
 - Return 50+ operations duplicating the entire resume
+- Ignore the user's explicit instructions (e.g., if they say "delete X", do not add new content instead)
+- Add content the user did not ask for
 
 BAD response pattern (DO NOT do this):
 {{
@@ -98,10 +150,15 @@ GOOD response pattern (DO THIS):
   "operations": [
     {{"op": "update_bullet", ..., "text": "Reworded bullet targeting Microsoft's engineering culture"}},
     {{"op": "add_bullet", ..., "text": "New AZ-900 certification bullet for Azure relevance"}},
-    {{"op": "add_section", ..., "label": "Relevant Skills"}},
+    {{"op": "delete_section", "section_label": "Hobbies", "reasoning": "User asked to remove this section"}},
     {{"op": "update_basics_field", "field": "summary", "value": "Summary rewritten for Microsoft role"}}
   ]
 }}
+
+When the user explicitly asks to delete or remove content, use delete operations:
+- `delete_section` to remove an entire section
+- `delete_entry` to remove an entry from a section
+- `delete_bullet` to remove a bullet from an entry
 
 Make 3-15 targeted changes. Do NOT rewrite the entire resume. Every operation must change something.
 """
@@ -133,6 +190,67 @@ def build_tailor_prompt_v3(
     return [
         {"role": "system", "content": system},
         {"role": "user", "content": session.notes or "Tailor this resume for the job description."},
+    ]
+
+
+def build_plan_mode_prompt(
+    session,
+    content: ResumeContent,
+    research_summary: dict | None,
+    career_context: str = "",
+) -> list[dict]:
+    research_json = json.dumps(research_summary or {}, indent=2)
+    content_json = json.dumps(content.model_dump(mode="json"), indent=2)
+
+    career_context_section = ""
+    if career_context:
+        career_context_section = f"CAREER CONTEXT:\n{career_context}"
+
+    system = PLAN_MODE_SYSTEM_PROMPT.format(
+        career_context_section=career_context_section,
+        research_summary=research_json,
+        job_description=session.job_description or "",
+        resume_content=content_json,
+    )
+
+    return [
+        {"role": "system", "content": system},
+    ]
+
+
+COVER_LETTER_SYSTEM_PROMPT = """\
+You are a professional cover letter writer. Write a compelling, tailored cover letter based on the provided resume content and job description.
+
+The cover letter should:
+- Be professional and confident in tone
+- Open with a strong introduction mentioning the company and role
+- Highlight 2-3 key relevant experiences/skills from the resume that match the job description
+- Close with enthusiasm and a call to action
+- Be 250-400 words
+- Do NOT include any markdown or formatting markup — just plain text paragraphs
+
+Return ONLY the cover letter text, nothing else."""
+
+
+def build_cover_letter_prompt(
+    master_tex: str,
+    job_description: str,
+    company_name: str,
+    role_title: str,
+) -> list[dict]:
+    return [
+        {"role": "system", "content": COVER_LETTER_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f"""Company: {company_name}
+Role: {role_title}
+
+Job Description:
+{job_description}
+
+My Resume:
+{master_tex}""",
+        },
     ]
 
 

@@ -4,6 +4,7 @@ import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
 import { RichEditableField } from "./RichEditableField"
 import { FormattedText } from "./FormattedText"
+import { DeleteButton } from "./DeleteButton"
 import { useDiff } from "@/components/diff/DiffView"
 import { diffBorderClass, diffGutterClass, diffGutter, renderDiffText } from "@/lib/wordDiff"
 import { clsx } from "clsx"
@@ -16,7 +17,13 @@ interface BulletRendererProps {
   bulletIndex?: number
 }
 
-export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletIndex }: BulletRendererProps) {
+export function BulletRenderer({
+  node,
+  bullet,
+  sectionLabel,
+  entryIndex,
+  bulletIndex,
+}: BulletRendererProps) {
   const id = bullet?.id ?? node?.id
   const text = bullet?.text ?? node?.text ?? ""
   const spans = bullet?.spans ?? node?.spans ?? []
@@ -29,19 +36,16 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
     const sessionId = useSessionStore.getState().activeSessionId
     const docType = useSessionStore.getState().activeDocType
     if (!sessionId) return
-    queryClient.setQueryData(
-      ["sessions", sessionId, "document", docType],
-      (old: any) => {
-        if (!old?.content) return old
-        const newContent = structuredClone(old.content)
-        const section = newContent.sections.find((s: any) => s.label === sectionLabel)
-        if (section && section.entries[entryIndex]?.bullets[bulletIndex]) {
-          section.entries[entryIndex].bullets[bulletIndex].text = newText
-          section.entries[entryIndex].bullets[bulletIndex].spans = newSpans
-        }
-        return { ...old, content: newContent }
+    queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+      if (!old?.content) return old
+      const newContent = structuredClone(old.content)
+      const section = newContent.sections.find((s: any) => s.label === sectionLabel)
+      if (section && section.entries[entryIndex]?.bullets[bulletIndex]) {
+        section.entries[entryIndex].bullets[bulletIndex].text = newText
+        section.entries[entryIndex].bullets[bulletIndex].spans = newSpans
       }
-    )
+      return { ...old, content: newContent }
+    })
   }
 
   const handleSave = (newText: string, newSpans: Span[]) => {
@@ -69,23 +73,21 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
       entry_index: entryIndex,
       bullet_index: bulletIndex,
     })
-    queryClient.setQueryData(
-      ["sessions", sessionId, "document", docType],
-      (old: any) => {
-        if (!old?.content) return old
-        const newContent = structuredClone(old.content)
-        const section = newContent.sections.find((s: any) => s.label === sectionLabel)
-        if (section && section.entries[entryIndex]) {
-          section.entries[entryIndex].bullets = section.entries[entryIndex].bullets.filter(
-            (_: any, i: number) => i !== bulletIndex
-          )
-        }
-        return { ...old, content: newContent }
+    queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+      if (!old?.content) return old
+      const newContent = structuredClone(old.content)
+      const section = newContent.sections.find((s: any) => s.label === sectionLabel)
+      if (section && section.entries[entryIndex]) {
+        section.entries[entryIndex].bullets = section.entries[entryIndex].bullets.filter(
+          (_: any, i: number) => i !== bulletIndex
+        )
       }
-    )
+      return { ...old, content: newContent }
+    })
   }
 
-  const showEditable = sectionLabel !== undefined && entryIndex !== undefined && bulletIndex !== undefined
+  const showEditable =
+    sectionLabel !== undefined && entryIndex !== undefined && bulletIndex !== undefined
 
   return (
     <li
@@ -95,24 +97,25 @@ export function BulletRenderer({ node, bullet, sectionLabel, entryIndex, bulletI
       )}
     >
       {diffState.kind && (
-        <span className={clsx("absolute -left-4 top-0 text-xs font-bold font-mono", diffGutterClass(diffState.kind))}>
+        <span
+          className={clsx(
+            "absolute -left-4 top-0 text-xs font-bold font-mono",
+            diffGutterClass(diffState.kind)
+          )}
+        >
           {diffGutter(diffState.kind)}
         </span>
       )}
       {showEditable ? (
         <RichEditableField value={text} spans={spans} onSave={handleSave} tag="span" />
-      ) : diffState.kind === "modified" && diffState.oldVal !== undefined && diffState.newVal !== undefined ? (
+      ) : diffState.kind === "modified" &&
+        diffState.oldVal !== undefined &&
+        diffState.newVal !== undefined ? (
         <span>{renderDiffText(diffState.kind, text, diffState.oldVal, diffState.newVal)}</span>
       ) : (
         <FormattedText text={text} spans={spans} />
       )}
-      {showEditable && viewMode !== "diff" && (
-        <button
-          onClick={handleDelete}
-          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-1"
-          title="Delete bullet"
-        >×</button>
-      )}
+      {showEditable && viewMode !== "diff" && <DeleteButton onClick={handleDelete} />}
     </li>
   )
 }

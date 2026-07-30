@@ -14,35 +14,69 @@ export interface DiffState {
 interface DiffContextValue {
   diff: DiffChangeSet | null
   getDiffState: (nodeId: string) => DiffState
+  getDiffChanges: (nodeId: string) => DiffState[]
 }
 
-const DiffContext = createContext<DiffContextValue>({ diff: null, getDiffState: () => ({ kind: null }) })
+const DiffContext = createContext<DiffContextValue>({
+  diff: null,
+  getDiffState: () => ({ kind: null }),
+  getDiffChanges: () => [],
+})
 
 export function useDiff(nodeId: string): DiffState {
   const { getDiffState } = useContext(DiffContext)
   return getDiffState(nodeId)
 }
 
+export function useDiffChanges(nodeId: string): DiffState[] {
+  const { getDiffChanges } = useContext(DiffContext)
+  return getDiffChanges(nodeId)
+}
+
 function buildPathToIdMap(content: ResumeContent): Map<string, string> {
   const map = new Map<string, string>()
+  const entryFields = ["title", "role", "organization", "dates", "location", "url"]
   content.sections.forEach((section, si) => {
     map.set(`sections[${si}]`, section.id)
     map.set(`sections[${si}].${section.label}`, section.id)
+    map.set(`sections.${section.label}`, section.id)
+    map.set(`sections[${si}].${section.label}.metadata`, section.id)
+    map.set(`sections.${section.label}.metadata`, section.id)
     section.entries.forEach((entry, ei) => {
       map.set(`sections[${si}].entries[${ei}]`, entry.id)
       map.set(`sections[${si}].${section.label}.entries[${ei}]`, entry.id)
+      map.set(`sections.${section.label}.entries[${ei}]`, entry.id)
+      entryFields.forEach((field) => {
+        map.set(`sections[${si}].entries[${ei}].${field}`, entry.id)
+        map.set(`sections[${si}].${section.label}.entries[${ei}].${field}`, entry.id)
+        map.set(`sections.${section.label}.entries[${ei}].${field}`, entry.id)
+      })
       entry.bullets.forEach((bullet, bi) => {
         map.set(`sections[${si}].entries[${ei}].bullets[${bi}]`, bullet.id)
         map.set(`sections[${si}].${section.label}.entries[${ei}].bullets[${bi}]`, bullet.id)
+        map.set(`sections.${section.label}.entries[${ei}].bullets[${bi}]`, bullet.id)
         map.set(`sections[${si}].entries[${ei}].bullets[${bi}].text`, bullet.id)
         map.set(`sections[${si}].${section.label}.entries[${ei}].bullets[${bi}].text`, bullet.id)
+        map.set(`sections.${section.label}.entries[${ei}].bullets[${bi}].text`, bullet.id)
+        map.set(`sections[${si}].entries[${ei}].bullets[${bi}].spans`, bullet.id)
+        map.set(`sections[${si}].${section.label}.entries[${ei}].bullets[${bi}].spans`, bullet.id)
+        map.set(`sections.${section.label}.entries[${ei}].bullets[${bi}].spans`, bullet.id)
       })
     })
     section.skill_rows.forEach((row, ri) => {
       map.set(`sections[${si}].skill_rows[${ri}]`, row.id)
       map.set(`sections[${si}].${section.label}.skill_rows[${ri}]`, row.id)
+      map.set(`sections.${section.label}.skill_rows[${ri}]`, row.id)
+      map.set(`sections.${section.label}.skill_rows[${ri}].category`, row.id)
+      map.set(`sections.${section.label}.skill_rows[${ri}].items`, row.id)
     })
   })
+  const basicsId = "basics"
+  map.set("basics.name", basicsId)
+  map.set("basics.email", basicsId)
+  map.set("basics.phone", basicsId)
+  map.set("basics.location", basicsId)
+  map.set("basics.summary", basicsId)
   return map
 }
 
@@ -91,15 +125,31 @@ function ChangesSummary({ changes }: { changes: any[] }) {
         onClick={() => setCollapsed(!collapsed)}
         className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f8f9fa] dark:bg-[#292a2d] border border-[#dadce0] dark:border-[#5f6368] text-left text-[11px] text-[#5f6368] dark:text-[#9aa0a6] font-mono hover:bg-[#f1f3f4] dark:hover:bg-[#3c4043] transition-colors"
       >
-        {collapsed ? <ChevronRight size={12} className="flex-shrink-0" /> : <ChevronDown size={12} className="flex-shrink-0" />}
+        {collapsed ? (
+          <ChevronRight size={12} className="flex-shrink-0" />
+        ) : (
+          <ChevronDown size={12} className="flex-shrink-0" />
+        )}
         <span className="flex items-center gap-1">
-          {added.length > 0 && <span className="text-[#137333] dark:text-[#81c995] font-semibold">+{added.length}</span>}
+          {added.length > 0 && (
+            <span className="text-[#137333] dark:text-[#81c995] font-semibold">
+              +{added.length}
+            </span>
+          )}
           {added.length > 0 && <span>added</span>}
           {added.length > 0 && (removed.length > 0 || modified.length > 0) && <span>·</span>}
-          {removed.length > 0 && <span className="text-[#c5221f] dark:text-[#f28b82] font-semibold">&ndash;{removed.length}</span>}
+          {removed.length > 0 && (
+            <span className="text-[#c5221f] dark:text-[#f28b82] font-semibold">
+              &ndash;{removed.length}
+            </span>
+          )}
           {removed.length > 0 && <span>removed</span>}
           {(added.length > 0 || removed.length > 0) && modified.length > 0 && <span>·</span>}
-          {modified.length > 0 && <span className="text-[#e37400] dark:text-[#fdd663] font-semibold">~{modified.length}</span>}
+          {modified.length > 0 && (
+            <span className="text-[#e37400] dark:text-[#fdd663] font-semibold">
+              ~{modified.length}
+            </span>
+          )}
           {modified.length > 0 && <span>modified</span>}
         </span>
         <span className="ml-auto text-[10px] text-[#9aa0a6] dark:text-[#80868b]">
@@ -115,10 +165,14 @@ function ChangesSummary({ changes }: { changes: any[] }) {
               <span className="font-semibold">+{added.length} added</span>
               {added.map((c, i) => {
                 const newVal = getNewValue(c)
-                const label = newVal?.label || newVal?.title || (typeof newVal === "string" ? newVal.substring(0, 40) : "")
+                const label =
+                  newVal?.label ||
+                  newVal?.title ||
+                  (typeof newVal === "string" ? newVal.substring(0, 40) : "")
                 return (
                   <div key={i} className="opacity-70 mt-0.5 ml-2 truncate text-[11px]">
-                    {humanizePath(getChangePath(c))}{label ? `: "${label}"` : ""}
+                    {humanizePath(getChangePath(c))}
+                    {label ? `: "${label}"` : ""}
                   </div>
                 )
               })}
@@ -129,7 +183,9 @@ function ChangesSummary({ changes }: { changes: any[] }) {
             <div className="p-2 rounded bg-[#fce8e6] dark:bg-[#a50e0e]/30 text-[#c5221f] dark:text-[#f28b82] border-l-[3px] border-[#c5221f] dark:border-[#f28b82]">
               <span className="font-semibold">&ndash;{removed.length} removed</span>
               {removed.map((c, i) => (
-                <div key={i} className="opacity-70 mt-0.5 ml-2 truncate text-[11px]">{humanizePath(getChangePath(c))}</div>
+                <div key={i} className="opacity-70 mt-0.5 ml-2 truncate text-[11px]">
+                  {humanizePath(getChangePath(c))}
+                </div>
               ))}
             </div>
           )}
@@ -139,24 +195,37 @@ function ChangesSummary({ changes }: { changes: any[] }) {
             const newVal = getNewValue(c)
             const path = getChangePath(c)
             return (
-              <div key={i} className="p-2 rounded bg-[#fef7e0] dark:bg-[#e37400]/20 text-[#b06000] dark:text-[#fdd663] border-l-[3px] border-[#e37400] dark:border-[#fdd663]">
-                <div className="font-semibold text-[10px] mb-0.5 opacity-70">{humanizePath(path)}</div>
+              <div
+                key={i}
+                className="p-2 rounded bg-[#fef7e0] dark:bg-[#e37400]/20 text-[#b06000] dark:text-[#fdd663] border-l-[3px] border-[#e37400] dark:border-[#fdd663]"
+              >
+                <div className="font-semibold text-[10px] mb-0.5 opacity-70">
+                  {humanizePath(path)}
+                </div>
                 {oldVal !== undefined && newVal !== undefined ? (
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div className="px-1.5 py-0.5 rounded bg-[#fce8e6]/70 dark:bg-[#a50e0e]/40 text-[#c5221f] dark:text-[#f28b82] line-through break-all">
-                      {typeof oldVal === "string" ? oldVal.substring(0, 150) : JSON.stringify(oldVal).substring(0, 150)}
+                      {typeof oldVal === "string"
+                        ? oldVal.substring(0, 150)
+                        : JSON.stringify(oldVal).substring(0, 150)}
                     </div>
                     <div className="px-1.5 py-0.5 rounded bg-[#e6f4ea]/70 dark:bg-[#137333]/40 text-[#137333] dark:text-[#81c995] break-all">
-                      {typeof newVal === "string" ? newVal.substring(0, 150) : JSON.stringify(newVal).substring(0, 150)}
+                      {typeof newVal === "string"
+                        ? newVal.substring(0, 150)
+                        : JSON.stringify(newVal).substring(0, 150)}
                     </div>
                   </div>
                 ) : oldVal !== undefined ? (
                   <div className="px-1.5 py-0.5 rounded bg-[#fce8e6]/70 dark:bg-[#a50e0e]/40 text-[#c5221f] dark:text-[#f28b82] line-through break-all text-[11px]">
-                    {typeof oldVal === "string" ? oldVal.substring(0, 150) : JSON.stringify(oldVal).substring(0, 150)}
+                    {typeof oldVal === "string"
+                      ? oldVal.substring(0, 150)
+                      : JSON.stringify(oldVal).substring(0, 150)}
                   </div>
                 ) : newVal !== undefined ? (
                   <div className="px-1.5 py-0.5 rounded bg-[#e6f4ea]/70 dark:bg-[#137333]/40 text-[#137333] dark:text-[#81c995] break-all text-[11px]">
-                    {typeof newVal === "string" ? newVal.substring(0, 150) : JSON.stringify(newVal).substring(0, 150)}
+                    {typeof newVal === "string"
+                      ? newVal.substring(0, 150)
+                      : JSON.stringify(newVal).substring(0, 150)}
                   </div>
                 ) : null}
               </div>
@@ -182,35 +251,39 @@ export function DiffView({
   const value = useMemo(() => {
     const pathToIdMap = content ? buildPathToIdMap(content) : new Map<string, string>()
 
-    const findChange = (nodeId: string): any => {
-      const change = diff?.changes?.find((c: any) => {
+    const findAllChanges = (nodeId: string): any[] => {
+      const changes = diff?.changes || []
+      return changes.filter((c: any) => {
         if (c.node_id === nodeId) return true
         if (c.path) {
           const mappedId = pathToIdMap.get(c.path)
           if (mappedId === nodeId) return true
-          for (const [p, id] of pathToIdMap.entries()) {
-            if (id === nodeId && c.path.includes(p)) return true
-          }
         }
         return false
       })
-      return change
+    }
+
+    const toDiffState = (change: any): DiffState => {
+      const kind = getChangeKind(change)
+      const oldVal = getOldValue(change)
+      const newVal = getNewValue(change)
+      return {
+        kind,
+        oldVal: typeof oldVal === "string" ? oldVal : undefined,
+        newVal: typeof newVal === "string" ? newVal : undefined,
+        path: getChangePath(change),
+      }
     }
 
     return {
       diff,
       getDiffState: (nodeId: string): DiffState => {
-        const change = findChange(nodeId)
+        const change = findAllChanges(nodeId)[0]
         if (!change) return { kind: null }
-        const kind = getChangeKind(change)
-        const oldVal = getOldValue(change)
-        const newVal = getNewValue(change)
-        return {
-          kind,
-          oldVal: typeof oldVal === "string" ? oldVal : undefined,
-          newVal: typeof newVal === "string" ? newVal : undefined,
-          path: getChangePath(change),
-        }
+        return toDiffState(change)
+      },
+      getDiffChanges: (nodeId: string): DiffState[] => {
+        return findAllChanges(nodeId).map(toDiffState)
       },
     }
   }, [diff, content])

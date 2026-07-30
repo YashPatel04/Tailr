@@ -17,7 +17,7 @@ from app.models.resume_schema import (
     SkillRow,
     Span,
 )
-from app.services.rendering.renderer import ResumeRenderer, span_format_filter
+from app.services.rendering.renderer import ResumeRenderer, span_format_filter, tex_escape
 
 
 def _has_pdflatex() -> bool:
@@ -126,6 +126,73 @@ class TestSpanFormatFilter:
         assert result == ""
 
 
+class TestTexEscape:
+    def test_empty_string(self):
+        assert tex_escape("") == ""
+
+    def test_none(self):
+        assert tex_escape(None) is None
+
+    def test_no_special_chars(self):
+        assert tex_escape("Hello World 123") == "Hello World 123"
+
+    def test_escapes_percent(self):
+        assert tex_escape("50%") == r"50\%"
+
+    def test_escapes_ampersand(self):
+        assert tex_escape("A & B") == r"A \& B"
+
+    def test_escapes_hash(self):
+        assert tex_escape("C#") == r"C\#"
+
+    def test_escapes_dollar(self):
+        assert tex_escape("$100") == r"\$100"
+
+    def test_escapes_underscore(self):
+        assert tex_escape("foo_bar") == r"foo\_bar"
+
+    def test_escapes_braces(self):
+        assert tex_escape("{text}") == r"\{text\}"
+
+    def test_escapes_caret(self):
+        assert tex_escape("x^2") == r"x\^{}2"
+
+    def test_escapes_tilde(self):
+        assert tex_escape("~user") == r"\textasciitilde{}user"
+
+    def test_escapes_backslash_first(self):
+        assert tex_escape(r"\command") == r"\textbackslash{}command"
+
+    def test_multiple_special_chars(self):
+        assert tex_escape("Price: $50 & up ~20%") == r"Price: \$50 \& up \textasciitilde{}20\%"
+
+
+class TestSpanFormatEscape:
+    def test_escapes_percent_in_segments(self):
+        result = span_format_filter("50% off", [])
+        assert result == r"50\% off"
+
+    def test_escapes_ampersand_in_segments(self):
+        result = span_format_filter("A & B", [])
+        assert result == r"A \& B"
+
+    def test_escapes_inside_bold(self):
+        result = span_format_filter("50% off", [
+            Span(start=0, end=3, formats=[FormatKind.BOLD])
+        ])
+        assert r"\textbf{50\%}" in result
+
+    def test_escapes_link_url(self):
+        result = span_format_filter("click here", [
+            Span(start=0, end=10, formats=[FormatKind.BOLD], link_url="https://example.com/a%20page")
+        ])
+        assert r"\href{https://example.com/a\%20page}" in result
+
+    def test_escapes_braces_in_text(self):
+        result = span_format_filter("set {a, b}", [])
+        assert result == r"set \{a, b\}"
+
+
 class TestResumeRenderer:
     def _make_content(self) -> ResumeContent:
         return ResumeContent(
@@ -150,7 +217,7 @@ class TestResumeRenderer:
                             organization="Acme Corp",
                             dates="2020--Present",
                             location="Remote",
-                            url="https://acme.com",
+                            urls={"https://acme.com": "Acme Corp"},
                             bullets=[
                                 Bullet(
                                     text="Built scalable web services using Python and FastAPI",
@@ -290,7 +357,7 @@ class TestResumeRenderer:
                         Entry(
                             title="My Project",
                             dates="2024",
-                            url="https://project.example.com",
+                            urls={"https://project.example.com": "Project Site"},
                             bullets=[Bullet(text="Built it")],
                         ),
                     ],
@@ -300,6 +367,7 @@ class TestResumeRenderer:
         tex = renderer.render_tex(content)
         assert "\\href{" in tex
         assert "https://project.example.com" in tex
+        assert "Project Site" in tex
 
     def test_render_tex_escapes_special_latex_chars(self):
         renderer = ResumeRenderer()
@@ -321,7 +389,12 @@ class TestResumeRenderer:
         tex = renderer.render_tex(content)
         assert "\\begin{document}" in tex
         assert "\\end{document}" in tex
-        assert "A & B Co." in tex
+        assert r"A \& B Co." in tex
+        assert r"50\%" in tex
+        assert r"20\%" in tex
+        assert "A & B Co." not in tex
+        assert "50%" not in tex
+        assert "20%" not in tex
 
 
 # ---------------------------------------------------------------------------

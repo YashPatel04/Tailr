@@ -31,7 +31,7 @@ RESUME SCHEMA (JSON):
           "organization": null,
           "dates": "Jan 2020 - Dec 2021",
           "location": "City, State",
-          "url": null,
+          "urls": {},
           "bullets": [
             {
               "text": "Bullet point text with no LaTeX formatting",
@@ -54,7 +54,7 @@ INSTRUCTIONS:
 3. If a section has \\textbf{...:} lines (with colon), create skill_rows.
 4. If a section has \\textbf{...} \\hfill ... header lines followed by itemize blocks, create entries with bullets.
 5. Parse each entry header: \\textbf{Title} \\hfill \\textbf{Dates} on line 1, \\textit{Role} \\hfill \\textit{Location} on line 2 (if present).
-6. For each \\item, extract the bullet text. Map \\textbf{...} to bold spans, \\textit{...} to italic spans, \\underline{...} to underline spans, \\texttt{...} to code spans, \\href{url}{text} to spans with link_url.
+6. For each \\item, extract the bullet text. Map \\textbf{...} to bold spans, \\textit{...} to italic spans, \\underline{...} to underline spans, \\texttt{...} to code spans. For entry-level \\href{url}{text} commands (not inside bullets), map to urls[url] = text (the display text becomes the mask). If \\href has no text mask, use the URL itself as the mask.
 7. Map sections by their \\section* label. Preserve section order.
 8. If you encounter LaTeX you cannot map, place it in the nearest element's metadata field (e.g., entry.metadata.raw_latex).
 9. IMPORTANT: Return ONLY the JSON object. No markdown code fences, no explanatory text.

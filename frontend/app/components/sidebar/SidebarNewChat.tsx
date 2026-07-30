@@ -1,20 +1,20 @@
 "use client"
 
 import { Pencil, Plus } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/Toaster"
 import { useMasterResume } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
+import { useSettingsStore } from "@/components/settings/SettingsModal"
 
 export function SidebarNewChat({ collapsed }: { collapsed: boolean }) {
-  const router = useRouter()
   const { data: master } = useMasterResume()
   const { setSetupOpen } = useSessionStore()
+  const openSettings = useSettingsStore((s) => s.open)
 
   const handleClick = () => {
     if (!master) {
       toast.error("Upload a master resume first")
-      router.push("/settings/master-resume")
+      openSettings("master-resume")
       return
     }
     setSetupOpen(true)

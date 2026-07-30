@@ -53,7 +53,7 @@
 </div>
 {%- endif %}
 {%- if entry.organization %}<div class="entry-org">{{ entry.organization }}</div>{% endif %}
-{%- if entry.url %}<div><a href="{{ entry.url }}">{{ entry.url }}</a></div>{% endif %}
+{%- if entry.urls %}{%- for url, mask in entry.urls.items() if url %}<div><a href="{{ url }}">{{ mask if mask else url }}</a></div>{%- endfor %}{% endif %}
 {%- if entry.bullets %}
 <ul class="bullets">
 {%- for bullet in entry.bullets %}

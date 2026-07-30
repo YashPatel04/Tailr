@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { Section } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
@@ -8,11 +8,11 @@ import { queueEdit } from "@/lib/editQueue"
 import { EditableField } from "./EditableField"
 import { EntryRenderer } from "./EntryRenderer"
 import { SortableEntry } from "./SortableEntry"
+import { SortableSkillRow } from "./SortableSkillRow"
 import { BulletRenderer } from "./BulletRenderer"
-import { SkillRowRenderer } from "./SkillRowRenderer"
+import { DeleteButton } from "./DeleteButton"
 import { FormattedText } from "./FormattedText"
 import { OpaqueNodeRenderer } from "./OpaqueNodeRenderer"
-import { RawTexPanel } from "./RawTexPanel"
 import { useDiff } from "@/components/diff/DiffView"
 import { diffBorderClass, diffGutterClass, diffGutter } from "@/lib/wordDiff"
 import { clsx } from "clsx"
@@ -22,50 +22,125 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 interface SectionRendererProps {
   node?: any
   section?: Section
-  texSource?: string | null
   sectionIndex?: number
 }
 
-export function SectionRenderer({ node, section, texSource, sectionIndex }: SectionRendererProps) {
-  const [showSource, setShowSource] = useState(false)
+export function SectionRenderer({ node, section, sectionIndex }: SectionRendererProps) {
   const contextDiff = useDiff(section ? section.id : node?.id)
   const effectiveDiff = contextDiff
   const queryClient = useQueryClient()
   const viewMode = useSessionStore((s) => s.viewMode)
 
-  const handleEntryDragEnd = useCallback((event: DragEndEvent) => {
-    if (viewMode === "diff" || !section) return
-    const { active, over } = event
-    if (!over || active.id === over.id) return
+  const handleEntryDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      if (viewMode === "diff" || !section) return
+      const { active, over } = event
+      if (!over || active.id === over.id) return
 
-    const oldIndex = section.entries.findIndex((e) => e.id === active.id)
-    const newIndex = section.entries.findIndex((e) => e.id === over.id)
+      const oldIndex = section.entries.findIndex((e) => e.id === active.id)
+      const newIndex = section.entries.findIndex((e) => e.id === over.id)
 
-    if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
 
+      const sessionId = useSessionStore.getState().activeSessionId
+      const docType = useSessionStore.getState().activeDocType
+      if (sessionId && sectionIndex !== undefined) {
+        queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+          if (!old?.content) return old
+          const newContent = structuredClone(old.content)
+          if (newContent.sections[sectionIndex]) {
+            const entries = [...newContent.sections[sectionIndex].entries]
+            const [moved] = entries.splice(oldIndex, 1)
+            entries.splice(newIndex, 0, moved)
+            newContent.sections[sectionIndex].entries = entries
+          }
+          return { ...old, content: newContent }
+        })
+      }
+      queueEdit({
+        op: "move_entry",
+        section_label: section.label,
+        from_index: oldIndex,
+        to_index: newIndex,
+      })
+    },
+    [section, viewMode, sectionIndex, queryClient]
+  )
+
+  const handleSkillRowDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      if (viewMode === "diff" || !section) return
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const oldIndex = section.skill_rows.findIndex((r) => r.id === active.id)
+      const newIndex = section.skill_rows.findIndex((r) => r.id === over.id)
+
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+
+      const sessionId = useSessionStore.getState().activeSessionId
+      const docType = useSessionStore.getState().activeDocType
+      if (sessionId && sectionIndex !== undefined) {
+        queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+          if (!old?.content) return old
+          const newContent = structuredClone(old.content)
+          if (newContent.sections[sectionIndex]) {
+            const rows = [...newContent.sections[sectionIndex].skill_rows]
+            const [moved] = rows.splice(oldIndex, 1)
+            rows.splice(newIndex, 0, moved)
+            newContent.sections[sectionIndex].skill_rows = rows
+          }
+          return { ...old, content: newContent }
+        })
+      }
+      queueEdit({
+        op: "move_skill_row",
+        section_label: section.label,
+        from_index: oldIndex,
+        to_index: newIndex,
+      })
+    },
+    [section, viewMode, sectionIndex, queryClient]
+  )
+
+  const addSkillRow = () => {
+    if (!section || sectionIndex === undefined) return
+    const sessionId = useSessionStore.getState().activeSessionId
+    const docType = useSessionStore.getState().activeDocType
+    const afterIndex = section.skill_rows.length - 1
     queueEdit({
-      op: "move_entry",
+      op: "add_skill_row",
       section_label: section.label,
-      from_index: oldIndex,
-      to_index: newIndex,
+      after_index: afterIndex,
+      category: "",
+      items: "",
     })
-  }, [section, viewMode])
+    if (sessionId) {
+      queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+        if (!old?.content) return old
+        const newContent = structuredClone(old.content)
+        const sec = newContent.sections[sectionIndex]
+        if (sec) {
+          const newId = `skill_row_${Date.now()}`
+          sec.skill_rows = [...sec.skill_rows, { id: newId, category: "", items: "" }]
+        }
+        return { ...old, content: newContent }
+      })
+    }
+  }
 
   const updateSectionLabel = (newLabel: string) => {
     const sessionId = useSessionStore.getState().activeSessionId
     const docType = useSessionStore.getState().activeDocType
     if (!sessionId || sectionIndex === undefined) return
-    queryClient.setQueryData(
-      ["sessions", sessionId, "document", docType],
-      (old: any) => {
-        if (!old?.content) return old
-        const newContent = structuredClone(old.content)
-        if (newContent.sections[sectionIndex]) {
-          newContent.sections[sectionIndex].label = newLabel
-        }
-        return { ...old, content: newContent }
+    queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+      if (!old?.content) return old
+      const newContent = structuredClone(old.content)
+      if (newContent.sections[sectionIndex]) {
+        newContent.sections[sectionIndex].label = newLabel
       }
-    )
+      return { ...old, content: newContent }
+    })
   }
 
   const deleteSection = () => {
@@ -74,54 +149,79 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
     const docType = useSessionStore.getState().activeDocType
     queueEdit({ op: "delete_section", section_label: section.label })
     if (sessionId) {
-      queryClient.setQueryData(
-        ["sessions", sessionId, "document", docType],
-        (old: any) => {
-          if (!old?.content) return old
-          const newContent = structuredClone(old.content)
-          newContent.sections = newContent.sections.filter((_: any, i: number) => i !== sectionIndex)
-          return { ...old, content: newContent }
-        }
-      )
+      queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
+        if (!old?.content) return old
+        const newContent = structuredClone(old.content)
+        newContent.sections = newContent.sections.filter((_: any, i: number) => i !== sectionIndex)
+        return { ...old, content: newContent }
+      })
     }
   }
 
   if (section) {
     return (
-      <section className={clsx("mb-8 group/section relative", diffBorderClass(effectiveDiff.kind))}>
+      <section className={clsx("mb-4 group/section relative", diffBorderClass(effectiveDiff.kind))}>
         {effectiveDiff.kind && (
-          <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", diffGutterClass(effectiveDiff.kind))}>
+          <span
+            className={clsx(
+              "absolute left-0 top-0 text-xs font-bold font-mono",
+              diffGutterClass(effectiveDiff.kind)
+            )}
+          >
             {diffGutter(effectiveDiff.kind)}
           </span>
         )}
         {section.label && (
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex items-center justify-between">
-            <EditableField
-              value={section.label}
-              tag="span"
-              onSave={updateSectionLabel}
-            />
+            <EditableField value={section.label} tag="span" onSave={updateSectionLabel} />
             {viewMode !== "diff" && sectionIndex !== undefined && (
-              <button
-                onClick={(e) => { e.stopPropagation(); deleteSection() }}
-                className="opacity-0 group-hover/section:opacity-100 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded px-1 text-xs transition-opacity ml-2 shrink-0"
-                title="Delete section"
-              >× Delete</button>
+              <DeleteButton onClick={() => deleteSection()} />
             )}
           </h2>
         )}
         {section.entries && section.entries.length > 0 && (
           <DndContext collisionDetection={closestCenter} onDragEnd={handleEntryDragEnd}>
-            <SortableContext items={section.entries.map(e => e.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext
+              items={section.entries.map((e) => e.id)}
+              strategy={verticalListSortingStrategy}
+            >
               {section.entries.map((entry, i) => (
-                <SortableEntry key={entry.id} entry={entry} sectionLabel={section.label} entryIndex={i} />
+                <SortableEntry
+                  key={entry.id}
+                  entry={entry}
+                  sectionLabel={section.label}
+                  entryIndex={i}
+                />
               ))}
             </SortableContext>
           </DndContext>
         )}
-        {section.skill_rows?.map((row) => (
-          <SkillRowRenderer key={row.id} row={row} />
-        ))}
+        {section.skill_rows && section.skill_rows.length > 0 && (
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleSkillRowDragEnd}>
+            <SortableContext
+              items={section.skill_rows.map((r) => r.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {section.skill_rows.map((row, i) => (
+                <SortableSkillRow
+                  key={row.id}
+                  row={row}
+                  sectionIndex={sectionIndex!}
+                  rowIndex={i}
+                  sectionLabel={section.label}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        )}
+        {viewMode !== "diff" && section.skill_rows && section.skill_rows.length > 0 && (
+          <button
+            onClick={addSkillRow}
+            className="opacity-0 group-hover/section:opacity-100 text-xs text-slate dark:text-[#8e8e8e] hover:text-brass dark:hover:text-brass px-1 py-0.5 rounded hover:bg-brass/10 transition-all"
+          >
+            + Add skill row
+          </button>
+        )}
       </section>
     )
   }
@@ -133,9 +233,14 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
   }
 
   return (
-    <section className={clsx("mb-8 relative", diffBorderClass(effectiveDiff.kind))}>
+    <section className={clsx("mb-4 relative", diffBorderClass(effectiveDiff.kind))}>
       {effectiveDiff.kind && (
-        <span className={clsx("absolute left-0 top-0 text-xs font-bold font-mono", diffGutterClass(effectiveDiff.kind))}>
+        <span
+          className={clsx(
+            "absolute left-0 top-0 text-xs font-bold font-mono",
+            diffGutterClass(effectiveDiff.kind)
+          )}
+        >
           {diffGutter(effectiveDiff.kind)}
         </span>
       )}
@@ -144,21 +249,10 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex-1">
             {node.label}
           </h2>
-          {texSource && (
-            <button
-              onClick={() => setShowSource(!showSource)}
-              className="ml-2 rounded border border-brass px-2 py-0.5 text-xs text-brass hover:bg-brass/10 transition-colors font-mono"
-            >
-              tex
-            </button>
-          )}
         </div>
       )}
 
-      {showSource && texSource ? (
-        <RawTexPanel texSource={texSource} />
-      ) : (
-        node.children?.map((child: any) => {
+      {node.children?.map((child: any) => {
           switch (child.type) {
             case "entry":
               return <EntryRenderer key={child.id} node={child} />
@@ -172,16 +266,20 @@ export function SectionRenderer({ node, section, texSource, sectionIndex }: Sect
                 </div>
               )
             case "text":
-              return <FormattedText key={child.id} text={child.text || ""} spans={child.spans || []} />
+              return (
+                <FormattedText key={child.id} text={child.text || ""} spans={child.spans || []} />
+              )
             case "section":
-              return <SectionRenderer key={child.id} node={child} texSource={child.tex_source || null} />
+              return (
+                <SectionRenderer key={child.id} node={child} />
+              )
             case "opaque":
               return <OpaqueNodeRenderer key={child.id} node={child} />
             default:
               return null
           }
         })
-      )}
+      }
     </section>
   )
 }

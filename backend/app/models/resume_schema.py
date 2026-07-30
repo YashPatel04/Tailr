@@ -65,7 +65,7 @@ class Entry(BaseModel):
     organization: str | None = None
     dates: str | None = None
     location: str | None = None
-    url: str | None = None
+    urls: dict[str, str] = Field(default_factory=dict)
     bullets: list[Bullet] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
 

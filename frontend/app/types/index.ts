@@ -27,8 +27,7 @@ export interface MasterResume {
   id: string
   filename: string
   original_format: string
-  tex_source: string
-  vocabulary_map_json: Record<string, string> | null
+  content_json: ResumeContent
   page_count: number
   created_at: string
   updated_at: string
@@ -49,6 +48,19 @@ export interface Session {
   is_archived: boolean
   created_at: string
   updated_at: string
+  latest_document?: {
+    id: string | null
+    version: number
+    document_type: "resume" | "cover_letter"
+    content: ResumeContent | null
+    parent_doc_id: string | null
+  } | null
+  cover_letter_document?: {
+    id: string | null
+    version: number
+    content: { text: string; type: string } | null
+  } | null
+  has_cover_letter?: boolean
 }
 
 export interface SessionDocument {
@@ -56,8 +68,7 @@ export interface SessionDocument {
   session_id: string
   doc_type: "resume" | "cover_letter"
   version: number
-  document_model_json: DocNode
-  tex_source: string
+  content_json: ResumeContent
   parent_doc_id: string | null
   is_final: boolean
   created_at: string
@@ -106,7 +117,6 @@ export interface DocNode {
 export interface SectionNode extends DocNode {
   type: "section"
   label: string
-  tex_source: string | null
 }
 
 export interface EntryNode extends DocNode {
@@ -172,7 +182,7 @@ export interface Entry {
   organization: string | null
   dates: string | null
   location: string | null
-  url: string | null
+  urls: Record<string, string> | null
   bullets: Bullet[]
   metadata: Record<string, unknown>
 }
