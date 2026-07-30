@@ -14,9 +14,8 @@ from app.db import get_db
 from app.models.models import ChatMessage, LLMProvider, Patch, Session, SessionDocument
 from app.models.resume_schema import ResumeContent
 from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
-from app.services.rendering.renderer import ResumeRenderer
 from app.services.llm.factory import get_adapter
-from app.services.llm.prompts import build_tailor_prompt_v3, build_plan_mode_prompt
+from app.services.llm.prompts import build_plan_mode_prompt, build_tailor_prompt_v3
 from app.services.research.summarizer import research_company
 
 router = APIRouter(prefix="/api/sessions", tags=["tailor"])
@@ -58,7 +57,9 @@ def _extract_content_ops(text: str) -> tuple[list[dict], str, str]:
         explanation = data.get("explanation", "")
         reasoning = data.get("reasoning", "")
         return data["operations"], explanation, reasoning
-    raise PatchParseError("Response must be a JSON array of operations or object with 'operations' key")
+    raise PatchParseError(
+        "Response must be a JSON array of operations or object with 'operations' key"
+    )
 
 
 @router.post("/{session_id}/chat")
@@ -76,7 +77,10 @@ async def chat_stream(
         raise HTTPException(status_code=404, detail="Session not found")
 
     user_msg = ChatMessage(
-        id=uuid4(), session_id=session.id, role="user", content=body.content,
+        id=uuid4(),
+        session_id=session.id,
+        role="user",
+        content=body.content,
         metadata_json={"mode": body.mode},
     )
     db.add(user_msg)
@@ -92,7 +96,9 @@ async def chat_stream(
         try:
             yield await _emit("researching", {"message": f"Researching {session.company_name}..."})
             if not session.research_summary_json:
-                logger.info("[chat] session=%s researching company %s", session_id, session.company_name)
+                logger.info(
+                    "[chat] session=%s researching company %s", session_id, session.company_name
+                )
                 research = await research_company(session.company_name)
                 session.research_summary_json = research
                 await db.commit()
@@ -108,8 +114,9 @@ async def chat_stream(
             provider_id = session.llm_provider_id
             if not provider_id:
                 p_result = await db.execute(
-                    select(LLMProvider)
-                    .where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+                    select(LLMProvider).where(
+                        LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+                    )
                 )
                 default_provider = p_result.scalar_one_or_none()
                 if not default_provider:
@@ -125,33 +132,47 @@ async def chat_stream(
                 yield await _emit("error", {"message": "No LLM provider configured"})
                 return
 
-            p_result = await db.execute(
-                select(LLMProvider).where(LLMProvider.id == provider_id)
-            )
+            p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
             provider = p_result.scalar_one_or_none()
-            logger.info("[chat] session=%s provider=%s model=%s", session_id, provider.provider_type, provider.model)
+            logger.info(
+                "[chat] session=%s provider=%s model=%s",
+                session_id,
+                provider.provider_type,
+                provider.model,
+            )
 
             doc_result = await db.execute(
                 select(SessionDocument)
-                .where(SessionDocument.session_id == session.id, SessionDocument.doc_type == body.doc_type)
+                .where(
+                    SessionDocument.session_id == session.id,
+                    SessionDocument.doc_type == body.doc_type,
+                )
                 .order_by(SessionDocument.version.desc())
                 .limit(1)
             )
             current_doc = doc_result.scalar_one_or_none()
 
             if not current_doc:
-                logger.warning("[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type)
+                logger.warning(
+                    "[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type
+                )
                 yield await _emit("error", {"message": "No document found"})
                 return
 
             content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
             content = ResumeContent.model_validate(content_dict)
-            logger.info("[chat] session=%s document loaded, sections=%d", session_id, len(content.sections))
+            logger.info(
+                "[chat] session=%s document loaded, sections=%d", session_id, len(content.sections)
+            )
 
             if is_plan_mode:
-                messages = build_plan_mode_prompt(session, content, research, current_user.career_context or "")
+                messages = build_plan_mode_prompt(
+                    session, content, research, current_user.career_context or ""
+                )
             else:
-                messages = build_tailor_prompt_v3(session, content, research, current_user.career_context or "")
+                messages = build_tailor_prompt_v3(
+                    session, content, research, current_user.career_context or ""
+                )
 
             messages.append({"role": "user", "content": body.content})
 
@@ -177,13 +198,16 @@ async def chat_stream(
                 db.add(assistant_msg)
                 await db.commit()
                 logger.info("[chat] session=%s plan mode response saved", session_id)
-                yield await _emit("proposal", {
-                    "message": raw_content,
-                    "operations": [],
-                    "diff": None,
-                    "patch_summary": "",
-                    "mode": "plan",
-                })
+                yield await _emit(
+                    "proposal",
+                    {
+                        "message": raw_content,
+                        "operations": [],
+                        "diff": None,
+                        "patch_summary": "",
+                        "mode": "plan",
+                    },
+                )
                 return
 
             try:
@@ -204,7 +228,10 @@ async def chat_stream(
                     [
                         *messages,
                         {"role": "assistant", "content": raw_content},
-                        {"role": "user", "content": f"Your operations had errors: {str(e)}. Please fix and return only valid JSON."},
+                        {
+                            "role": "user",
+                            "content": f"Your operations had errors: {str(e)}. Please fix and return only valid JSON.",
+                        },
                     ],
                     stream=False,
                 )
@@ -213,7 +240,11 @@ async def chat_stream(
                     ops_list, explanation, reasoning = _extract_content_ops(raw_content)
                     content_ops = ops_from_list(ops_list)
                     new_content = applier.apply(content, content_ops)
-                    logger.info("[chat] session=%s retry succeeded, %d operations", session_id, len(ops_list))
+                    logger.info(
+                        "[chat] session=%s retry succeeded, %d operations",
+                        session_id,
+                        len(ops_list),
+                    )
                 except Exception as e:
                     logger.error("[chat] session=%s retry also failed: %s", session_id, e)
                     yield await _emit("error", {"message": f"Operations retry failed: {str(e)}"})
@@ -222,7 +253,9 @@ async def chat_stream(
             differ = ContentDiffer()
             diff = differ.diff(content, new_content)
 
-            ops_for_storage = [op if isinstance(op, dict) else op.model_dump() for op in content_ops]
+            ops_for_storage = [
+                op if isinstance(op, dict) else op.model_dump() for op in content_ops
+            ]
 
             session.pending_operations_json = {"ops": ops_list, "content_ops": ops_for_storage}
             session.pending_diff_json = diff
@@ -230,15 +263,19 @@ async def chat_stream(
 
             op_count = len(ops_list)
             logger.info("[chat] session=%s proposal ready, %d operations", session_id, op_count)
-            yield await _emit("proposal", {
-                "message": explanation or f"I'd like to make {op_count} changes to your resume. Review them below.",
-                "operations": ops_list,
-                "diff": diff,
-                "patch_summary": f"{op_count} changes proposed",
-                "explanation": explanation,
-                "reasoning": reasoning,
-                "mode": "edit",
-            })
+            yield await _emit(
+                "proposal",
+                {
+                    "message": explanation
+                    or f"I'd like to make {op_count} changes to your resume. Review them below.",
+                    "operations": ops_list,
+                    "diff": diff,
+                    "patch_summary": f"{op_count} changes proposed",
+                    "explanation": explanation,
+                    "reasoning": reasoning,
+                    "mode": "edit",
+                },
+            )
 
         except Exception as e:
             logger.error("[chat] session=%s unhandled error: %s", session_id, e, exc_info=True)
@@ -284,7 +321,9 @@ async def accept_proposal(
     if not current_doc:
         raise HTTPException(status_code=404, detail="No document found")
 
-    content = ResumeContent.model_validate(current_doc.content_json or {"basics": {"name": ""}, "sections": []})
+    content = ResumeContent.model_validate(
+        current_doc.content_json or {"basics": {"name": ""}, "sections": []}
+    )
 
     content_ops = ops_from_list(ops_list)
     applier = ContentApplier()

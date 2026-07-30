@@ -1,10 +1,5 @@
-import hashlib
-import os
-import re
 import json
 import urllib.request
-
-from app.config import settings
 
 
 class CompileError(Exception):
@@ -21,8 +16,9 @@ class LatexCompiler:
 
     def compile(self, tex_source: str, document_id: str) -> bytes:
         data = json.dumps({"tex_source": tex_source, "document_id": document_id}).encode("utf-8")
-        req = urllib.request.Request(self.service_url, data=data, method="POST",
-                                       headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            self.service_url, data=data, method="POST", headers={"Content-Type": "application/json"}
+        )
         try:
             with urllib.request.urlopen(req, timeout=60) as resp:
                 if resp.status == 200:

@@ -27,12 +27,14 @@ function LinkableField({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => {
           setEditing(false)
-          if (draft.trim() !== value) onSave(draft.trim())
+          const trimmed = draft.trim()
+          if (trimmed !== value && trimmed !== "") onSave(trimmed)
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             setEditing(false)
-            if (draft.trim() !== value) onSave(draft.trim())
+            const trimmed = draft.trim()
+            if (trimmed !== value && trimmed !== "") onSave(trimmed)
           }
           if (e.key === "Escape") {
             setDraft(value)
@@ -95,7 +97,6 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
   const locationDiff = getFieldDiff("location")
   const phoneDiff = getFieldDiff("phone")
   const emailDiff = getFieldDiff("email")
-  const summaryDiff = getFieldDiff("summary")
 
   return (
     <header className="mb-8 text-center">
@@ -178,27 +179,6 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
             </span>
           ))}
         </p>
-        {basics.summary !== undefined && (
-          <p className={`text-sm text-ink dark:text-[#ececec] mt-2 whitespace-pre-wrap ${diffBorderClass(summaryDiff?.kind || null)}`}>
-            {viewMode === "diff" && summaryDiff?.kind && (
-              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterClass(summaryDiff.kind)}`}>
-                {diffGutter(summaryDiff.kind)}
-              </span>
-            )}
-            <LinkableField
-              value={basics.summary || ""}
-              onSave={(v) => queueBasisEdit("summary", v)}
-            />
-            {viewMode === "diff" &&
-              summaryDiff?.kind === "modified" &&
-              summaryDiff.oldVal !== undefined &&
-              summaryDiff.newVal !== undefined && (
-                <span className="text-xs ml-2">
-                  {renderDiffText(summaryDiff.kind, basics.summary || "", summaryDiff.oldVal, summaryDiff.newVal)}
-                </span>
-              )}
-          </p>
-        )}
       </div>
     </header>
   )

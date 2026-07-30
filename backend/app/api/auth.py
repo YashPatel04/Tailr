@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, get_current_user
+from app.api.deps import CurrentUser
 from app.config import settings
 from app.db import get_db
 from app.models.models import EmailVerification, PasswordReset, RefreshToken, User
@@ -120,7 +120,7 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(token),
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        expires_at=datetime.now(UTC) + timedelta(hours=1),
     )
     db.add(verification)
     await db.commit()
@@ -151,7 +151,7 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
     )
     verification = result.scalar_one_or_none()
 
-    if not verification or verification.expires_at < datetime.now(timezone.utc):
+    if not verification or verification.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
     verification.used = True
@@ -187,7 +187,7 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
         id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_token_str),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
     )
     db.add(refresh_row)
     await db.commit()
@@ -223,11 +223,13 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
 
     token_hash = hash_token(cookie_token)
     result = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_hash == token_hash).order_by(RefreshToken.created_at.desc())
+        select(RefreshToken)
+        .where(RefreshToken.token_hash == token_hash)
+        .order_by(RefreshToken.created_at.desc())
     )
     token_row = result.scalars().first()
 
-    if not token_row or token_row.expires_at < datetime.now(timezone.utc):
+    if not token_row or token_row.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=401, detail="Token expired")
 
     if token_row.revoked:
@@ -236,11 +238,17 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
                 RefreshToken.user_id == token_row.user_id, RefreshToken.revoked == False
             )
         )
-        tokens_to_revoke = (await db.execute(
-            select(RefreshToken).where(
-                RefreshToken.user_id == token_row.user_id, RefreshToken.revoked == False
+        tokens_to_revoke = (
+            (
+                await db.execute(
+                    select(RefreshToken).where(
+                        RefreshToken.user_id == token_row.user_id, RefreshToken.revoked == False
+                    )
+                )
             )
-        )).scalars().all()
+            .scalars()
+            .all()
+        )
         for t in tokens_to_revoke:
             t.revoked = True
         await db.commit()
@@ -255,7 +263,7 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
         id=uuid4(),
         user_id=token_row.user_id,
         token_hash=hash_token(refresh_token_str),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
         replaced_by_token_hash=None,
     )
     token_row.replaced_by_token_hash = new_refresh.token_hash
@@ -281,7 +289,7 @@ async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depend
             id=uuid4(),
             user_id=user.id,
             token_hash=hash_token(token),
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+            expires_at=datetime.now(UTC) + timedelta(hours=1),
         )
         db.add(reset)
         await db.commit()
@@ -308,7 +316,7 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
     )
     reset = result.scalar_one_or_none()
 
-    if not reset or reset.expires_at < datetime.now(timezone.utc):
+    if not reset or reset.expires_at < datetime.now(UTC):
         raise HTTPException(status_code=400, detail="Invalid or expired token")
 
     reset.used = True
@@ -318,9 +326,17 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
     if user:
         user.password_hash = hash_password(body.new_password)
 
-    tokens = (await db.execute(
-        select(RefreshToken).where(RefreshToken.user_id == reset.user_id, RefreshToken.revoked == False)
-    )).scalars().all()
+    tokens = (
+        (
+            await db.execute(
+                select(RefreshToken).where(
+                    RefreshToken.user_id == reset.user_id, RefreshToken.revoked == False
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
     for t in tokens:
         t.revoked = True
 
@@ -336,9 +352,7 @@ async def logout(request: Request, db: AsyncSession = Depends(get_db)):
     cookie_token = request.cookies.get("refresh_token")
     if cookie_token:
         token_hash = hash_token(cookie_token)
-        result = await db.execute(
-            select(RefreshToken).where(RefreshToken.token_hash == token_hash)
-        )
+        result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
         token_row = result.scalar_one_or_none()
         if token_row:
             token_row.revoked = True
@@ -368,7 +382,9 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(code: str, state: str, request: Request, db: AsyncSession = Depends(get_db)):
+async def github_callback(
+    code: str, state: str, request: Request, db: AsyncSession = Depends(get_db)
+):
     cookie_state = request.cookies.get("oauth_state")
     if not cookie_state or cookie_state != state:
         raise HTTPException(status_code=400, detail="Invalid state")
@@ -403,7 +419,10 @@ async def github_callback(code: str, state: str, request: Request, db: AsyncSess
             headers={"Authorization": f"Bearer {access_token}"},
         )
         emails_data = emails_res.json()
-        primary_email = next((e["email"] for e in emails_data if e.get("primary")), emails_data[0]["email"] if emails_data else None)
+        primary_email = next(
+            (e["email"] for e in emails_data if e.get("primary")),
+            emails_data[0]["email"] if emails_data else None,
+        )
 
     result = await db.execute(
         select(User).where(User.oauth_provider == "github", User.oauth_id == github_id)
@@ -437,7 +456,7 @@ async def github_callback(code: str, state: str, request: Request, db: AsyncSess
         id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_jwt),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
     )
     db.add(refresh_row)
     await db.commit()
@@ -468,7 +487,9 @@ async def google_login():
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, state: str, request: Request, db: AsyncSession = Depends(get_db)):
+async def google_callback(
+    code: str, state: str, request: Request, db: AsyncSession = Depends(get_db)
+):
     cookie_state = request.cookies.get("oauth_state")
     if not cookie_state or cookie_state != state:
         raise HTTPException(status_code=400, detail="Invalid state")
@@ -532,7 +553,7 @@ async def google_callback(code: str, state: str, request: Request, db: AsyncSess
         id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_jwt),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=7),
+        expires_at=datetime.now(UTC) + timedelta(days=7),
     )
     db.add(refresh_row)
     await db.commit()
@@ -562,7 +583,9 @@ async def get_me(current_user: CurrentUser):
 
 
 @user_router.patch("/me")
-async def update_me(body: UserUpdateRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def update_me(
+    body: UserUpdateRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     if body.career_context is not None:
         current_user.career_context = body.career_context
     await db.commit()
@@ -584,16 +607,24 @@ async def change_password(
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
-    if not current_user.password_hash or not verify_password(body.current_password, current_user.password_hash):
+    if not current_user.password_hash or not verify_password(
+        body.current_password, current_user.password_hash
+    ):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
     current_user.password_hash = hash_password(body.new_password)
 
-    tokens = (await db.execute(
-        select(RefreshToken).where(
-            RefreshToken.user_id == current_user.id, RefreshToken.revoked == False
+    tokens = (
+        (
+            await db.execute(
+                select(RefreshToken).where(
+                    RefreshToken.user_id == current_user.id, RefreshToken.revoked == False
+                )
+            )
         )
-    )).scalars().all()
+        .scalars()
+        .all()
+    )
     for t in tokens:
         t.revoked = True
 

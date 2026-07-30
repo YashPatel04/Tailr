@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -9,7 +9,7 @@ from app.db import Base
 
 
 def utcnow():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
@@ -27,10 +27,18 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    providers: Mapped[list["LLMProvider"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    master_resumes: Mapped[list["MasterResume"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    sessions: Mapped[list["Session"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    providers: Mapped[list["LLMProvider"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    master_resumes: Mapped[list["MasterResume"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    sessions: Mapped[list["Session"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     email_verifications: Mapped[list["EmailVerification"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
@@ -43,7 +51,9 @@ class LLMProvider(Base):
     __tablename__ = "llm_providers"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     provider_type: Mapped[str] = mapped_column(String(20), nullable=False)
     api_key_encrypted: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -65,7 +75,9 @@ class MasterResume(Base):
     __tablename__ = "master_resumes"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
     filename: Mapped[str] = mapped_column(String(256), nullable=False)
     original_format: Mapped[str] = mapped_column(String(10), nullable=False)
     content_json: Mapped[dict] = mapped_column(JSONB, nullable=False)
@@ -82,7 +94,9 @@ class Session(Base):
     __tablename__ = "sessions"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     master_resume_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("master_resumes.id", ondelete="SET NULL"), nullable=True
     )
@@ -105,9 +119,15 @@ class Session(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="sessions")
-    documents: Mapped[list["SessionDocument"]] = relationship(back_populates="session", cascade="all, delete-orphan")
-    patches: Mapped[list["Patch"]] = relationship(back_populates="session", cascade="all, delete-orphan")
-    chat_messages: Mapped[list["ChatMessage"]] = relationship(back_populates="session", cascade="all, delete-orphan")
+    documents: Mapped[list["SessionDocument"]] = relationship(
+        back_populates="session", cascade="all, delete-orphan"
+    )
+    patches: Mapped[list["Patch"]] = relationship(
+        back_populates="session", cascade="all, delete-orphan"
+    )
+    chat_messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class SessionDocument(Base):
@@ -162,7 +182,9 @@ class ChatMessage(Base):
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
-    patch_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("patches.id", ondelete="SET NULL"), nullable=True)
+    patch_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("patches.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     session: Mapped["Session"] = relationship(back_populates="chat_messages")

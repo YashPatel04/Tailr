@@ -33,7 +33,6 @@ class Basics(BaseModel):
     phone: str | None = None
     location: str | None = None
     profiles: list[Profile] = Field(default_factory=list)
-    summary: str | None = None
 
 
 class Bullet(BaseModel):
@@ -48,13 +47,9 @@ class Bullet(BaseModel):
             if span.start < 0:
                 raise ValueError(f"span[{i}].start must be >= 0, got {span.start}")
             if span.end > text_len:
-                raise ValueError(
-                    f"span[{i}].end ({span.end}) exceeds text length ({text_len})"
-                )
+                raise ValueError(f"span[{i}].end ({span.end}) exceeds text length ({text_len})")
             if span.start >= span.end:
-                raise ValueError(
-                    f"span[{i}].start ({span.start}) must be < span.end ({span.end})"
-                )
+                raise ValueError(f"span[{i}].start ({span.start}) must be < span.end ({span.end})")
         return self
 
 

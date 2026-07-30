@@ -63,11 +63,7 @@ class LatexParser:
                 stack[-1].children.append(
                     Token(type="verbatim", start_byte=start, end_byte=end, content=value)
                 )
-            elif kind == "display_math":
-                stack[-1].children.append(
-                    Token(type="math", start_byte=start, end_byte=end, content=value)
-                )
-            elif kind == "inline_math":
+            elif kind == "display_math" or kind == "inline_math":
                 stack[-1].children.append(
                     Token(type="math", start_byte=start, end_byte=end, content=value)
                 )

@@ -9,8 +9,8 @@ from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import Session, SessionDocument
 from app.models.resume_schema import ResumeContent
-from app.services.rendering.renderer import ResumeRenderer
 from app.services.latex.compiler import CompileError, LatexCompiler
+from app.services.rendering.renderer import ResumeRenderer
 
 router = APIRouter(prefix="/api/sessions", tags=["export"])
 
@@ -132,7 +132,11 @@ async def export_document(
                         role_p.add_run(f"  —  {entry.location}").italic = True
                 for bullet in entry.bullets:
                     bp = docx.add_paragraph(style="List Bullet")
-                    _docx_apply_spans(bp, [s.model_dump() if hasattr(s, 'model_dump') else s for s in bullet.spans], bullet.text)
+                    _docx_apply_spans(
+                        bp,
+                        [s.model_dump() if hasattr(s, "model_dump") else s for s in bullet.spans],
+                        bullet.text,
+                    )
             for sk in section.skill_rows:
                 p = docx.add_paragraph()
                 run = p.add_run(f"{sk.category} ")
@@ -188,6 +192,3 @@ async def export_document(
         )
 
     raise HTTPException(status_code=400, detail="Invalid format")
-
-
-

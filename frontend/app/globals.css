@@ -132,6 +132,15 @@ body {
     }
   }
 
+  @keyframes peek-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: rgba(142, 142, 142, 0.3) transparent;

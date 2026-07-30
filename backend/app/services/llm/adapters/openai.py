@@ -1,5 +1,5 @@
 import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import httpx
 
@@ -22,7 +22,9 @@ class OpenAIAdapter(LLMAdapter):
                 return "max_completion_tokens"
         return "max_tokens"
 
-    async def chat(self, messages: list[dict], stream: bool = False, **kwargs) -> AsyncIterator[LLMChunk] | LLMResponse:
+    async def chat(
+        self, messages: list[dict], stream: bool = False, **kwargs
+    ) -> AsyncIterator[LLMChunk] | LLMResponse:
         max_token_key = self._max_token_param()
         payload = {
             "model": self.model,
@@ -37,11 +39,15 @@ class OpenAIAdapter(LLMAdapter):
 
         async with httpx.AsyncClient(timeout=120) as client:
             if stream:
+
                 async def gen():
                     async with client.stream(
                         "POST",
                         f"{self.base_url}/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                        headers={
+                            "Authorization": f"Bearer {self.api_key}",
+                            "Content-Type": "application/json",
+                        },
                         json=payload,
                     ) as response:
                         async for line in response.aiter_lines():
@@ -57,11 +63,15 @@ class OpenAIAdapter(LLMAdapter):
                                         yield LLMChunk(content=content)
                                 except json.JSONDecodeError:
                                     pass
+
                 return gen()
             else:
                 response = await client.post(
                     f"{self.base_url}/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
                     json=payload,
                 )
                 if response.status_code >= 400:
@@ -73,8 +83,12 @@ class OpenAIAdapter(LLMAdapter):
                     raise RuntimeError(f"LLM API error ({response.status_code}): {msg}")
                 data = response.json()
                 if "error" in data:
-                    raise RuntimeError(f"LLM API error: {data['error'].get('message', data['error'])}")
+                    raise RuntimeError(
+                        f"LLM API error: {data['error'].get('message', data['error'])}"
+                    )
                 content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                 if not content:
-                    raise RuntimeError(f"LLM returned empty response. Full response: {json.dumps(data)[:500]}")
+                    raise RuntimeError(
+                        f"LLM returned empty response. Full response: {json.dumps(data)[:500]}"
+                    )
                 return LLMResponse(content=content)

@@ -1,10 +1,10 @@
 """Prompt builders for LLM tailoring."""
+
 from __future__ import annotations
 
 import json
 
 from app.models.resume_schema import ResumeContent
-
 
 PLAN_MODE_SYSTEM_PROMPT = """\
 You are a resume advisor and career coach. Your job is to help the user understand the role, \
@@ -97,7 +97,6 @@ Available operations:
 - {{"op": "delete_section", "section_label": "Hobbies", "reasoning": "<why>"}}
 - {{"op": "move_section", "from_index": 3, "to_index": 1, "reasoning": "<why>"}}
 - {{"op": "update_skill_row", "section_label": "Skills", "skill_row_index": 0, "category": "Languages", "items": "Python, Rust, TypeScript", "reasoning": "<why>"}}
-- {{"op": "update_basics_field", "field": "summary", "value": "<new summary text>", "reasoning": "<why>"}}
 - {{"op": "update_basics_field", "field": "name", "value": "<new name>", "reasoning": "<why>"}}
 - {{"op": "update_basics_field", "field": "email", "value": "<new email>", "reasoning": "<why>"}}
 - {{"op": "update_basics_field", "field": "phone", "value": "<new phone>", "reasoning": "<why>"}}
@@ -125,6 +124,7 @@ CRITICAL — SURGICAL EDITING RULES:
 3. You are a SURGICAL editor, not a rewriter. Return 3-15 operations max. If you find yourself returning 30+ operations, you are doing it wrong.
 4. Only use `update_bullet` when you CHANGE the bullet text. Never re-emit a bullet with identical text.
 5. Use `add_section` to add new relevant sections, `add_bullet` to add new bullets to existing entries.
+6. If the user asks for a summary, profile, or objective, use `add_section` with a "Summary" or "Profile" label — do NOT use `update_basics_field`. There is no basics summary field.
 6. Use `delete_section`, `delete_entry`, `delete_bullet` when the user asks to remove content. Do NOT add replacements unless the user asks.
 7. The resume content above shows the CURRENT state. Only operations you return will be applied. Unchanged content stays as-is automatically.
 
@@ -151,7 +151,7 @@ GOOD response pattern (DO THIS):
     {{"op": "update_bullet", ..., "text": "Reworded bullet targeting Microsoft's engineering culture"}},
     {{"op": "add_bullet", ..., "text": "New AZ-900 certification bullet for Azure relevance"}},
     {{"op": "delete_section", "section_label": "Hobbies", "reasoning": "User asked to remove this section"}},
-    {{"op": "update_basics_field", "field": "summary", "value": "Summary rewritten for Microsoft role"}}
+    {{"op": "update_basics_field", "field": "name", "value": "Summary rewritten for Microsoft role"}}
   ]
 }}
 
@@ -252,6 +252,3 @@ My Resume:
 {master_tex}""",
         },
     ]
-
-
-

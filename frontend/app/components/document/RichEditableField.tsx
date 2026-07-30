@@ -205,8 +205,11 @@ export function RichEditableField({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [editing, commit])
 
+  const autoEnteredRef = useRef(false)
+
   useEffect(() => {
-    if (value === " " && placeholder && !editing) {
+    if (value === " " && placeholder && !editing && !autoEnteredRef.current) {
+      autoEnteredRef.current = true
       enterEditing()
     }
   }, [value, placeholder, editing, enterEditing])

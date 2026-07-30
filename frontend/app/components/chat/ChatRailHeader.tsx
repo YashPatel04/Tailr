@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
 
 export function ChatRailHeader() {
-  const { activeSessionId, activeMode } = useSessionStore()
+  const { activeSessionId } = useSessionStore()
   const { setChatRailCollapsed } = useLayoutStore()
   const { data: session } = useSession(activeSessionId!)
   const { data: providers } = useProviders()
@@ -41,13 +41,6 @@ export function ChatRailHeader() {
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-ink dark:text-[#ececec] truncate">
             {session.company_name}
-          </span>
-          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${
-            activeMode === "plan"
-              ? "bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
-              : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-          }`}>
-            {activeMode === "plan" ? "Plan" : "Edit"}
           </span>
         </div>
         <div className="text-xs text-slate dark:text-[#8e8e8e] truncate">

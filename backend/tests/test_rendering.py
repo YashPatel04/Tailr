@@ -177,15 +177,21 @@ class TestSpanFormatEscape:
         assert result == r"A \& B"
 
     def test_escapes_inside_bold(self):
-        result = span_format_filter("50% off", [
-            Span(start=0, end=3, formats=[FormatKind.BOLD])
-        ])
+        result = span_format_filter("50% off", [Span(start=0, end=3, formats=[FormatKind.BOLD])])
         assert r"\textbf{50\%}" in result
 
     def test_escapes_link_url(self):
-        result = span_format_filter("click here", [
-            Span(start=0, end=10, formats=[FormatKind.BOLD], link_url="https://example.com/a%20page")
-        ])
+        result = span_format_filter(
+            "click here",
+            [
+                Span(
+                    start=0,
+                    end=10,
+                    formats=[FormatKind.BOLD],
+                    link_url="https://example.com/a%20page",
+                )
+            ],
+        )
         assert r"\href{https://example.com/a\%20page}" in result
 
     def test_escapes_braces_in_text(self):
@@ -203,7 +209,11 @@ class TestResumeRenderer:
                 location="New York, NY",
                 profiles=[
                     Profile(network="GitHub", username="johndoe", url="https://github.com/johndoe"),
-                    Profile(network="LinkedIn", username="johndoe", url="https://linkedin.com/in/johndoe"),
+                    Profile(
+                        network="LinkedIn",
+                        username="johndoe",
+                        url="https://linkedin.com/in/johndoe",
+                    ),
                 ],
                 summary="Experienced software engineer.",
             ),
@@ -401,26 +411,37 @@ class TestResumeRenderer:
 # Task 2.5: Render known ResumeContent, verify output contains expected LaTeX
 # ---------------------------------------------------------------------------
 
+
 def test_render_tex_basic():
     """2.5: render known ResumeContent, verify output contains expected LaTeX commands"""
     content = ResumeContent(
         basics={"name": "John Doe", "email": "john@test.com", "phone": "555", "location": "CA"},
-        sections=[{"id": "s1", "label": "EXPERIENCE", "entries": [
-            {"id": "e1", "title": "Company", "role": "Engineer", "dates": "2024", "bullets": [
-                {"id": "b1", "text": "Built things", "spans": []}
-            ]}
-        ]}]
+        sections=[
+            {
+                "id": "s1",
+                "label": "EXPERIENCE",
+                "entries": [
+                    {
+                        "id": "e1",
+                        "title": "Company",
+                        "role": "Engineer",
+                        "dates": "2024",
+                        "bullets": [{"id": "b1", "text": "Built things", "spans": []}],
+                    }
+                ],
+            }
+        ],
     )
     content = ResumeContent.model_validate(content.model_dump())
     renderer = ResumeRenderer()
     tex = renderer.render_tex(content)
 
-    assert r'\documentclass' in tex
-    assert 'John Doe' in tex
-    assert r'\section*{EXPERIENCE}' in tex
-    assert r'\textbf{Company}' in tex
-    assert r'\item Built things' in tex
-    assert r'\end{document}' in tex
+    assert r"\documentclass" in tex
+    assert "John Doe" in tex
+    assert r"\section*{EXPERIENCE}" in tex
+    assert r"\textbf{Company}" in tex
+    assert r"\item Built things" in tex
+    assert r"\end{document}" in tex
 
 
 def test_render_empty_resume():
@@ -429,65 +450,80 @@ def test_render_empty_resume():
     content = ResumeContent.model_validate(content.model_dump())
     renderer = ResumeRenderer()
     tex = renderer.render_tex(content)
-    assert r'\documentclass' in tex
-    assert 'Test' in tex
-    assert r'\end{document}' in tex
+    assert r"\documentclass" in tex
+    assert "Test" in tex
+    assert r"\end{document}" in tex
 
 
 def test_render_skill_rows():
     """Skill rows render with bold category"""
     content = ResumeContent(
         basics={"name": "Test"},
-        sections=[{"id": "s1", "label": "SKILLS", "skill_rows": [
-            {"id": "sk1", "category": "Languages", "items": "Python, Java"}
-        ]}]
+        sections=[
+            {
+                "id": "s1",
+                "label": "SKILLS",
+                "skill_rows": [{"id": "sk1", "category": "Languages", "items": "Python, Java"}],
+            }
+        ],
     )
     content = ResumeContent.model_validate(content.model_dump())
     renderer = ResumeRenderer()
     tex = renderer.render_tex(content)
-    assert r'\textbf{Languages:}' in tex
+    assert r"\textbf{Languages:}" in tex
 
 
 # ---------------------------------------------------------------------------
 # Task 2.6: span_format edge cases via dict spans
 # ---------------------------------------------------------------------------
 
+
 def test_span_format_single_bold():
-    result = span_format_filter("Hello World", [{"start": 0, "end": 5, "formats": ["bold"], "link_url": None}])
-    assert result == r'\textbf{Hello} World'
+    result = span_format_filter(
+        "Hello World", [{"start": 0, "end": 5, "formats": ["bold"], "link_url": None}]
+    )
+    assert result == r"\textbf{Hello} World"
 
 
 def test_span_format_single_italic():
-    result = span_format_filter("Hello World", [{"start": 0, "end": 5, "formats": ["italic"], "link_url": None}])
-    assert result == r'\textit{Hello} World'
+    result = span_format_filter(
+        "Hello World", [{"start": 0, "end": 5, "formats": ["italic"], "link_url": None}]
+    )
+    assert result == r"\textit{Hello} World"
 
 
 def test_span_format_nested_bold_italic():
-    result = span_format_filter("abcde", [
-        {"start": 0, "end": 4, "formats": ["bold"], "link_url": None},
-        {"start": 1, "end": 3, "formats": ["italic"], "link_url": None}
-    ])
-    assert r'\textbf' in result
-    assert r'\textit' in result
-    assert result.count('{') == result.count('}')
+    result = span_format_filter(
+        "abcde",
+        [
+            {"start": 0, "end": 4, "formats": ["bold"], "link_url": None},
+            {"start": 1, "end": 3, "formats": ["italic"], "link_url": None},
+        ],
+    )
+    assert r"\textbf" in result
+    assert r"\textit" in result
+    assert result.count("{") == result.count("}")
 
 
 def test_span_format_adjacent():
-    result = span_format_filter("ab", [
-        {"start": 0, "end": 1, "formats": ["bold"], "link_url": None},
-        {"start": 1, "end": 2, "formats": ["italic"], "link_url": None}
-    ])
-    assert r'\textbf{a}' in result
-    assert r'\textit{b}' in result
+    result = span_format_filter(
+        "ab",
+        [
+            {"start": 0, "end": 1, "formats": ["bold"], "link_url": None},
+            {"start": 1, "end": 2, "formats": ["italic"], "link_url": None},
+        ],
+    )
+    assert r"\textbf{a}" in result
+    assert r"\textit{b}" in result
 
 
 def test_span_format_with_link():
-    result = span_format_filter("click", [
-        {"start": 0, "end": 5, "formats": ["bold"], "link_url": "https://example.com"}
-    ])
-    assert r'\href{https://example.com}' in result
-    assert r'\textbf{' in result
-    assert 'click' in result
+    result = span_format_filter(
+        "click", [{"start": 0, "end": 5, "formats": ["bold"], "link_url": "https://example.com"}]
+    )
+    assert r"\href{https://example.com}" in result
+    assert r"\textbf{" in result
+    assert "click" in result
 
 
 def test_span_format_empty_spans():
@@ -496,13 +532,17 @@ def test_span_format_empty_spans():
 
 
 def test_span_format_underline():
-    result = span_format_filter("text", [{"start": 0, "end": 4, "formats": ["underline"], "link_url": None}])
-    assert r'\underline{text}' in result
+    result = span_format_filter(
+        "text", [{"start": 0, "end": 4, "formats": ["underline"], "link_url": None}]
+    )
+    assert r"\underline{text}" in result
 
 
 def test_span_format_code():
-    result = span_format_filter("code", [{"start": 0, "end": 4, "formats": ["code"], "link_url": None}])
-    assert r'\texttt{code}' in result
+    result = span_format_filter(
+        "code", [{"start": 0, "end": 4, "formats": ["code"], "link_url": None}]
+    )
+    assert r"\texttt{code}" in result
 
 
 def test_render_html_basic():
@@ -511,4 +551,4 @@ def test_render_html_basic():
     content = ResumeContent.model_validate(content.model_dump())
     renderer = ResumeRenderer()
     html = renderer.render_html(content)
-    assert '<!DOCTYPE html>' in html or '<html>' in html or '<div' in html
+    assert "<!DOCTYPE html>" in html or "<html>" in html or "<div" in html

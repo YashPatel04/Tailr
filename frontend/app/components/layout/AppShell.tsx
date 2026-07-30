@@ -9,7 +9,7 @@ import { SettingsModal } from "@/components/settings/SettingsModal"
 import { useLayoutStore } from "@/stores/layout"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, setSidebarCollapsed, chatRailWidth, setChatRailWidth, chatRailCollapsed, setChatRailCollapsed } =
+  const { sidebarCollapsed, setSidebarCollapsed, chatRailWidth, setChatRailWidth, chatRailCollapsed, setChatRailCollapsed, chatRailPeeking } =
     useLayoutStore()
   const [hydrated, setHydrated] = useState(false)
   const [resizing, setResizing] = useState(false)
@@ -75,10 +75,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           onMouseDown={onMouseDown}
         />
         <div
-          style={{ width: chatRailCollapsed ? 52 : chatRailWidth }}
-          className="flex-shrink-0 transition-[width] duration-200 ease-in-out"
+          style={{ width: chatRailCollapsed ? (chatRailPeeking ? 220 : 52) : chatRailWidth }}
+          className="flex-shrink-0 transition-[width] duration-200 ease-out"
         >
-          <ChatRail width={chatRailCollapsed ? 52 : chatRailWidth} />
+          <ChatRail width={chatRailCollapsed ? (chatRailPeeking ? 220 : 52) : chatRailWidth} />
         </div>
         <SearchModal />
         <SettingsModal />

@@ -30,9 +30,6 @@
 {%- if contact_parts %}
     {{ contact_parts | join(' $|$ ') }} \\[4pt]
 {%- endif %}
-{%- if content.basics.summary %}
-    {{ content.basics.summary | tex_escape }}
-{%- endif %}
 \end{center}
 {% for section in content.sections %}
 \section*{ {{- section.label | tex_escape -}} }

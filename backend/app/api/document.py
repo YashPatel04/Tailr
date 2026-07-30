@@ -3,6 +3,7 @@
 Accepts typed ops, applies via the content ops applier,
 persists a new SessionDocument version with source="user".
 """
+
 from __future__ import annotations
 
 from uuid import uuid4
@@ -56,7 +57,11 @@ async def edit_document(
     if not current_doc:
         raise HTTPException(status_code=404, detail="No document found for this session")
 
-    content_dict = current_doc.content_json or {"basics": {"name": "Unknown"}, "sections": [], "metadata": {}}
+    content_dict = current_doc.content_json or {
+        "basics": {"name": "Unknown"},
+        "sections": [],
+        "metadata": {},
+    }
     content = ResumeContent.model_validate(content_dict)
 
     try:
@@ -74,7 +79,7 @@ async def edit_document(
         session_id=session.id,
         doc_type="resume",
         version=(current_doc.version or 0) + 1,
-        content_json=new_content.model_dump(mode='json'),
+        content_json=new_content.model_dump(mode="json"),
         parent_doc_id=current_doc.id,
     )
     warnings: list[dict] = []

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from app.models.resume_schema import (
     Basics,
@@ -41,7 +42,9 @@ def _make_typical_content() -> ResumeContent:
                         dates="2020–Present",
                         location="Remote",
                         bullets=[
-                            Bullet(text="Designed and built microservices architecture serving 1M+ users"),
+                            Bullet(
+                                text="Designed and built microservices architecture serving 1M+ users"
+                            ),
                             Bullet(text="Led team of 5 engineers through 3 major releases"),
                             Bullet(text="Reduced API latency by 40% through query optimization"),
                         ],
@@ -52,7 +55,9 @@ def _make_typical_content() -> ResumeContent:
                         dates="2017–2020",
                         location="New York, NY",
                         bullets=[
-                            Bullet(text="Built real-time analytics dashboard using React and D3.js"),
+                            Bullet(
+                                text="Built real-time analytics dashboard using React and D3.js"
+                            ),
                             Bullet(text="Implemented CI/CD pipeline reducing deploy time by 60%"),
                         ],
                     ),
@@ -98,7 +103,9 @@ class TestBuildTailorPromptV3:
         messages = build_tailor_prompt_v3(session, content, research_summary=None)
 
         system_content = messages[0]["content"]
-        assert len(system_content) < 8000, f"System prompt is {len(system_content)} chars, should be < 8000"
+        assert len(system_content) < 8000, (
+            f"System prompt is {len(system_content)} chars, should be < 8000"
+        )
 
     def test_prompt_contains_section_labels(self):
         content = _make_typical_content()
@@ -261,6 +268,7 @@ class TestV3SystemPrompt:
 # Task 5.3: Prompt tests with dict-based content
 # ---------------------------------------------------------------------------
 
+
 def _make_minimal_session_mock():
     session = MagicMock()
     session.tailoring_mode = "polish"
@@ -276,12 +284,22 @@ def test_build_tailor_prompt_under_8kb():
     content = ResumeContent(
         basics={"name": "Test", "email": "t@t.com"},
         sections=[
-            {"id": "s1", "label": "EXPERIENCE", "entries": [
-                {"id": "e1", "title": "Company", "role": "Engineer", "dates": "2024", "bullets": [
-                    {"id": "b1", "text": "Built things with python and react", "spans": []}
-                ]}
-            ]}
-        ]
+            {
+                "id": "s1",
+                "label": "EXPERIENCE",
+                "entries": [
+                    {
+                        "id": "e1",
+                        "title": "Company",
+                        "role": "Engineer",
+                        "dates": "2024",
+                        "bullets": [
+                            {"id": "b1", "text": "Built things with python and react", "spans": []}
+                        ],
+                    }
+                ],
+            }
+        ],
     )
     content = ResumeContent.model_validate(content.model_dump())
 
@@ -297,9 +315,13 @@ def test_prompt_contains_section_labels():
 
     content = ResumeContent(
         basics={"name": "Test"},
-        sections=[{"id": "s1", "label": "EXPERIENCE", "entries": [
-            {"id": "e1", "title": "Acme Corp", "role": "Dev", "dates": "2024"}
-        ]}]
+        sections=[
+            {
+                "id": "s1",
+                "label": "EXPERIENCE",
+                "entries": [{"id": "e1", "title": "Acme Corp", "role": "Dev", "dates": "2024"}],
+            }
+        ],
     )
     content = ResumeContent.model_validate(content.model_dump())
 

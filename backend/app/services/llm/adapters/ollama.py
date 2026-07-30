@@ -1,5 +1,4 @@
-import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import httpx
 
@@ -12,7 +11,9 @@ class OllamaAdapter(LLMAdapter):
         self.model = model
         self.params = params
 
-    async def chat(self, messages: list[dict], stream: bool = False, **kwargs) -> AsyncIterator[LLMChunk] | LLMResponse:
+    async def chat(
+        self, messages: list[dict], stream: bool = False, **kwargs
+    ) -> AsyncIterator[LLMChunk] | LLMResponse:
         payload = {"model": self.model, "messages": messages, "stream": stream}
 
         async with httpx.AsyncClient(timeout=120) as client:

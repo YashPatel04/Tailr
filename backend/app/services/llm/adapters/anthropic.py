@@ -1,5 +1,4 @@
-import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import httpx
 
@@ -12,7 +11,9 @@ class AnthropicAdapter(LLMAdapter):
         self.model = model
         self.params = params
 
-    async def chat(self, messages: list[dict], stream: bool = False, **kwargs) -> AsyncIterator[LLMChunk] | LLMResponse:
+    async def chat(
+        self, messages: list[dict], stream: bool = False, **kwargs
+    ) -> AsyncIterator[LLMChunk] | LLMResponse:
         system = next((m["content"] for m in messages if m.get("role") == "system"), None)
         chat_messages = [m for m in messages if m.get("role") != "system"]
 

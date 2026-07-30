@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 from app.services.research.scraper import (
     scrape_careers,
@@ -12,7 +11,7 @@ async def research_company(company: str, provider=None) -> dict:
     async def run_with_timeout(coro, timeout: float):
         try:
             return await asyncio.wait_for(coro, timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return ""
         except Exception:
             return ""

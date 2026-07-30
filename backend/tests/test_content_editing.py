@@ -605,21 +605,34 @@ class TestContentDiffer:
 # Task 4.5: Standalone content editing tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def sample_content():
     c = ResumeContent(
         basics={"name": "Test", "email": "t@t.com"},
         sections=[
-            {"id": "s1", "label": "EXPERIENCE", "entries": [
-                {"id": "e1", "title": "Company A", "role": "Engineer", "dates": "2024", "bullets": [
-                    {"id": "b1", "text": "Built stuff"},
-                    {"id": "b2", "text": "Led team"}
-                ]}
-            ]},
-            {"id": "s2", "label": "EDUCATION", "entries": [
-                {"id": "e2", "title": "University", "dates": "2020-2024"}
-            ]}
-        ]
+            {
+                "id": "s1",
+                "label": "EXPERIENCE",
+                "entries": [
+                    {
+                        "id": "e1",
+                        "title": "Company A",
+                        "role": "Engineer",
+                        "dates": "2024",
+                        "bullets": [
+                            {"id": "b1", "text": "Built stuff"},
+                            {"id": "b2", "text": "Led team"},
+                        ],
+                    }
+                ],
+            },
+            {
+                "id": "s2",
+                "label": "EDUCATION",
+                "entries": [{"id": "e2", "title": "University", "dates": "2020-2024"}],
+            },
+        ],
     )
     return ResumeContent.model_validate(c.model_dump())
 
@@ -627,7 +640,9 @@ def sample_content():
 def test_update_bullet(sample_content):
     """Apply single op: update a bullet"""
     applier = ContentApplier()
-    op = UpdateBulletOp(section_label="EXPERIENCE", entry_index=0, bullet_index=0, text="Built AMAZING stuff")
+    op = UpdateBulletOp(
+        section_label="EXPERIENCE", entry_index=0, bullet_index=0, text="Built AMAZING stuff"
+    )
     result = applier.apply(sample_content, [op])
     assert result.sections[0].entries[0].bullets[0].text == "Built AMAZING stuff"
 
@@ -635,7 +650,9 @@ def test_update_bullet(sample_content):
 def test_add_entry(sample_content):
     """Add a new entry"""
     applier = ContentApplier()
-    op = AddEntryOp(section_label="EXPERIENCE", after_index=0, title="Company B", role="Dev", dates="2023")
+    op = AddEntryOp(
+        section_label="EXPERIENCE", after_index=0, title="Company B", role="Dev", dates="2023"
+    )
     result = applier.apply(sample_content, [op])
     assert len(result.sections[0].entries) == 2
     assert result.sections[0].entries[1].title == "Company B"
@@ -652,7 +669,10 @@ def test_delete_entry(sample_content):
 def test_move_entry(sample_content):
     """Move entry from index 1 to index 0 (swap order)"""
     applier = ContentApplier()
-    c = applier.apply(sample_content, [AddEntryOp(section_label="EXPERIENCE", after_index=0, title="B", role="R", dates="2023")])
+    c = applier.apply(
+        sample_content,
+        [AddEntryOp(section_label="EXPERIENCE", after_index=0, title="B", role="R", dates="2023")],
+    )
     assert len(c.sections[0].entries) == 2
     op = MoveEntryOp(section_label="EXPERIENCE", from_index=1, to_index=0)
     result = applier.apply(c, [op])
@@ -726,9 +746,13 @@ def test_update_skill_row(sample_content):
     """Update a skill row -- add skill rows section first"""
     c = ResumeContent(
         basics={"name": "Test"},
-        sections=[{"id": "s1", "label": "SKILLS", "skill_rows": [
-            {"id": "sk1", "category": "Languages", "items": "Python, Java"}
-        ]}]
+        sections=[
+            {
+                "id": "s1",
+                "label": "SKILLS",
+                "skill_rows": [{"id": "sk1", "category": "Languages", "items": "Python, Java"}],
+            }
+        ],
     )
     c = ResumeContent.model_validate(c.model_dump())
     applier = ContentApplier()
@@ -771,7 +795,9 @@ def test_diff_modified_bullet(sample_content):
     """Diff detects a modified bullet"""
     applier = ContentApplier()
     differ = ContentDiffer()
-    op = UpdateBulletOp(section_label="EXPERIENCE", entry_index=0, bullet_index=0, text="Changed text")
+    op = UpdateBulletOp(
+        section_label="EXPERIENCE", entry_index=0, bullet_index=0, text="Changed text"
+    )
     new_content = applier.apply(sample_content, [op])
     diff = differ.diff(sample_content, new_content)
     changes = diff.get("changes", [])

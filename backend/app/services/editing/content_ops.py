@@ -5,10 +5,9 @@ Operations use section_label + indices instead of Region tree node IDs.
 
 from __future__ import annotations
 
+import json
 from copy import deepcopy
 from typing import Literal, Union
-
-import json
 
 from pydantic import BaseModel, Field
 
@@ -165,7 +164,7 @@ class AddSkillRowOp(BaseModel):
 
 class UpdateBasicsFieldOp(BaseModel):
     op: Literal["update_basics_field"] = "update_basics_field"
-    field: Literal["name", "email", "phone", "location", "summary", "profiles"]
+    field: Literal["name", "email", "phone", "location", "profiles"]
     value: str
     reasoning: str = ""
 
@@ -243,10 +242,7 @@ def _span_from_dict(s: dict | Span) -> Span:
 
 def _clamp_spans(bullet: Bullet) -> None:
     text_len = len(bullet.text)
-    bullet.spans = [
-        s for s in bullet.spans
-        if s.start < text_len and s.end > s.start
-    ]
+    bullet.spans = [s for s in bullet.spans if s.start < text_len and s.end > s.start]
     for span in bullet.spans:
         span.end = min(span.end, text_len)
 
@@ -264,36 +260,39 @@ def _remap_spans(
     working = list(old_spans)
 
     removed_words_lower = [w.lower() for w in bold_removed]
-    working = [
-        s for s in working
-        if old_text[s.start:s.end].lower() not in removed_words_lower
-    ]
+    working = [s for s in working if old_text[s.start : s.end].lower() not in removed_words_lower]
 
     new_spans: list[Span] = []
     for word in bold_added:
         idx = new_text.lower().find(word.lower())
         if idx >= 0:
-            new_spans.append(Span(
-                start=idx,
-                end=idx + len(word),
-                formats=[FormatKind.BOLD],
-            ))
+            new_spans.append(
+                Span(
+                    start=idx,
+                    end=idx + len(word),
+                    formats=[FormatKind.BOLD],
+                )
+            )
 
     remaining: list[Span] = []
     for span in working:
-        old_sub = old_text[span.start:span.end]
-        if (0 <= span.start < span.end <= len(new_text)
-                and new_text[span.start:span.end] == old_sub):
+        old_sub = old_text[span.start : span.end]
+        if (
+            0 <= span.start < span.end <= len(new_text)
+            and new_text[span.start : span.end] == old_sub
+        ):
             remaining.append(span)
         else:
             idx = new_text.lower().find(old_sub.lower())
             if idx >= 0:
-                remaining.append(Span(
-                    start=idx,
-                    end=idx + len(old_sub),
-                    formats=span.formats,
-                    link_url=span.link_url,
-                ))
+                remaining.append(
+                    Span(
+                        start=idx,
+                        end=idx + len(old_sub),
+                        formats=span.formats,
+                        link_url=span.link_url,
+                    )
+                )
 
     return new_spans + remaining
 
@@ -493,7 +492,9 @@ class ContentApplier:
         elif op_type == "update_basics_field":
             if op.field == "profiles":
                 profiles_data = json.loads(op.value)
-                content.basics.profiles = [Profile(**p) if isinstance(p, dict) else p for p in profiles_data]
+                content.basics.profiles = [
+                    Profile(**p) if isinstance(p, dict) else p for p in profiles_data
+                ]
             else:
                 setattr(content.basics, op.field, op.value)
 
@@ -524,16 +525,18 @@ class ContentDiffer:
         return {"changes": changes}
 
     def _compare_basics(self, old: dict, new: dict, changes: list[dict]) -> None:
-        for field in ("name", "email", "phone", "location", "summary", "profiles"):
+        for field in ("name", "email", "phone", "location", "profiles"):
             ov = old.get(field)
             nv = new.get(field)
             if ov != nv:
-                changes.append({
-                    "path": f"basics.{field}",
-                    "kind": "modified",
-                    "old": ov,
-                    "new": nv,
-                })
+                changes.append(
+                    {
+                        "path": f"basics.{field}",
+                        "kind": "modified",
+                        "old": ov,
+                        "new": nv,
+                    }
+                )
 
     def _compare_sections(
         self, old_sections: list[dict], new_sections: list[dict], changes: list[dict]
@@ -546,18 +549,22 @@ class ContentDiffer:
 
         for label in old_labels - new_labels:
             old_idx = next(i for i, s in enumerate(old_sections) if s["label"] == label)
-            changes.append({
-                "path": f"sections[{old_idx}].{label}",
-                "kind": "removed",
-            })
+            changes.append(
+                {
+                    "path": f"sections[{old_idx}].{label}",
+                    "kind": "removed",
+                }
+            )
 
         for label in new_labels - old_labels:
             new_idx = next(i for i, s in enumerate(new_sections) if s["label"] == label)
-            changes.append({
-                "path": f"sections[{new_idx}].{label}",
-                "kind": "added",
-                "new": new_by_label[label],
-            })
+            changes.append(
+                {
+                    "path": f"sections[{new_idx}].{label}",
+                    "kind": "added",
+                    "new": new_by_label[label],
+                }
+            )
 
         for label in old_labels & new_labels:
             old_s = old_by_label[label]
@@ -583,12 +590,14 @@ class ContentDiffer:
             )
 
             if old_s.get("metadata") != new_s.get("metadata"):
-                changes.append({
-                    "path": f"sections[{new_idx}].{label}.metadata",
-                    "kind": "modified",
-                    "old": old_s.get("metadata"),
-                    "new": new_s.get("metadata"),
-                })
+                changes.append(
+                    {
+                        "path": f"sections[{new_idx}].{label}.metadata",
+                        "kind": "modified",
+                        "old": old_s.get("metadata"),
+                        "new": new_s.get("metadata"),
+                    }
+                )
 
     def _compare_entries(
         self,
@@ -618,17 +627,21 @@ class ContentDiffer:
 
         if len(new_entries) > len(old_entries):
             for i in range(len(old_entries), len(new_entries)):
-                changes.append({
-                    "path": f"sections.{section_label}.entries[{i}]",
-                    "kind": "added",
-                    "new": new_entries[i],
-                })
+                changes.append(
+                    {
+                        "path": f"sections.{section_label}.entries[{i}]",
+                        "kind": "added",
+                        "new": new_entries[i],
+                    }
+                )
         elif len(old_entries) > len(new_entries):
             for i in range(len(new_entries), len(old_entries)):
-                changes.append({
-                    "path": f"sections.{section_label}.entries[{i}]",
-                    "kind": "removed",
-                })
+                changes.append(
+                    {
+                        "path": f"sections.{section_label}.entries[{i}]",
+                        "kind": "removed",
+                    }
+                )
 
     def _compare_entry_fields(
         self,
@@ -643,12 +656,14 @@ class ContentDiffer:
             ov = old_entry.get(field)
             nv = new_entry.get(field)
             if ov != nv:
-                changes.append({
-                    "path": f"{prefix}.{field}",
-                    "kind": "modified",
-                    "old": ov,
-                    "new": nv,
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.{field}",
+                        "kind": "modified",
+                        "old": ov,
+                        "new": nv,
+                    }
+                )
 
     def _compare_bullets(
         self,
@@ -664,35 +679,43 @@ class ContentDiffer:
             ot = old_bullets[i].get("text")
             nt = new_bullets[i].get("text")
             if ot != nt:
-                changes.append({
-                    "path": f"{prefix}.bullets[{i}].text",
-                    "kind": "modified",
-                    "old": ot,
-                    "new": nt,
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.bullets[{i}].text",
+                        "kind": "modified",
+                        "old": ot,
+                        "new": nt,
+                    }
+                )
             os_spans = old_bullets[i].get("spans")
             ns_spans = new_bullets[i].get("spans")
             if os_spans != ns_spans:
-                changes.append({
-                    "path": f"{prefix}.bullets[{i}].spans",
-                    "kind": "modified",
-                    "old": os_spans,
-                    "new": ns_spans,
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.bullets[{i}].spans",
+                        "kind": "modified",
+                        "old": os_spans,
+                        "new": ns_spans,
+                    }
+                )
 
         if len(new_bullets) > len(old_bullets):
             for i in range(len(old_bullets), len(new_bullets)):
-                changes.append({
-                    "path": f"{prefix}.bullets[{i}]",
-                    "kind": "added",
-                    "new": new_bullets[i],
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.bullets[{i}]",
+                        "kind": "added",
+                        "new": new_bullets[i],
+                    }
+                )
         elif len(old_bullets) > len(new_bullets):
             for i in range(len(new_bullets), len(old_bullets)):
-                changes.append({
-                    "path": f"{prefix}.bullets[{i}]",
-                    "kind": "removed",
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.bullets[{i}]",
+                        "kind": "removed",
+                    }
+                )
 
     def _compare_skill_rows(
         self,
@@ -708,32 +731,40 @@ class ContentDiffer:
             oc = old_rows[i].get("category")
             nc = new_rows[i].get("category")
             if oc != nc:
-                changes.append({
-                    "path": f"{prefix}.skill_rows[{i}].category",
-                    "kind": "modified",
-                    "old": oc,
-                    "new": nc,
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.skill_rows[{i}].category",
+                        "kind": "modified",
+                        "old": oc,
+                        "new": nc,
+                    }
+                )
             oi = old_rows[i].get("items")
             ni = new_rows[i].get("items")
             if oi != ni:
-                changes.append({
-                    "path": f"{prefix}.skill_rows[{i}].items",
-                    "kind": "modified",
-                    "old": oi,
-                    "new": ni,
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.skill_rows[{i}].items",
+                        "kind": "modified",
+                        "old": oi,
+                        "new": ni,
+                    }
+                )
 
         if len(new_rows) > len(old_rows):
             for i in range(len(old_rows), len(new_rows)):
-                changes.append({
-                    "path": f"{prefix}.skill_rows[{i}]",
-                    "kind": "added",
-                    "new": new_rows[i],
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.skill_rows[{i}]",
+                        "kind": "added",
+                        "new": new_rows[i],
+                    }
+                )
         elif len(old_rows) > len(new_rows):
             for i in range(len(new_rows), len(old_rows)):
-                changes.append({
-                    "path": f"{prefix}.skill_rows[{i}]",
-                    "kind": "removed",
-                })
+                changes.append(
+                    {
+                        "path": f"{prefix}.skill_rows[{i}]",
+                        "kind": "removed",
+                    }
+                )

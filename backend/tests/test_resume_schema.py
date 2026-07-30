@@ -6,9 +6,7 @@ import sys
 import pytest
 from pydantic import ValidationError
 
-_spec = importlib.util.spec_from_file_location(
-    "resume_schema", "app/models/resume_schema.py"
-)
+_spec = importlib.util.spec_from_file_location("resume_schema", "app/models/resume_schema.py")
 _resume_schema = importlib.util.module_from_spec(_spec)
 sys.modules["resume_schema"] = _resume_schema
 _spec.loader.exec_module(_resume_schema)
@@ -74,7 +72,9 @@ class TestBasics:
             name="Jane Doe",
             profiles=[
                 Profile(network="GitHub", username="janedoe", url="https://github.com/janedoe"),
-                Profile(network="LinkedIn", username="janedoe", url="https://linkedin.com/in/janedoe"),
+                Profile(
+                    network="LinkedIn", username="janedoe", url="https://linkedin.com/in/janedoe"
+                ),
             ],
         )
         assert len(b.profiles) == 2

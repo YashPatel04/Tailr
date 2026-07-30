@@ -23,8 +23,11 @@ class CsrfMiddleware(BaseHTTPMiddleware):
         cookie_token = request.cookies.get("csrf_token")
 
         if not header_token or not cookie_token or header_token != cookie_token:
-            return Response(status_code=403, content='{"detail":"CSRF token missing or invalid"}',
-                           media_type="application/json")
+            return Response(
+                status_code=403,
+                content='{"detail":"CSRF token missing or invalid"}',
+                media_type="application/json",
+            )
 
         response = await call_next(request)
         return response

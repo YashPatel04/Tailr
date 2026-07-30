@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 
 from app.services.research.extractor import extract_company_name

@@ -1,21 +1,20 @@
 import json
-import logging
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
-from sqlalchemy import select, func
+from pydantic import BaseModel
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import ChatMessage, LLMProvider, MasterResume, Session, SessionDocument
-from app.services.research.extractor import fetch_jd_text
 from app.services.llm.factory import get_adapter
 from app.services.llm.prompts import build_cover_letter_prompt
+from app.services.research.extractor import fetch_jd_text
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 master_router = APIRouter(prefix="/api/master-resume", tags=["master-resume"])
@@ -50,9 +49,13 @@ Job Description:
 
 
 @router.post("/analyze")
-async def analyze_jd(body: AnalyzeRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def analyze_jd(
+    body: AnalyzeRequest, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     if not body.job_description and not body.job_description_url:
-        raise HTTPException(status_code=400, detail="Provide job_description or job_description_url")
+        raise HTTPException(
+            status_code=400, detail="Provide job_description or job_description_url"
+        )
 
     jd_text = body.job_description or ""
     source_url = body.job_description_url
@@ -73,11 +76,15 @@ async def analyze_jd(body: AnalyzeRequest, current_user: CurrentUser, db: AsyncS
         }
 
     p_result = await db.execute(
-        select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+        select(LLMProvider).where(
+            LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+        )
     )
     provider = p_result.scalar_one_or_none()
     if not provider:
-        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+        )
         provider = p_result.scalars().first()
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")
@@ -91,6 +98,7 @@ async def analyze_jd(body: AnalyzeRequest, current_user: CurrentUser, db: AsyncS
     raw = response.content if hasattr(response, "content") else ""
 
     import json as _json
+
     cleaned = raw.strip()
     cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
     cleaned = re.sub(r"\s*```$", "", cleaned)
@@ -132,6 +140,7 @@ class SessionUpdate(BaseModel):
 def _strip_latex(text: str) -> str:
     """Remove common LaTeX formatting commands from display text."""
     import re
+
     text = re.sub(r"^\\\\", "", text)
     text = re.sub(r"\\textbf\{([^{}]*)\}?", r"\1", text)
     text = re.sub(r"\\textit\{([^{}]*)\}?", r"\1", text)
@@ -158,7 +167,6 @@ def _strip_latex(text: str) -> str:
     return text
 
 
-
 def _session_to_dict(s: Session) -> dict:
     return {
         "id": str(s.id),
@@ -179,10 +187,10 @@ def _session_to_dict(s: Session) -> dict:
 
 
 @router.post("")
-async def create_session(body: SessionCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(MasterResume).where(MasterResume.user_id == current_user.id)
-    )
+async def create_session(
+    body: SessionCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(MasterResume).where(MasterResume.user_id == current_user.id))
     master = result.scalar_one_or_none()
     if not master:
         raise HTTPException(status_code=400, detail="Upload a master resume first")
@@ -196,6 +204,7 @@ async def create_session(body: SessionCreate, current_user: CurrentUser, db: Asy
 
     if body.llm_provider_id:
         from app.models.models import LLMProvider
+
         prov_result = await db.execute(
             select(LLMProvider).where(
                 LLMProvider.id == body.llm_provider_id,
@@ -253,7 +262,7 @@ async def list_sessions_grouped(current_user: CurrentUser, db: AsyncSession = De
     )
     sessions = result.scalars().all()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday_start = today_start - timedelta(days=1)
     week_ago = today_start - timedelta(days=7)
@@ -275,7 +284,9 @@ async def list_sessions_grouped(current_user: CurrentUser, db: AsyncSession = De
 
 
 @router.get("/{session_id}")
-async def get_session(session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def get_session(
+    session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
     )
@@ -305,21 +316,36 @@ async def get_session(session_id: str, current_user: CurrentUser, db: AsyncSessi
             "id": str(latest_doc.id) if latest_doc else None,
             "version": latest_doc.version if latest_doc else 0,
             "document_type": latest_doc.doc_type if latest_doc else "resume",
-            "content": latest_doc.content_json if latest_doc and latest_doc.content_json else ({"basics": {"name": "Unknown"}, "sections": [], "metadata": {}} if latest_doc else None),
-            "parent_doc_id": str(latest_doc.parent_doc_id) if latest_doc and latest_doc.parent_doc_id else None,
-        } if latest_doc else None,
+            "content": latest_doc.content_json
+            if latest_doc and latest_doc.content_json
+            else (
+                {"basics": {"name": "Unknown"}, "sections": [], "metadata": {}}
+                if latest_doc
+                else None
+            ),
+            "parent_doc_id": str(latest_doc.parent_doc_id)
+            if latest_doc and latest_doc.parent_doc_id
+            else None,
+        }
+        if latest_doc
+        else None,
         "cover_letter_document": {
             "id": str(cover_doc.id) if cover_doc else None,
             "version": cover_doc.version if cover_doc else 0,
             "content": cover_doc.content_json if cover_doc and cover_doc.content_json else None,
-        } if cover_doc else None,
+        }
+        if cover_doc
+        else None,
         "has_cover_letter": cover_doc is not None,
     }
 
 
 @router.patch("/{session_id}")
 async def update_session(
-    session_id: str, body: SessionUpdate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+    session_id: str,
+    body: SessionUpdate,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
@@ -337,7 +363,9 @@ async def update_session(
 
 
 @router.delete("/{session_id}")
-async def delete_session(session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def delete_session(
+    session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
     )
@@ -351,7 +379,9 @@ async def delete_session(session_id: str, current_user: CurrentUser, db: AsyncSe
 
 
 @router.get("/{session_id}/messages")
-async def get_messages(session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def get_messages(
+    session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
     )
@@ -421,9 +451,7 @@ async def company_sessions(
 
 @tag_router.get("")
 async def list_tags(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Session.tags).where(Session.user_id == current_user.id)
-    )
+    result = await db.execute(select(Session.tags).where(Session.user_id == current_user.id))
     tag_counts: dict[str, int] = {}
     for (tags,) in result.all():
         if tags:
@@ -452,20 +480,22 @@ async def upload_master_resume(
     if not tex_source:
         raise HTTPException(status_code=400, detail="No tex_source provided")
 
-    result = await db.execute(
-        select(MasterResume).where(MasterResume.user_id == current_user.id)
-    )
+    result = await db.execute(select(MasterResume).where(MasterResume.user_id == current_user.id))
     master = result.scalar_one_or_none()
 
-    from app.services.llm.factory import get_adapter
     from app.services.importers.tex_llm_importer import import_from_tex
+    from app.services.llm.factory import get_adapter
 
     p_result = await db.execute(
-        select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+        select(LLMProvider).where(
+            LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+        )
     )
     provider = p_result.scalar_one_or_none()
     if not provider:
-        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+        )
         provider = p_result.scalars().first()
 
     if not provider:
@@ -474,7 +504,7 @@ async def upload_master_resume(
     try:
         adapter = get_adapter(provider)
         resume_content = await import_from_tex(tex_source, adapter)
-        content_json = resume_content.model_dump(mode='json')
+        content_json = resume_content.model_dump(mode="json")
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Failed to parse resume: {e}")
 
@@ -510,15 +540,19 @@ async def import_master_resume_sse(
         yield await _emit("importing", {"message": "Analyzing resume structure..."})
 
         try:
-            from app.services.llm.factory import get_adapter
             from app.services.importers.tex_llm_importer import import_from_tex
+            from app.services.llm.factory import get_adapter
 
             p_result = await db.execute(
-                select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+                select(LLMProvider).where(
+                    LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+                )
             )
             provider = p_result.scalar_one_or_none()
             if not provider:
-                p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+                p_result = await db.execute(
+                    select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+                )
                 provider = p_result.scalars().first()
 
             if not provider:
@@ -531,9 +565,12 @@ async def import_master_resume_sse(
 
             content = await import_from_tex(tex_source, adapter)
 
-            yield await _emit("import_done", {
-                "content": content.model_dump(mode='json'),
-            })
+            yield await _emit(
+                "import_done",
+                {
+                    "content": content.model_dump(mode="json"),
+                },
+            )
 
         except Exception as e:
             yield await _emit("error", {"message": f"Import failed: {str(e)}"})
@@ -543,9 +580,7 @@ async def import_master_resume_sse(
 
 @master_router.get("")
 async def get_master_resume(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(MasterResume).where(MasterResume.user_id == current_user.id)
-    )
+    result = await db.execute(select(MasterResume).where(MasterResume.user_id == current_user.id))
     master = result.scalar_one_or_none()
     if not master:
         raise HTTPException(status_code=404, detail="No master resume found")
@@ -571,9 +606,7 @@ async def replace_master_resume(
 
 @master_router.delete("")
 async def delete_master_resume(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(MasterResume).where(MasterResume.user_id == current_user.id)
-    )
+    result = await db.execute(select(MasterResume).where(MasterResume.user_id == current_user.id))
     master = result.scalar_one_or_none()
     if not master:
         raise HTTPException(status_code=404, detail="No master resume found")
@@ -609,7 +642,9 @@ async def generate_cover_letter(
     provider_id = session.llm_provider_id
     if not provider_id:
         p_result = await db.execute(
-            select(LLMProvider).where(LLMProvider.user_id == current_user.id, LLMProvider.is_default == True)
+            select(LLMProvider).where(
+                LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+            )
         )
         default_provider = p_result.scalar_one_or_none()
         if not default_provider:
@@ -632,6 +667,7 @@ async def generate_cover_letter(
 
     from app.models.resume_schema import ResumeContent
     from app.services.rendering.renderer import ResumeRenderer
+
     content = ResumeContent.model_validate(master.content_json)
     renderer = ResumeRenderer()
     master_tex = renderer.render_tex(content)

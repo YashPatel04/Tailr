@@ -7,6 +7,8 @@ interface LayoutState {
   setChatRailWidth: (width: number) => void
   chatRailCollapsed: boolean
   setChatRailCollapsed: (collapsed: boolean) => void
+  chatRailPeeking: boolean
+  setChatRailPeeking: (peeking: boolean) => void
 }
 
 export const useLayoutStore = create<LayoutState>((set) => ({
@@ -16,4 +18,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   setChatRailWidth: (width) => set({ chatRailWidth: width }),
   chatRailCollapsed: false,
   setChatRailCollapsed: (collapsed) => set({ chatRailCollapsed: collapsed }),
+  chatRailPeeking: false,
+  setChatRailPeeking: (peeking) => set({ chatRailPeeking: peeking }),
 }))

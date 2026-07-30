@@ -207,7 +207,6 @@ export interface Basics {
   phone: string | null
   location: string | null
   profiles: Array<{network: string; username: string; url: string}>
-  summary: string | null
 }
 
 export interface ResumeContent {

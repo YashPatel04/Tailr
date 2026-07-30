@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest
 import pytest_asyncio
@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.db import Base, get_db
 from app.main import app
 
-TEST_DATABASE_URL = "postgresql+asyncpg://resume_builder:resume_builder@localhost:5432/resume_builder_test"
+TEST_DATABASE_URL = (
+    "postgresql+asyncpg://resume_builder:resume_builder@localhost:5432/resume_builder_test"
+)
 
 engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

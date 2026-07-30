@@ -210,7 +210,10 @@ class TestFullPipeline:
         user_result = applier.apply(original, user_ops)
         llm_result = applier.apply(original, llm_ops)
 
-        assert user_result.sections[0].entries[0].bullets[0].text != llm_result.sections[0].entries[0].bullets[0].text
+        assert (
+            user_result.sections[0].entries[0].bullets[0].text
+            != llm_result.sections[0].entries[0].bullets[0].text
+        )
         assert user_result.sections[0].entries[0].bullets[0].text == "User edit"
         assert llm_result.sections[0].entries[0].bullets[0].text == "LLM edit"
 

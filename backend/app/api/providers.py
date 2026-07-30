@@ -65,17 +65,23 @@ def _provider_to_response(p: LLMProvider) -> ProviderResponse:
 @router.get("")
 async def list_providers(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(LLMProvider).where(LLMProvider.user_id == current_user.id).order_by(LLMProvider.created_at)
+        select(LLMProvider)
+        .where(LLMProvider.user_id == current_user.id)
+        .order_by(LLMProvider.created_at)
     )
     providers = result.scalars().all()
     return [_provider_to_response(p) for p in providers]
 
 
 @router.post("")
-async def create_provider(body: ProviderCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def create_provider(
+    body: ProviderCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     if body.is_default:
         await db.execute(
-            update(LLMProvider).where(LLMProvider.user_id == current_user.id).values(is_default=False)
+            update(LLMProvider)
+            .where(LLMProvider.user_id == current_user.id)
+            .values(is_default=False)
         )
 
     provider = LLMProvider(
@@ -98,9 +104,13 @@ async def create_provider(body: ProviderCreate, current_user: CurrentUser, db: A
 
 
 @router.get("/{provider_id}")
-async def get_provider(provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def get_provider(
+    provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(LLMProvider).where(LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id)
+        select(LLMProvider).where(
+            LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id
+        )
     )
     provider = result.scalar_one_or_none()
     if not provider:
@@ -110,10 +120,15 @@ async def get_provider(provider_id: str, current_user: CurrentUser, db: AsyncSes
 
 @router.put("/{provider_id}")
 async def update_provider(
-    provider_id: str, body: ProviderCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+    provider_id: str,
+    body: ProviderCreate,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(LLMProvider).where(LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id)
+        select(LLMProvider).where(
+            LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id
+        )
     )
     provider = result.scalar_one_or_none()
     if not provider:
@@ -121,7 +136,9 @@ async def update_provider(
 
     if body.is_default:
         await db.execute(
-            update(LLMProvider).where(LLMProvider.user_id == current_user.id).values(is_default=False)
+            update(LLMProvider)
+            .where(LLMProvider.user_id == current_user.id)
+            .values(is_default=False)
         )
 
     provider.name = body.name
@@ -141,9 +158,13 @@ async def update_provider(
 
 
 @router.delete("/{provider_id}")
-async def delete_provider(provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def delete_provider(
+    provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(LLMProvider).where(LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id)
+        select(LLMProvider).where(
+            LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id
+        )
     )
     provider = result.scalar_one_or_none()
     if not provider:
@@ -155,9 +176,13 @@ async def delete_provider(provider_id: str, current_user: CurrentUser, db: Async
 
 
 @router.post("/{provider_id}/test")
-async def test_provider(provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+async def test_provider(
+    provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(LLMProvider).where(LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id)
+        select(LLMProvider).where(
+            LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id
+        )
     )
     provider = result.scalar_one_or_none()
     if not provider:
@@ -165,7 +190,9 @@ async def test_provider(provider_id: str, current_user: CurrentUser, db: AsyncSe
 
     try:
         adapter = get_adapter(provider)
-        response = await adapter.chat([{"role": "user", "content": "Hello, respond with just 'ok'."}])
+        response = await adapter.chat(
+            [{"role": "user", "content": "Hello, respond with just 'ok'."}]
+        )
         content = response.content if hasattr(response, "content") else ""
         if "ok" in content.lower():
             return {"status": "ok", "message": "Provider test successful"}
