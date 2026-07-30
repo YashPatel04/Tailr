@@ -184,6 +184,13 @@ export function RichEditableField({
   )
 
   useEffect(() => {
+    if (!editing) {
+      setDraft(value)
+      setDraftSpans(structuredClone(spans))
+    }
+  }, [value, spans, editing])
+
+  useEffect(() => {
     if (!editing) return
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -256,7 +263,6 @@ export function RichEditableField({
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
-      onFocus={handleFocus}
       onInput={() => setDraft(containerRef.current?.textContent ?? "")}
       onPaste={handlePaste}
       data-drag-disabled={!draggable}
@@ -265,8 +271,6 @@ export function RichEditableField({
         <span className="text-brass italic cursor-pointer hover:bg-brass/10 rounded px-1 -mx-1 transition-colors">
           + {placeholder}
         </span>
-      ) : editing ? (
-        draft
       ) : (
         renderFormatted()
       )}
