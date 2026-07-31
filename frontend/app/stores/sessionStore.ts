@@ -1,6 +1,11 @@
 import { create } from "zustand"
+import type { QueryClient } from "@tanstack/react-query"
 import type { SessionDocument } from "@/types"
 import type { SaveStatus } from "@/lib/editQueue"
+import { getApiBaseUrl } from "@/lib/env"
+import { getCsrfToken } from "@/lib/api"
+import { parseSSEStream } from "@/lib/sseParser"
+import { toast } from "@/components/ui/Toaster"
 
 export interface PendingProposal {
   message: string
@@ -43,9 +48,12 @@ interface SessionState {
   setActiveMode: (mode: "plan" | "edit") => void
   setTailoringMode: (mode: string) => void
   setSelectedModel: (providerId: string | null, model: string | null) => void
+  sendMessage: (content: string, queryClient: QueryClient, proposalContext?: string) => Promise<void>
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
+let controllerRef: AbortController | null = null
+
+export const useSessionStore = create<SessionState>((set, get) => ({
   activeSessionId: null,
   activeDocType: "resume",
   viewMode: "final",
@@ -85,4 +93,135 @@ export const useSessionStore = create<SessionState>((set) => ({
   setActiveMode: (mode) => set({ activeMode: mode }),
   setTailoringMode: (mode) => set({ tailoringMode: mode }),
   setSelectedModel: (providerId, model) => set({ selectedProviderId: providerId, selectedModel: model }),
+  sendMessage: async (content, queryClient, proposalContext) => {
+    const state = get()
+    const sessionId = state.activeSessionId
+    if (!sessionId) return
+
+    controllerRef?.abort()
+    const controller = new AbortController()
+    controllerRef = controller
+
+    const requestId = crypto.randomUUID()
+
+    set({ isStreaming: true, progressPhase: "", progressMessage: "" })
+
+    queryClient.setQueryData(
+      ["sessions", sessionId, "messages"],
+      (old: any[] | undefined) => [
+        ...(old || []),
+        { id: `optimistic-${Date.now()}`, role: "user", content, created_at: new Date().toISOString() },
+      ]
+    )
+
+    try {
+      const csrfToken = await getCsrfToken()
+      const response = await fetch(`${getApiBaseUrl()}/api/sessions/${sessionId}/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream",
+          "X-CSRF-Token": csrfToken,
+        },
+        body: JSON.stringify({
+          content,
+          role: "user",
+          mode: state.activeMode,
+          tailoring_mode: state.tailoringMode,
+          proposal_context: proposalContext,
+          llm_provider_id: state.selectedProviderId,
+          model: state.selectedModel,
+          request_id: requestId,
+        }),
+        credentials: "include",
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          toast.error("Duplicate request")
+        } else {
+          toast.error(`Connection failed (${response.status})`)
+        }
+        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+        return
+      }
+
+      if (!response.body) {
+        toast.error("No response body")
+        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+        return
+      }
+
+      await parseSSEStream(
+        response.body,
+        (event) => {
+          try {
+            const data = JSON.parse(event.data)
+            switch (event.event) {
+              case "researching":
+                set({ progressPhase: "researching", progressMessage: data.message || "Researching..." })
+                break
+              case "research_done":
+                set({ progressPhase: "research_done", progressMessage: "Research complete" })
+                break
+              case "thinking":
+                set({ progressPhase: "thinking", progressMessage: data.message || "Thinking..." })
+                break
+              case "writing":
+                set({ progressPhase: "writing", progressMessage: data.message || "Writing changes..." })
+                break
+              case "proposal":
+                set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+                if (data.mode === "plan") {
+                  queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                  break
+                }
+                set({ viewMode: "diff" })
+                if (data.diff) {
+                  set({ latestDiff: data.diff })
+                }
+                set({
+                  pendingProposal: {
+                    message: data.message || "Proposed changes ready for review",
+                    operations: data.operations || [],
+                    diff: data.diff,
+                    patch_summary: data.patch_summary || "",
+                    explanation: data.explanation || "",
+                    reasoning: data.reasoning || "",
+                  },
+                })
+                queryClient.invalidateQueries({ queryKey: ["sessions"] })
+                queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                break
+              case "done":
+                set({ isStreaming: false, progressPhase: "", progressMessage: "", viewMode: "diff" })
+                if (data.diff) {
+                  set({ latestDiff: data.diff })
+                }
+                if (data.document_id) {
+                  set({ latestDocument: { id: data.document_id } as any })
+                }
+                queryClient.invalidateQueries({ queryKey: ["sessions"] })
+                break
+              case "error":
+                controller.abort()
+                set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+                toast.error(data.message || "An error occurred")
+                queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                break
+            }
+          } catch {}
+        },
+        controller.signal
+      )
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+      }
+    }
+  },
 }))

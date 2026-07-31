@@ -3,8 +3,8 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLayoutStore } from "@/stores/layout"
-import { useSessionSSE } from "@/hooks/useSessionSSE"
 import { useSessionMessages } from "@/hooks/queries"
+import { useQueryClient } from "@tanstack/react-query"
 import { ChatRailEmptyState } from "./ChatRailEmptyState"
 import { ChatRailHeader } from "./ChatRailHeader"
 import { ChatMessageList } from "./ChatMessageList"
@@ -19,7 +19,12 @@ const PEEK_MAX_MESSAGES = 4
 export function ChatRail({ width }: { width: number }) {
   const { activeSessionId, setupOpen, setSetupOpen, activeMode } = useSessionStore()
   const { chatRailCollapsed, setChatRailCollapsed, chatRailPeeking, setChatRailPeeking } = useLayoutStore()
-  const { sendMessage } = useSessionSSE(activeSessionId)
+  const storeSendMessage = useSessionStore((s) => s.sendMessage)
+  const queryClient = useQueryClient()
+  const sendMessage = useCallback(
+    (content: string) => storeSendMessage(content, queryClient),
+    [storeSendMessage, queryClient]
+  )
   const { data: messages } = useSessionMessages(activeSessionId ?? "")
   const railRef = useRef<HTMLElement>(null)
   const peekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)

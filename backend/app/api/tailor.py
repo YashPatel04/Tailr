@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import time
 from uuid import uuid4
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -31,6 +32,24 @@ class ChatMessageRequest(BaseModel):
     proposal_context: str | None = None
     llm_provider_id: str | None = None
     model: str | None = None
+    request_id: str | None = None
+
+
+_recent_request_ids: dict[str, float] = {}
+DEDUP_WINDOW_SECONDS = 60
+
+
+def _is_duplicate(request_id: str | None) -> bool:
+    if not request_id:
+        return False
+    now = time.time()
+    expired = [k for k, v in _recent_request_ids.items() if now - v > DEDUP_WINDOW_SECONDS]
+    for k in expired:
+        del _recent_request_ids[k]
+    if request_id in _recent_request_ids:
+        return True
+    _recent_request_ids[request_id] = now
+    return False
 
 
 async def _emit(event_type: str, data: dict) -> str:
@@ -71,6 +90,9 @@ async def chat_stream(
     current_user: CurrentUser,
     db: AsyncSession = Depends(get_db),
 ):
+    if _is_duplicate(body.request_id):
+        raise HTTPException(status_code=409, detail="Duplicate request")
+
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
     )
@@ -94,6 +116,89 @@ async def chat_stream(
         session.tailoring_mode = body.tailoring_mode
         await db.commit()
 
+    provider_id = body.llm_provider_id
+    model_name = body.model
+
+    if (
+        (not provider_id or not model_name)
+        and session.current_provider_id
+        and session.current_model
+    ):
+        provider_id = provider_id or str(session.current_provider_id)
+        model_name = model_name or session.current_model
+
+    if not provider_id or not model_name:
+        last_msg_result = await db.execute(
+            select(ChatMessage)
+            .where(
+                ChatMessage.session_id == session.id,
+                ChatMessage.role == "assistant",
+                ChatMessage.llm_provider_id.isnot(None),
+            )
+            .order_by(ChatMessage.created_at.desc())
+            .limit(1)
+        )
+        last_msg = last_msg_result.scalar_one_or_none()
+        if last_msg:
+            provider_id = provider_id or str(last_msg.llm_provider_id)
+            model_name = model_name or last_msg.model
+
+    if not provider_id:
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+        )
+        any_provider = p_result.scalars().first()
+        if any_provider:
+            provider_id = str(any_provider.id)
+
+    if not provider_id or not model_name:
+        logger.warning(
+            "[chat] session=%s no LLM provider or model specified", session_id
+        )
+        raise HTTPException(
+            status_code=422, detail="Select a model from the dropdown before sending."
+        )
+
+    p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
+    provider = p_result.scalar_one_or_none()
+
+    adapter = get_adapter(
+        provider,
+        model=model_name,
+        temperature=current_user.default_temperature,
+        max_tokens=current_user.default_max_tokens,
+        top_p=current_user.default_top_p,
+    )
+    logger.info(
+        "[chat] session=%s provider=%s model=%s",
+        session_id,
+        provider.provider_type,
+        model_name,
+    )
+
+    doc_result = await db.execute(
+        select(SessionDocument)
+        .where(
+            SessionDocument.session_id == session.id,
+            SessionDocument.doc_type == body.doc_type,
+        )
+        .order_by(SessionDocument.version.desc())
+        .limit(1)
+    )
+    current_doc = doc_result.scalar_one_or_none()
+
+    if not current_doc:
+        logger.warning(
+            "[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type
+        )
+        raise HTTPException(status_code=422, detail="No document found")
+
+    content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
+    content = ResumeContent.model_validate(content_dict)
+    logger.info(
+        "[chat] session=%s document loaded, sections=%d", session_id, len(content.sections)
+    )
+
     async def event_stream():
         try:
             yield await _emit("researching", {"message": f"Researching {session.company_name}..."})
@@ -112,93 +217,6 @@ async def chat_stream(
             yield await _emit("research_done", {"summary": research})
 
             yield await _emit("thinking", {"message": "Thinking..."})
-
-            provider_id = body.llm_provider_id
-            model_name = body.model
-
-            if (
-                (not provider_id or not model_name)
-                and session.current_provider_id
-                and session.current_model
-            ):
-                provider_id = provider_id or str(session.current_provider_id)
-                model_name = model_name or session.current_model
-
-            if not provider_id or not model_name:
-                last_msg_result = await db.execute(
-                    select(ChatMessage)
-                    .where(
-                        ChatMessage.session_id == session.id,
-                        ChatMessage.role == "assistant",
-                        ChatMessage.llm_provider_id.isnot(None),
-                    )
-                    .order_by(ChatMessage.created_at.desc())
-                    .limit(1)
-                )
-                last_msg = last_msg_result.scalar_one_or_none()
-                if last_msg:
-                    provider_id = provider_id or str(last_msg.llm_provider_id)
-                    model_name = model_name or last_msg.model
-
-            if not provider_id:
-                p_result = await db.execute(
-                    select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-                )
-                any_provider = p_result.scalars().first()
-                if any_provider:
-                    provider_id = str(any_provider.id)
-
-            if not provider_id or not model_name:
-                logger.warning(
-                    "[chat] session=%s no LLM provider or model specified", session_id
-                )
-                yield await _emit(
-                    "error",
-                    {"message": "Select a model from the dropdown before sending."},
-                )
-                return
-
-            p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
-            provider = p_result.scalar_one_or_none()
-
-            user = current_user
-            adapter = get_adapter(
-                provider,
-                model=model_name,
-                temperature=user.default_temperature,
-                max_tokens=user.default_max_tokens,
-                top_p=user.default_top_p,
-            )
-            logger.info(
-                "[chat] session=%s provider=%s model=%s",
-                session_id,
-                provider.provider_type,
-                model_name,
-            )
-
-            doc_result = await db.execute(
-                select(SessionDocument)
-                .where(
-                    SessionDocument.session_id == session.id,
-                    SessionDocument.doc_type == body.doc_type,
-                )
-                .order_by(SessionDocument.version.desc())
-                .limit(1)
-            )
-            current_doc = doc_result.scalar_one_or_none()
-
-            if not current_doc:
-                logger.warning(
-                    "[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type
-                )
-                yield await _emit("error", {"message": "No document found"})
-                return
-
-            content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
-            content = ResumeContent.model_validate(content_dict)
-            logger.info(
-                "[chat] session=%s document loaded, sections=%d", session_id, len(content.sections)
-            )
 
             if is_plan_mode:
                 messages = build_plan_mode_prompt(

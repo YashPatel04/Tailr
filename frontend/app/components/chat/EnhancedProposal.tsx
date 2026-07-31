@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useSessionSSE } from "@/hooks/useSessionSSE"
 import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
 import { useQueryClient } from "@tanstack/react-query"
@@ -10,8 +9,12 @@ import { FileText, Target, BarChart3, Check, X, ArrowRight } from "lucide-react"
 
 export function EnhancedProposal() {
   const { pendingProposal, setPendingProposal, setViewMode, setLatestDiff, activeSessionId } = useSessionStore()
-  const { sendMessage } = useSessionSSE(activeSessionId)
+  const storeSendMessage = useSessionStore((s) => s.sendMessage)
   const queryClient = useQueryClient()
+  const sendMessage = useCallback(
+    (content: string, proposalContext?: string) => storeSendMessage(content, queryClient, proposalContext),
+    [storeSendMessage, queryClient]
+  )
   const [replyText, setReplyText] = useState("")
   const [status, setStatus] = useState<"pending" | "accepted" | "declined">("pending")
   const [replyCount, setReplyCount] = useState(0)
