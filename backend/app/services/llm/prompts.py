@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from app.models.resume_schema import ResumeContent
+from app.models.resume_schema import CoverLetterContent, ResumeContent
 
 PLAN_MODE_SYSTEM_PROMPT = """\
 You are a resume advisor and career coach. Your job is to help the user understand the role, \
@@ -232,12 +232,65 @@ The cover letter should:
 Return ONLY the cover letter text, nothing else."""
 
 
+COVER_LETTER_EDIT_PROMPT = """\
+You are editing a cover letter. The user will ask you to make changes.
+
+Current cover letter:
+Salutation: {salutation}
+{paragraphs_formatted}
+Closing: {closing}
+
+Company: {company}
+Role: {role}
+{research_block}
+
+Tone guidance: {tone_guidance}
+
+Return ONLY a valid JSON object with keys:
+- "explanation": 1-3 sentence summary of what you changed
+- "reasoning": why you made these changes
+- "operations": array of operations (see below)
+
+Available operations:
+- {{"op": "update_salutation", "text": "Dear Ms. Chen,"}}
+- {{"op": "update_paragraph", "id": "<paragraph-id>", "text": "new paragraph text"}}
+- {{"op": "add_paragraph", "text": "new paragraph text", "after_id": "<paragraph-id or null for start>"}}
+- {{"op": "delete_paragraph", "id": "<paragraph-id>"}}
+- {{"op": "reorder_paragraphs", "ids": ["p3", "p1", "p2"]}}
+- {{"op": "update_closing", "text": "Thank you for your consideration,\\nYash"}}
+
+IMPORTANT:
+- Only return operations for what needs changing. Be conservative.
+- Max 6 operations per response.
+- Do NOT include any text outside the JSON.
+- Each paragraph has an "id" field — use it to target specific paragraphs.
+
+Tailoring mode: {mode}
+{mode_instruction}
+"""
+
+
+CL_MODE_INSTRUCTIONS = {
+    "polish": "SURGICAL micro-edits — fix word choice, tighten phrasing. 1-3 operations max.",
+    "refine": "May restructure paragraphs and improve flow. Focus on impact.",
+    "rewrite": "Restructure aggressively — rewrite paragraphs, reorder, reorganize. Only preserve facts.",
+}
+
+
 def build_cover_letter_prompt(
     master_tex: str,
     job_description: str,
     company_name: str,
     role_title: str,
+    research: dict | None = None,
 ) -> list[dict]:
+    research_block = ""
+    if research:
+        values = ", ".join(research.get("values", []))
+        signals = ", ".join(research.get("hiring_signals", []))
+        tone = research.get("tone_guidance", "")
+        research_block = f"\nCompany Research:\n- Values: {values}\n- Hiring signals: {signals}\n- Tone guidance: {tone}"
+
     return [
         {"role": "system", "content": COVER_LETTER_SYSTEM_PROMPT},
         {
@@ -247,8 +300,45 @@ Role: {role_title}
 
 Job Description:
 {job_description}
+{research_block}
 
 My Resume:
 {master_tex}""",
         },
     ]
+
+
+def build_cover_letter_edit_prompt(
+    content: CoverLetterContent,
+    session,
+    research_summary: dict | None = None,
+) -> list[dict]:
+    paragraphs_formatted = "\n".join(
+        f"[{p.id}]: {p.text}" for p in content.paragraphs
+    )
+    if not paragraphs_formatted:
+        paragraphs_formatted = "(no paragraphs)"
+
+    research_block = ""
+    tone_guidance = ""
+    if research_summary:
+        values = ", ".join(research_summary.get("values", []))
+        signals = ", ".join(research_summary.get("hiring_signals", []))
+        tone_guidance = research_summary.get("tone_guidance", "")
+        research_block = f"Company Research:\n- Values: {values}\n- Hiring signals: {signals}"
+
+    mode = session.tailoring_mode or "polish"
+
+    system = COVER_LETTER_EDIT_PROMPT.format(
+        salutation=content.salutation or "(none)",
+        paragraphs_formatted=paragraphs_formatted,
+        closing=content.closing or "(none)",
+        company=session.company_name or "",
+        role=session.role_title or "",
+        research_block=research_block,
+        tone_guidance=tone_guidance,
+        mode=mode,
+        mode_instruction=CL_MODE_INSTRUCTIONS.get(mode, CL_MODE_INSTRUCTIONS["polish"]),
+    )
+
+    return [{"role": "system", "content": system}]

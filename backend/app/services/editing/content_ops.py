@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field
 
 from app.models.resume_schema import (
     Bullet,
+    CoverLetterContent,
+    CoverLetterParagraph,
     Entry,
     FormatKind,
     Profile,
@@ -175,6 +177,44 @@ class AskOp(BaseModel):
     context: str = ""
 
 
+class UpdateSalutationOp(BaseModel):
+    op: Literal["update_salutation"] = "update_salutation"
+    text: str
+    reasoning: str = ""
+
+
+class UpdateParagraphOp(BaseModel):
+    op: Literal["update_paragraph"] = "update_paragraph"
+    id: str
+    text: str
+    reasoning: str = ""
+
+
+class AddParagraphOp(BaseModel):
+    op: Literal["add_paragraph"] = "add_paragraph"
+    text: str
+    after_id: str | None = None
+    reasoning: str = ""
+
+
+class DeleteParagraphOp(BaseModel):
+    op: Literal["delete_paragraph"] = "delete_paragraph"
+    id: str
+    reasoning: str = ""
+
+
+class ReorderParagraphsOp(BaseModel):
+    op: Literal["reorder_paragraphs"] = "reorder_paragraphs"
+    ids: list[str]
+    reasoning: str = ""
+
+
+class UpdateClosingOp(BaseModel):
+    op: Literal["update_closing"] = "update_closing"
+    text: str
+    reasoning: str = ""
+
+
 ContentOp = Union[
     UpdateBulletOp,
     AddEntryOp,
@@ -194,6 +234,21 @@ ContentOp = Union[
     AddSkillRowOp,
     UpdateBasicsFieldOp,
     AskOp,
+    UpdateSalutationOp,
+    UpdateParagraphOp,
+    AddParagraphOp,
+    DeleteParagraphOp,
+    ReorderParagraphsOp,
+    UpdateClosingOp,
+]
+
+CoverLetterOp = Union[
+    UpdateSalutationOp,
+    UpdateParagraphOp,
+    AddParagraphOp,
+    DeleteParagraphOp,
+    ReorderParagraphsOp,
+    UpdateClosingOp,
 ]
 
 OP_CLASSES = [
@@ -215,6 +270,12 @@ OP_CLASSES = [
     AddSkillRowOp,
     UpdateBasicsFieldOp,
     AskOp,
+    UpdateSalutationOp,
+    UpdateParagraphOp,
+    AddParagraphOp,
+    DeleteParagraphOp,
+    ReorderParagraphsOp,
+    UpdateClosingOp,
 ]
 
 
@@ -341,6 +402,56 @@ class ContentApplier:
                     _clamp_spans(bullet)
         ResumeContent.model_validate(new_content.model_dump())
         return new_content
+
+    def apply_cover_letter(
+        self, content: CoverLetterContent, ops: list[CoverLetterOp]
+    ) -> CoverLetterContent:
+        new_content = deepcopy(content)
+        for op in ops:
+            self._apply_cover_letter_one(new_content, op)
+        return new_content
+
+    def _apply_cover_letter_one(self, content: CoverLetterContent, op: CoverLetterOp) -> None:
+        op_type = op.op
+
+        if op_type == "update_salutation":
+            content.salutation = op.text
+
+        elif op_type == "update_paragraph":
+            para = next((p for p in content.paragraphs if p.id == op.id), None)
+            if not para:
+                raise ValueError(f"Paragraph '{op.id}' not found")
+            para.text = op.text
+
+        elif op_type == "add_paragraph":
+            new_para = CoverLetterParagraph(text=op.text)
+            if op.after_id is None:
+                content.paragraphs.insert(0, new_para)
+            else:
+                idx = next(
+                    (i for i, p in enumerate(content.paragraphs) if p.id == op.after_id), None
+                )
+                if idx is None:
+                    raise ValueError(f"Paragraph '{op.after_id}' not found")
+                content.paragraphs.insert(idx + 1, new_para)
+
+        elif op_type == "delete_paragraph":
+            before = len(content.paragraphs)
+            content.paragraphs = [p for p in content.paragraphs if p.id != op.id]
+            if len(content.paragraphs) == before:
+                raise ValueError(f"Paragraph '{op.id}' not found")
+
+        elif op_type == "reorder_paragraphs":
+            by_id = {p.id: p for p in content.paragraphs}
+            reordered = []
+            for pid in op.ids:
+                if pid not in by_id:
+                    raise ValueError(f"Paragraph '{pid}' not found in reorder")
+                reordered.append(by_id[pid])
+            content.paragraphs = reordered
+
+        elif op_type == "update_closing":
+            content.closing = op.text
 
     def _apply_one(self, content: ResumeContent, op: ContentOp) -> None:
         op_type = op.op

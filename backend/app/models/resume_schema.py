@@ -83,3 +83,45 @@ class ResumeContent(BaseModel):
     basics: Basics
     sections: list[Section] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class CoverLetterParagraph(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    text: str
+
+
+class CoverLetterContent(BaseModel):
+    type: str = "cover_letter"
+    salutation: str = ""
+    paragraphs: list[CoverLetterParagraph] = Field(default_factory=list)
+    closing: str = ""
+
+    @classmethod
+    def from_legacy_text(cls, text: str) -> "CoverLetterContent":
+        """Migrate legacy {text, type} format to structured JSON."""
+        if not text:
+            return cls()
+        lines = text.strip().split("\n\n")
+        salutation = ""
+        closing = ""
+        paragraphs = []
+
+        if lines and (lines[0].startswith("Dear") or lines[0].startswith("To")):
+            salutation = lines[0].strip()
+            lines = lines[1:]
+
+        if len(lines) >= 2:
+            closing_lines = lines[-1].strip().split("\n")
+            if any(
+                kw in closing_lines[0].lower()
+                for kw in ("thank", "regards", "sincerely", "best", "warmly", "respectfully")
+            ):
+                closing = "\n".join(lines[-1:]).strip()
+                lines = lines[:-1]
+
+        for line in lines:
+            stripped = line.strip()
+            if stripped:
+                paragraphs.append(CoverLetterParagraph(text=stripped))
+
+        return cls(salutation=salutation, paragraphs=paragraphs, closing=closing)

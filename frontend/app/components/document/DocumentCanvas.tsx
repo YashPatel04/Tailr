@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import type { ResumeContent } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useSessionDocument, useSession } from "@/hooks/queries"
-import { apiRequest } from "@/lib/api"
 import { queueEdit, undo, redo, clearHistory } from "@/lib/editQueue"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -18,15 +17,14 @@ import { ResumeHeader } from "./ResumeHeader"
 import { DiffView } from "@/components/diff/DiffView"
 import { DiffActions } from "@/components/diff/DiffActions"
 import { toast } from "@/components/ui/Toaster"
-import { Mail, Loader2 } from "lucide-react"
 import { InlineFormatToolbar } from "./InlineFormatToolbar"
+import { CoverLetterCanvas } from "./CoverLetterCanvas"
 
 export function DocumentCanvas() {
   const { activeSessionId, activeDocType, viewMode, latestDiff } = useSessionStore()
   const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
   const { data: session } = useSession(activeSessionId!)
   const queryClient = useQueryClient()
-  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false)
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -34,7 +32,15 @@ export function DocumentCanvas() {
       const { active, over } = event
       if (!over || active.id === over.id) return
 
-      const content = doc?.content as ResumeContent | undefined
+  if (!activeSessionId) {
+    return (
+      <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121] scrollbar-thin">
+        <DocumentEmptyState />
+      </div>
+    )
+  }
+
+  const content = doc?.content as ResumeContent | undefined
       if (!content) return
 
       const oldIndex = content.sections.findIndex((s) => s.id === active.id)
@@ -157,28 +163,6 @@ export function DocumentCanvas() {
     }
   }
 
-  const handleGenerateCoverLetter = async () => {
-    if (!activeSessionId) return
-    setGeneratingCoverLetter(true)
-    try {
-      await apiRequest("POST", `/api/sessions/${activeSessionId}/generate-cover-letter`)
-      toast.success("Cover letter generated!")
-      queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId] })
-    } catch (err: any) {
-      toast.error(err.message || "Cover letter generation failed")
-    } finally {
-      setGeneratingCoverLetter(false)
-    }
-  }
-
-  if (!activeSessionId) {
-    return (
-      <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121] scrollbar-thin">
-        <DocumentEmptyState />
-      </div>
-    )
-  }
-
   const content = doc?.content as ResumeContent | undefined
   const documentModel = doc?.documentModel
   const coverLetterContent = session?.cover_letter_document?.content
@@ -204,51 +188,12 @@ export function DocumentCanvas() {
   const renderLegacyChildren = () =>
     documentModel?.children?.map((child: any) => <SectionRenderer key={child.id} node={child} />)
 
-  const hasContent = content ? content.sections.length > 0 : documentModel && documentModel.children
+  const hasContent = isCoverLetterView ? true : content ? (content.sections?.length ?? 0) > 0 : documentModel && documentModel.children
 
   let innerContent: React.ReactNode
 
   if (isCoverLetterView) {
-    if (coverLetterContent?.text) {
-      innerContent = (
-        <div className="paper rounded-lg p-8">
-          <div className="text-sm text-ink dark:text-[#ececec] leading-relaxed whitespace-pre-wrap">
-            {coverLetterContent.text}
-          </div>
-        </div>
-      )
-    } else {
-      innerContent = (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-16 h-16 rounded-full bg-[#10a37f]/10 flex items-center justify-center mb-5">
-            <Mail size={28} className="text-[#10a37f]" />
-          </div>
-          <h3 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-2">
-            No cover letter yet
-          </h3>
-          <p className="text-sm text-slate dark:text-[#8e8e8e] mb-6 text-center max-w-[320px]">
-            Generate a tailored cover letter for this session based on the job description.
-          </p>
-          <button
-            onClick={handleGenerateCoverLetter}
-            disabled={generatingCoverLetter}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#10a37f] text-white text-sm font-medium hover:bg-[#0d8c6d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {generatingCoverLetter ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Mail size={16} />
-                Generate Cover Letter
-              </>
-            )}
-          </button>
-        </div>
-      )
-    }
+    innerContent = <CoverLetterCanvas content={coverLetterContent} />
   } else {
     innerContent = hasContent ? (
       viewMode === "diff" && latestDiff ? (

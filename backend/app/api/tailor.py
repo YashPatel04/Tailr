@@ -13,10 +13,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import ChatMessage, LLMProvider, Patch, Session, SessionDocument
-from app.models.resume_schema import ResumeContent
+from app.models.resume_schema import CoverLetterContent, ResumeContent
 from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
 from app.services.llm.factory import get_adapter
-from app.services.llm.prompts import build_plan_mode_prompt, build_tailor_prompt_v3
+from app.services.llm.prompts import (
+    build_cover_letter_edit_prompt,
+    build_plan_mode_prompt,
+    build_tailor_prompt_v3,
+)
 from app.services.research.summarizer import research_company
 
 router = APIRouter(prefix="/api/sessions", tags=["tailor"])
@@ -105,6 +109,7 @@ async def chat_stream(
         session_id=session.id,
         role="user",
         content=body.content,
+        doc_type=body.doc_type,
         metadata_json={"mode": body.mode},
     )
     db.add(user_msg)
@@ -152,9 +157,7 @@ async def chat_stream(
             provider_id = str(any_provider.id)
 
     if not provider_id or not model_name:
-        logger.warning(
-            "[chat] session=%s no LLM provider or model specified", session_id
-        )
+        logger.warning("[chat] session=%s no LLM provider or model specified", session_id)
         raise HTTPException(
             status_code=422, detail="Select a model from the dropdown before sending."
         )
@@ -187,20 +190,40 @@ async def chat_stream(
     )
     current_doc = doc_result.scalar_one_or_none()
 
-    if not current_doc:
+    is_cover_letter = body.doc_type == "cover_letter"
+
+    if not current_doc and not is_cover_letter:
         logger.warning(
             "[chat] session=%s no document found for doc_type=%s", session_id, body.doc_type
         )
         raise HTTPException(status_code=422, detail="No document found")
 
-    content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
-    content = ResumeContent.model_validate(content_dict)
-    logger.info(
-        "[chat] session=%s document loaded, sections=%d", session_id, len(content.sections)
-    )
+    if not is_cover_letter:
+        content_dict = current_doc.content_json or {"basics": {"name": ""}, "sections": []}
+        content = ResumeContent.model_validate(content_dict)
+        logger.info(
+            "[chat] session=%s document loaded, sections=%d", session_id, len(content.sections)
+        )
 
     async def event_stream():
         try:
+            # Cover letter: no document exists — tell user to generate first
+            if is_cover_letter and not current_doc:
+                assistant_msg = ChatMessage(
+                    id=uuid4(),
+                    session_id=session.id,
+                    role="assistant",
+                    content="Generate a cover letter first before editing. Click the button in the canvas or say 'write a cover letter'.",
+                    doc_type="cover_letter",
+                    llm_provider_id=provider_id,
+                    model=model_name,
+                )
+                db.add(assistant_msg)
+                await db.commit()
+                yield await _emit("done", {"message": "No cover letter yet"})
+                return
+
+            # Research (shared for resume and cover letter)
             yield await _emit("researching", {"message": f"Researching {session.company_name}..."})
             if not session.research_summary_json:
                 logger.info(
@@ -218,6 +241,133 @@ async def chat_stream(
 
             yield await _emit("thinking", {"message": "Thinking..."})
 
+            # Cover letter branch
+            if is_cover_letter:
+                cl_content_dict = current_doc.content_json
+                if "paragraphs" not in cl_content_dict:
+                    cl_content = CoverLetterContent.from_legacy_text(
+                        cl_content_dict.get("text", "")
+                    )
+                else:
+                    cl_content = CoverLetterContent.model_validate(cl_content_dict)
+
+                if is_plan_mode:
+                    plan_messages = [
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a cover letter advisor. Help the user improve their cover letter. "
+                                "Give conversational advice — do NOT return structured JSON operations. "
+                                f"Company: {session.company_name}. Role: {session.role_title}."
+                            ),
+                        }
+                    ]
+                    plan_messages.append({"role": "user", "content": body.content})
+                    response = await adapter.chat(plan_messages, stream=False)
+                    raw_content = response.content if hasattr(response, "content") else ""
+
+                    assistant_msg = ChatMessage(
+                        id=uuid4(),
+                        session_id=session.id,
+                        role="assistant",
+                        content=raw_content,
+                        doc_type="cover_letter",
+                        metadata_json={"mode": "plan"},
+                        llm_provider_id=provider_id,
+                        model=model_name,
+                    )
+                    db.add(assistant_msg)
+                    await db.commit()
+                    yield await _emit(
+                        "proposal",
+                        {
+                            "message": raw_content,
+                            "operations": [],
+                            "diff": None,
+                            "patch_summary": "",
+                            "mode": "plan",
+                        },
+                    )
+                    return
+
+                # Cover letter edit mode
+                cl_messages = build_cover_letter_edit_prompt(cl_content, session, research)
+                cl_messages.append({"role": "user", "content": body.content})
+                if body.proposal_context:
+                    cl_messages.append({"role": "user", "content": body.proposal_context})
+
+                yield await _emit("writing", {"message": "Editing cover letter..."})
+
+                response = await adapter.chat(cl_messages, stream=False)
+                raw_content = response.content if hasattr(response, "content") else ""
+
+                try:
+                    ops_list, explanation, reasoning = _extract_content_ops(raw_content)
+                except PatchParseError as e:
+                    logger.error("[chat] session=%s cover letter parse error: %s", session_id, e)
+                    yield await _emit("error", {"message": f"Invalid operations: {str(e)}"})
+                    return
+
+                try:
+                    cl_ops = ops_from_list(ops_list)
+                    applier = ContentApplier()
+                    new_cl_content = applier.apply_cover_letter(cl_content, cl_ops)
+                except Exception as e:
+                    logger.warning(
+                        "[chat] session=%s cover letter ops failed, retrying: %s", session_id, e
+                    )
+                    retry_response = await adapter.chat(
+                        [
+                            *cl_messages,
+                            {"role": "assistant", "content": raw_content},
+                            {
+                                "role": "user",
+                                "content": f"Your operations had errors: {str(e)}. Please fix and return only valid JSON.",
+                            },
+                        ],
+                        stream=False,
+                    )
+                    raw_content = (
+                        retry_response.content if hasattr(retry_response, "content") else ""
+                    )
+                    try:
+                        ops_list, explanation, reasoning = _extract_content_ops(raw_content)
+                        cl_ops = ops_from_list(ops_list)
+                        new_cl_content = applier.apply_cover_letter(cl_content, cl_ops)
+                    except Exception as e2:
+                        logger.error("[chat] session=%s cover letter retry failed: %s", session_id, e2)
+                        yield await _emit("error", {"message": f"Operations retry failed: {str(e2)}"})
+                        return
+
+                new_doc = SessionDocument(
+                    id=uuid4(),
+                    session_id=session.id,
+                    doc_type="cover_letter",
+                    version=(current_doc.version or 0) + 1,
+                    content_json=new_cl_content.model_dump(mode="json"),
+                    parent_doc_id=current_doc.id,
+                )
+                db.add(new_doc)
+                await db.flush()
+
+                explanation_text = explanation or f"Updated {len(ops_list)} section(s) of your cover letter."
+                assistant_msg = ChatMessage(
+                    id=uuid4(),
+                    session_id=session.id,
+                    role="assistant",
+                    content=explanation_text,
+                    doc_type="cover_letter",
+                    metadata_json={"operations_count": len(ops_list)},
+                    llm_provider_id=provider_id,
+                    model=model_name,
+                )
+                db.add(assistant_msg)
+                await db.commit()
+
+                yield await _emit("done", {"document_id": str(new_doc.id)})
+                return
+
+            # Resume branch (existing logic)
             if is_plan_mode:
                 messages = build_plan_mode_prompt(
                     session, content, research, current_user.career_context or ""
@@ -245,6 +395,7 @@ async def chat_stream(
                     session_id=session.id,
                     role="assistant",
                     content=raw_content,
+                    doc_type=body.doc_type,
                     metadata_json={"mode": "plan"},
                     llm_provider_id=provider_id,
                     model=model_name,
@@ -413,6 +564,7 @@ async def accept_proposal(
         session_id=session.id,
         role="assistant",
         content=f"Changes applied ({len(ops_list)} operations)",
+        doc_type="resume",
         metadata_json={"patch_id": str(patch_record.id)},
         patch_id=patch_record.id,
     )
@@ -446,6 +598,7 @@ async def decline_proposal(
         session_id=session.id,
         role="assistant",
         content="Proposal declined. How can I help?",
+        doc_type="resume",
     )
     db.add(assistant_msg)
     await db.commit()

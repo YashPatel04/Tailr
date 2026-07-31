@@ -76,9 +76,7 @@ async def analyze_jd(
             "question": "The job description appears to be empty. Could you paste the text?",
         }
 
-    p_result = await db.execute(
-        select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-    )
+    p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
     provider = p_result.scalars().first()
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")
@@ -288,7 +286,7 @@ async def get_session(
 
     doc_result = await db.execute(
         select(SessionDocument)
-        .where(SessionDocument.session_id == session.id)
+        .where(SessionDocument.session_id == session.id, SessionDocument.doc_type == "resume")
         .order_by(SessionDocument.version.desc())
         .limit(1)
     )
@@ -372,7 +370,10 @@ async def delete_session(
 
 @router.get("/{session_id}/messages")
 async def get_messages(
-    session_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+    session_id: str,
+    doc_type: str = "resume",
+    current_user: CurrentUser = None,
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(Session).where(Session.id == session_id, Session.user_id == current_user.id)
@@ -383,7 +384,7 @@ async def get_messages(
 
     msg_result = await db.execute(
         select(ChatMessage)
-        .where(ChatMessage.session_id == session.id)
+        .where(ChatMessage.session_id == session.id, ChatMessage.doc_type == doc_type)
         .order_by(ChatMessage.created_at)
     )
     messages = msg_result.scalars().all()
@@ -392,6 +393,7 @@ async def get_messages(
             "id": str(m.id),
             "role": m.role,
             "content": m.content,
+            "doc_type": m.doc_type,
             "metadata_json": m.metadata_json,
             "llm_provider_id": str(m.llm_provider_id) if m.llm_provider_id else None,
             "model": m.model,
@@ -655,13 +657,20 @@ async def generate_cover_letter(
     if not master:
         raise HTTPException(status_code=400, detail="Upload a master resume first")
 
-    p_result = await db.execute(
-        select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-    )
-    provider = p_result.scalars().first()
+    # Resolve provider: session's selected > user's first
+    provider = None
+    if session.current_provider_id:
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.id == session.current_provider_id)
+        )
+        provider = p_result.scalar_one_or_none()
+    if not provider:
+        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        provider = p_result.scalars().first()
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")
 
+    model_name = session.current_model or "gpt-4o"
     job_desc = session.job_description or ""
     company = session.company_name or ""
     role = session.role_title or ""
@@ -673,11 +682,12 @@ async def generate_cover_letter(
     renderer = ResumeRenderer()
     master_tex = renderer.render_tex(content)
 
-    messages = build_cover_letter_prompt(master_tex, job_desc, company, role)
+    research = session.research_summary_json
+    messages = build_cover_letter_prompt(master_tex, job_desc, company, role, research=research)
     user = current_user
     adapter = get_adapter(
         provider,
-        model="gpt-4o",
+        model=model_name,
         temperature=user.default_temperature,
         max_tokens=user.default_max_tokens,
         top_p=user.default_top_p,
@@ -685,15 +695,32 @@ async def generate_cover_letter(
     response = await adapter.chat(messages, stream=False)
     raw_content = response.content if hasattr(response, "content") else ""
 
+    # Parse generated text into structured cover letter
+    from app.models.resume_schema import CoverLetterContent
+
+    cl_content = CoverLetterContent.from_legacy_text(raw_content)
+
     cover_doc = SessionDocument(
         id=uuid4(),
         session_id=session.id,
         doc_type="cover_letter",
         version=1,
-        content_json={"text": raw_content, "type": "cover_letter"},
+        content_json=cl_content.model_dump(mode="json"),
         is_final=False,
     )
     db.add(cover_doc)
+
+    # Save generation confirmation as chat message
+    assistant_msg = ChatMessage(
+        id=uuid4(),
+        session_id=session.id,
+        role="assistant",
+        content="Cover letter generated. You can edit it directly or ask me to make changes.",
+        doc_type="cover_letter",
+        llm_provider_id=str(provider.id),
+        model=model_name,
+    )
+    db.add(assistant_msg)
     await db.commit()
 
     return CoverLetterResponse(cover_letter=raw_content)

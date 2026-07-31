@@ -22,6 +22,7 @@ interface SessionState {
   viewMode: "diff" | "final"
   setupOpen: boolean
   isStreaming: boolean
+  streamingDocType: "resume" | "cover_letter" | null
   latestDocument: SessionDocument | null
   latestDiff: any | null
   pendingProposal: PendingProposal | null
@@ -59,6 +60,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   viewMode: "final",
   setupOpen: false,
   isStreaming: false,
+  streamingDocType: null,
   latestDocument: null,
   latestDiff: null,
   pendingProposal: null,
@@ -98,19 +100,22 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const sessionId = state.activeSessionId
     if (!sessionId) return
 
+    const docType = state.activeDocType
+
     controllerRef?.abort()
     const controller = new AbortController()
     controllerRef = controller
 
     const requestId = crypto.randomUUID()
 
-    set({ isStreaming: true, progressPhase: "", progressMessage: "" })
+    set({ isStreaming: true, streamingDocType: docType, progressPhase: "", progressMessage: "" })
 
+    const queryKey = ["sessions", sessionId, "messages", docType]
     queryClient.setQueryData(
-      ["sessions", sessionId, "messages"],
+      queryKey,
       (old: any[] | undefined) => [
         ...(old || []),
-        { id: `optimistic-${Date.now()}`, role: "user", content, created_at: new Date().toISOString() },
+        { id: `optimistic-${Date.now()}`, role: "user", content, doc_type: docType, created_at: new Date().toISOString() },
       ]
     )
 
@@ -126,6 +131,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         body: JSON.stringify({
           content,
           role: "user",
+          doc_type: docType,
           mode: state.activeMode,
           tailoring_mode: state.tailoringMode,
           proposal_context: proposalContext,
@@ -143,15 +149,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         } else {
           toast.error(`Connection failed (${response.status})`)
         }
-        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
-        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+        set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey })
         return
       }
 
       if (!response.body) {
         toast.error("No response body")
-        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
-        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+        set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey })
         return
       }
 
@@ -174,9 +180,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 set({ progressPhase: "writing", progressMessage: data.message || "Writing changes..." })
                 break
               case "proposal":
-                set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
                 if (data.mode === "plan") {
-                  queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                  queryClient.invalidateQueries({ queryKey })
                   break
                 }
                 set({ viewMode: "diff" })
@@ -194,10 +200,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                   },
                 })
                 queryClient.invalidateQueries({ queryKey: ["sessions"] })
-                queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                queryClient.invalidateQueries({ queryKey })
                 break
               case "done":
-                set({ isStreaming: false, progressPhase: "", progressMessage: "", viewMode: "diff" })
+                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
                 if (data.diff) {
                   set({ latestDiff: data.diff })
                 }
@@ -205,12 +211,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                   set({ latestDocument: { id: data.document_id } as any })
                 }
                 queryClient.invalidateQueries({ queryKey: ["sessions"] })
+                queryClient.invalidateQueries({ queryKey })
                 break
               case "error":
                 controller.abort()
-                set({ isStreaming: false, progressPhase: "", progressMessage: "" })
+                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
                 toast.error(data.message || "An error occurred")
-                queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+                queryClient.invalidateQueries({ queryKey })
                 break
             }
           } catch {}
@@ -219,8 +226,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       )
     } catch (err: any) {
       if (err.name !== "AbortError") {
-        set({ isStreaming: false, progressPhase: "", progressMessage: "" })
-        queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
+        set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+        queryClient.invalidateQueries({ queryKey })
       }
     }
   },

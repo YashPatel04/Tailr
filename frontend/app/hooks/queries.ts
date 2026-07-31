@@ -105,10 +105,10 @@ export function useSession(id: string) {
   })
 }
 
-export function useSessionMessages(id: string) {
+export function useSessionMessages(id: string, docType: string = "resume") {
   return useQuery({
-    queryKey: ["sessions", id, "messages"],
-    queryFn: () => apiRequest<any[]>("GET", `/api/sessions/${id}/messages`),
+    queryKey: ["sessions", id, "messages", docType],
+    queryFn: () => apiRequest<any[]>("GET", `/api/sessions/${id}/messages?doc_type=${docType}`),
     enabled: !!id,
   })
 }

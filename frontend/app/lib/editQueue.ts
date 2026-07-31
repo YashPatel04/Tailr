@@ -47,10 +47,11 @@ async function flushEdits() {
   }
 
   const leftover = pending.filter((q) => q.sessionId !== sessionId)
+  const docType = useSessionStore.getState().activeDocType
   setSaveStatus("saving")
 
   try {
-    await apiRequest("PATCH", `/api/sessions/${sessionId}/document`, { operations: ops })
+    await apiRequest("PATCH", `/api/sessions/${sessionId}/document`, { operations: ops, doc_type: docType })
     setSaveStatus("saved")
     setTimeout(() => {
       if (useSessionStore.getState().saveStatus === "saved") {

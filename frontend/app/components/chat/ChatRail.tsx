@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLayoutStore } from "@/stores/layout"
-import { useSessionMessages } from "@/hooks/queries"
+import { useSessionMessages, useSession } from "@/hooks/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { ChatRailEmptyState } from "./ChatRailEmptyState"
 import { ChatRailHeader } from "./ChatRailHeader"
@@ -11,21 +11,48 @@ import { ChatMessageList } from "./ChatMessageList"
 import { ChatInput } from "./ChatInput"
 import { JDSetupForm } from "./JDSetupForm"
 import { ModeBar } from "./ModeBar"
+import { CoverLetterEmptyPrompt } from "./CoverLetterEmptyPrompt"
 import { MessageSquare, Lock } from "lucide-react"
+import { getApiBaseUrl } from "@/lib/env"
+import { getCsrfToken } from "@/lib/api"
 
 const PEEK_DELAY = 300
 const PEEK_MAX_MESSAGES = 4
 
 export function ChatRail({ width }: { width: number }) {
-  const { activeSessionId, setupOpen, setSetupOpen, activeMode } = useSessionStore()
+  const { activeSessionId, setupOpen, setSetupOpen, activeMode, activeDocType } = useSessionStore()
   const { chatRailCollapsed, setChatRailCollapsed, chatRailPeeking, setChatRailPeeking } = useLayoutStore()
   const storeSendMessage = useSessionStore((s) => s.sendMessage)
   const queryClient = useQueryClient()
+  const { data: session } = useSession(activeSessionId!)
+  const hasCoverLetter = session?.has_cover_letter || false
+
+  const GENERATE_CL_PATTERN = /\b(write|generate|draft|create)\b.*\b(cover\s*letter|cl)\b/i
+
   const sendMessage = useCallback(
-    (content: string) => storeSendMessage(content, queryClient),
-    [storeSendMessage, queryClient]
+    async (content: string) => {
+      if (activeDocType === "cover_letter" && !hasCoverLetter) {
+        if (GENERATE_CL_PATTERN.test(content)) {
+          try {
+            const csrfToken = await getCsrfToken()
+            const response = await fetch(`${getApiBaseUrl()}/api/sessions/${activeSessionId}/generate-cover-letter`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+              credentials: "include",
+            })
+            if (response.ok) {
+              queryClient.invalidateQueries({ queryKey: ["sessions"] })
+              queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "messages", "cover_letter"] })
+            }
+          } catch {}
+          return
+        }
+      }
+      storeSendMessage(content, queryClient)
+    },
+    [storeSendMessage, queryClient, activeDocType, hasCoverLetter, activeSessionId]
   )
-  const { data: messages } = useSessionMessages(activeSessionId ?? "")
+  const { data: messages } = useSessionMessages(activeSessionId ?? "", activeDocType)
   const railRef = useRef<HTMLElement>(null)
   const peekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [peekFading, setPeekFading] = useState(false)

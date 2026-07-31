@@ -1,14 +1,16 @@
 {
-  "generated": "2026-07-30T19:00:00.000Z",
+  "generated": "2026-07-31T12:00:00Z",
   "sections": [
     {
       "id": "mockups",
       "label": "Mockups",
       "groups": [
         {
-          "slug": "diff-view-reinvention",
+          "slug": "tailr-logos",
           "files": [
-            { "label": "Resume Changes View — Redesign", "path": "mockups/diff-view-reinvention/diff-view.html" }
+            { "label": "Logo Concepts (6 directions)", "path": "mockups/tailr-logos/concepts.html" },
+            { "label": "Redline Refinements", "path": "mockups/tailr-logos/refined.html" },
+            { "label": "Design Brief (for Claude)", "path": "mockups/tailr-logos/design-brief.md" }
           ]
         }
       ]

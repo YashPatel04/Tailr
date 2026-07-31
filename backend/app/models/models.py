@@ -42,7 +42,6 @@ class User(Base):
     )
 
 
-
 class LLMProvider(Base):
     __tablename__ = "llm_providers"
 
@@ -173,6 +172,7 @@ class ChatMessage(Base):
     )
     role: Mapped[str] = mapped_column(String(20), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    doc_type: Mapped[str] = mapped_column(String(20), nullable=False, default="resume")
     metadata_json: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     patch_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("patches.id", ondelete="SET NULL"), nullable=True
@@ -200,4 +200,3 @@ class RefreshToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="refresh_tokens")
-

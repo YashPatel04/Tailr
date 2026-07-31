@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import Patch, Session, SessionDocument
-from app.models.resume_schema import ResumeContent
+from app.models.resume_schema import CoverLetterContent, ResumeContent
 from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
 
 router = APIRouter(prefix="/api/sessions", tags=["document-editing"])
@@ -24,6 +24,7 @@ router = APIRouter(prefix="/api/sessions", tags=["document-editing"])
 
 class UserEditRequest(BaseModel):
     operations: list[dict]
+    doc_type: str = "resume"
 
 
 class UserEditResponse(BaseModel):
@@ -47,9 +48,11 @@ async def edit_document(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    doc_type = body.doc_type
+
     doc_result = await db.execute(
         select(SessionDocument)
-        .where(SessionDocument.session_id == session.id, SessionDocument.doc_type == "resume")
+        .where(SessionDocument.session_id == session.id, SessionDocument.doc_type == doc_type)
         .order_by(SessionDocument.version.desc())
         .limit(1)
     )
@@ -57,32 +60,49 @@ async def edit_document(
     if not current_doc:
         raise HTTPException(status_code=404, detail="No document found for this session")
 
-    content_dict = current_doc.content_json or {
-        "basics": {"name": "Unknown"},
-        "sections": [],
-        "metadata": {},
-    }
-    content = ResumeContent.model_validate(content_dict)
+    content_ops = ops_from_list(body.operations)
+    applier = ContentApplier()
+    warnings: list[dict] = []
 
-    try:
-        applier = ContentApplier()
-        content_ops = ops_from_list(body.operations)
-        new_content = applier.apply(content, content_ops)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
+    if doc_type == "cover_letter":
+        content_dict = current_doc.content_json or {}
+        if "paragraphs" not in content_dict:
+            content = CoverLetterContent.from_legacy_text(content_dict.get("text", ""))
+        else:
+            content = CoverLetterContent.model_validate(content_dict)
 
-    differ = ContentDiffer()
-    diff = differ.diff(content, new_content)
+        try:
+            new_content = applier.apply_cover_letter(content, content_ops)
+        except Exception as e:
+            raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
+
+        diff = {}
+        new_content_dict = new_content.model_dump(mode="json")
+    else:
+        content_dict = current_doc.content_json or {
+            "basics": {"name": "Unknown"},
+            "sections": [],
+            "metadata": {},
+        }
+        content = ResumeContent.model_validate(content_dict)
+
+        try:
+            new_content = applier.apply(content, content_ops)
+        except Exception as e:
+            raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
+
+        differ = ContentDiffer()
+        diff = differ.diff(content, new_content)
+        new_content_dict = new_content.model_dump(mode="json")
 
     new_doc = SessionDocument(
         id=uuid4(),
         session_id=session.id,
-        doc_type="resume",
+        doc_type=doc_type,
         version=(current_doc.version or 0) + 1,
-        content_json=new_content.model_dump(mode="json"),
+        content_json=new_content_dict,
         parent_doc_id=current_doc.id,
     )
-    warnings: list[dict] = []
     db.add(new_doc)
     await db.flush()
 

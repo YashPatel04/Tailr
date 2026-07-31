@@ -8,9 +8,12 @@ import { ProgressMessage } from "./ProgressMessage"
 import { EnhancedProposal } from "./EnhancedProposal"
 
 export function ChatMessageList() {
-  const { activeSessionId, isStreaming, progressPhase, progressMessage, pendingProposal } = useSessionStore()
-  const { data: messages } = useSessionMessages(activeSessionId!)
+  const { activeSessionId, activeDocType, isStreaming, streamingDocType, progressPhase, progressMessage, pendingProposal } = useSessionStore()
+  const { data: messages } = useSessionMessages(activeSessionId!, activeDocType)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const showStreaming = isStreaming && streamingDocType === activeDocType
+  const showProposal = !isStreaming && pendingProposal && activeDocType === "resume"
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -21,10 +24,10 @@ export function ChatMessageList() {
       {messages?.map((message) => (
         <ChatMessage key={message.id} message={message} />
       ))}
-      {isStreaming && progressPhase && (
+      {showStreaming && progressPhase && (
         <ProgressMessage phase={progressPhase} text={progressMessage} />
       )}
-      {!isStreaming && pendingProposal && (
+      {showProposal && (
         <EnhancedProposal />
       )}
       <div ref={bottomRef} />

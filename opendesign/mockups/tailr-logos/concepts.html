@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tailr — Logo Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --surface: #18181b;
+    --surface-raised: #1e1e22;
+    --border: #2a2a2e;
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    padding: 48px 24px;
+    min-height: 100vh;
+  }
+  .page-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+  .concepts {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 80px;
+  }
+  .concept {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .concept-info {
+    position: sticky;
+    top: 48px;
+  }
+  .concept-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .concept-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .concept-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .concept-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+  }
+  .concept-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .showcase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .showcase-card.dark {
+    background: #000;
+  }
+  .showcase-card.light {
+    background: #fafafa;
+    border-color: #e5e5e5;
+  }
+  .showcase-card.light svg { color: #111; }
+  .showcase-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .showcase-row .showcase-card {
+    padding: 32px;
+  }
+  .sizes-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  .size-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+  .size-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .wordmark-showcase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .wordmark-row {
+    display: flex;
+    align-items: center;
+    gap: 48px;
+  }
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+  .icon-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Tailr — Logo Concepts</h1>
+  <p>Six directions. Each shows mark, wordmark, sizes, and light/dark treatment.</p>
+</div>
+
+<div class="concepts">
+
+<!-- ═══════════════════════════════════════════ CONCEPT 1: SHEARS ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">01</div>
+    <div class="concept-title">Shears</div>
+    <div class="concept-subtitle">Open tailor's scissors forming a geometric T. The blades double as the crossbar, the handles as the stem. Instant read as both "tool" and "letter."</div>
+    <div class="concept-tags">
+      <span class="tag">geometric</span>
+      <span class="tag">recognizable</span>
+      <span class="tag">works at 16px</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Top blade left -->
+        <path d="M40 36 L80 68 L80 76 L72 76 L32 44 Z" fill="#3b82f6"/>
+        <!-- Top blade right -->
+        <path d="M120 36 L80 68 L80 76 L88 76 L128 44 Z" fill="#60a5fa"/>
+        <!-- Handle left -->
+        <path d="M72 76 L80 76 L80 136 L72 130 Z" fill="#3b82f6"/>
+        <!-- Handle right -->
+        <path d="M80 76 L88 76 L88 130 L80 136 Z" fill="#2563eb"/>
+        <!-- Pivot screw -->
+        <circle cx="80" cy="72" r="5" fill="#1e1e22" stroke="#60a5fa" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 8 L26 28 L26 34 L23 34 L5 14 Z" fill="#3b82f6"/>
+        <path d="M40 8 L26 28 L26 34 L29 34 L47 14 Z" fill="#60a5fa"/>
+        <path d="M23 34 L26 34 L26 48 L23 46 Z" fill="#3b82f6"/>
+        <path d="M26 34 L29 34 L29 46 L26 48 Z" fill="#2563eb"/>
+        <circle cx="26" cy="32" r="2" fill="#0e0e10" stroke="#60a5fa" stroke-width="1"/>
+        <text x="56" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 8 L26 28 L26 34 L23 34 L5 14 Z" fill="#2563eb"/>
+        <path d="M40 8 L26 28 L26 34 L29 34 L47 14 Z" fill="#3b82f6"/>
+        <path d="M23 34 L26 34 L26 48 L23 46 Z" fill="#2563eb"/>
+        <path d="M26 34 L29 34 L29 46 L26 48 Z" fill="#1d4ed8"/>
+        <circle cx="26" cy="32" r="2" fill="#fafafa" stroke="#3b82f6" stroke-width="1"/>
+        <text x="56" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 10 L24 20 L24 23 L22 23 L8 13 Z" fill="#3b82f6"/><path d="M36 10 L24 20 L24 23 L26 23 L40 13 Z" fill="#60a5fa"/><path d="M22 23 L24 23 L24 40 L22 38 Z" fill="#3b82f6"/><path d="M24 23 L26 23 L26 38 L24 40 Z" fill="#2563eb"/><circle cx="24" cy="22" r="1.5" fill="#1e1e22" stroke="#60a5fa" stroke-width="1"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M8 7 L16 14 L16 15.5 L15 15.5 L5.5 8.5 Z" fill="#3b82f6"/><path d="M24 7 L16 14 L16 15.5 L17 15.5 L26.5 8.5 Z" fill="#60a5fa"/><path d="M15 15.5 L16 15.5 L16 27 L15 26 Z" fill="#3b82f6"/><path d="M16 15.5 L17 15.5 L17 26 L16 27 Z" fill="#2563eb"/><circle cx="16" cy="14.5" r="1" fill="#1e1e22" stroke="#60a5fa" stroke-width="0.75"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 3.5 L8 7 L8 7.8 L7.5 7.8 L2.5 4.3 Z" fill="#3b82f6"/><path d="M12 3.5 L8 7 L8 7.8 L8.5 7.8 L13.5 4.3 Z" fill="#60a5fa"/><path d="M7.5 7.8 L8 7.8 L8 13.5 L7.5 13 Z" fill="#3b82f6"/><path d="M8 7.8 L8.5 7.8 L8.5 13 L8 13.5 Z" fill="#2563eb"/><circle cx="8" cy="7.3" r="0.6" fill="#1e1e22" stroke="#60a5fa" stroke-width="0.5"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONCEPT 2: STITCH ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">02</div>
+    <div class="concept-title">Stitch</div>
+    <div class="concept-subtitle">A dashed stitch line that traces the letter T. A needle sits at the starting point. Minimal, distinctive, reads well at every size.</div>
+    <div class="concept-tags">
+      <span class="tag">minimal</span>
+      <span class="tag">linear</span>
+      <span class="tag">unique silhouette</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Needle at top-left -->
+        <path d="M28 28 L48 48" stroke="#e4e4e7" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M24 24 L32 32" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="26" cy="26" r="2" fill="#3b82f6"/>
+        <!-- Crossbar - dashed stitch -->
+        <line x1="48" y1="48" x2="132" y2="48" stroke="#3b82f6" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"/>
+        <!-- Stem - dashed stitch -->
+        <line x1="86" y1="48" x2="86" y2="132" stroke="#3b82f6" stroke-width="3" stroke-dasharray="8 6" stroke-linecap="round"/>
+        <!-- End stitch dots -->
+        <circle cx="132" cy="48" r="3" fill="#3b82f6"/>
+        <circle cx="86" cy="132" r="3" fill="#3b82f6"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6 L12 16" stroke="#71717a" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="5" cy="7" r="1.5" fill="#3b82f6"/>
+        <line x1="12" y1="16" x2="42" y2="16" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
+        <line x1="26" y1="16" x2="26" y2="42" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
+        <circle cx="42" cy="16" r="2" fill="#3b82f6"/>
+        <circle cx="26" cy="42" r="2" fill="#3b82f6"/>
+        <text x="52" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6 L12 16" stroke="#a1a1aa" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="5" cy="7" r="1.5" fill="#2563eb"/>
+        <line x1="12" y1="16" x2="42" y2="16" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
+        <line x1="26" y1="16" x2="26" y2="42" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>
+        <circle cx="42" cy="16" r="2" fill="#2563eb"/>
+        <circle cx="26" cy="42" r="2" fill="#2563eb"/>
+        <text x="52" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M8 8 L14 14" stroke="#71717a" stroke-width="1" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="#3b82f6"/><line x1="14" y1="14" x2="34" y2="14" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/><line x1="24" y1="14" x2="24" y2="40" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/><circle cx="34" cy="14" r="1.5" fill="#3b82f6"/><circle cx="24" cy="40" r="1.5" fill="#3b82f6"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><line x1="10" y1="10" x2="22" y2="10" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/><line x1="16" y1="10" x2="16" y2="28" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3 2" stroke-linecap="round"/><circle cx="22" cy="10" r="1.2" fill="#3b82f6"/><circle cx="16" cy="28" r="1.2" fill="#3b82f6"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="5" y1="5" x2="11" y2="5" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="2 1.5" stroke-linecap="round"/><line x1="8" y1="5" x2="8" y2="13" stroke="#3b82f6" stroke-width="1.2" stroke-dasharray="2 1.5" stroke-linecap="round"/><circle cx="11" cy="5" r="0.8" fill="#3b82f6"/><circle cx="8" cy="13" r="0.8" fill="#3b82f6"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONCEPT 3: REDLINE ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">03</div>
+    <div class="concept-title">Redline</div>
+    <div class="concept-subtitle">A document page with a diagonal cut — the signature proofreading mark. The cut reveals a colored edge, like a tailor's notch on fabric.</div>
+    <div class="concept-tags">
+      <span class="tag">document metaphor</span>
+      <span class="tag">proofreading</span>
+      <span class="tag">layered</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Document back -->
+        <rect x="36" y="24" width="88" height="112" rx="4" fill="#2a2a2e" stroke="#3b3b40" stroke-width="1"/>
+        <!-- Document front (cut) -->
+        <path d="M40 28 L96 28 L120 28 C122.2 28 124 29.8 124 32 L124 128 C124 130.2 122.2 132 120 132 L40 132 C37.8 132 36 130.2 36 128 L36 32 C36 29.8 37.8 28 40 28 Z" fill="#1e1e22" stroke="#3b82f6" stroke-width="1.5"/>
+        <!-- Diagonal cut line -->
+        <line x1="56" y1="132" x2="108" y2="28" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Accent edge on the cut -->
+        <path d="M56 132 L108 28 L112 28 L60 132 Z" fill="#3b82f6" opacity="0.3"/>
+        <!-- Text lines (abbreviated resume) -->
+        <line x1="48" y1="50" x2="80" y2="50" stroke="#4a4a4e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="48" y1="60" x2="96" y2="60" stroke="#3b3b40" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="48" y1="68" x2="88" y2="68" stroke="#3b3b40" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="48" y1="82" x2="72" y2="82" stroke="#4a4a4e" stroke-width="2" stroke-linecap="round"/>
+        <line x1="48" y1="92" x2="92" y2="92" stroke="#3b3b40" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="48" y1="100" x2="84" y2="100" stroke="#3b3b40" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="30" height="40" rx="3" fill="#2a2a2e" stroke="#3b3b40" stroke-width="0.75"/>
+        <path d="M5 6 L22 6 C23.1 6 24 6.9 24 8 L24 40 C24 41.1 23.1 42 22 42 L5 42 C3.9 42 3 41.1 3 40 L3 8 C3 6.9 3.9 6 5 6 Z" fill="#1e1e22" stroke="#3b82f6" stroke-width="1"/>
+        <line x1="10" y1="42" x2="22" y2="6" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M10 42 L22 6 L23.5 6 L11.5 42 Z" fill="#3b82f6" opacity="0.3"/>
+        <line x1="7" y1="14" x2="16" y2="14" stroke="#4a4a4e" stroke-width="1" stroke-linecap="round"/>
+        <line x1="7" y1="19" x2="20" y2="19" stroke="#3b3b40" stroke-width="0.75" stroke-linecap="round"/>
+        <line x1="7" y1="24" x2="18" y2="24" stroke="#3b3b40" stroke-width="0.75" stroke-linecap="round"/>
+        <text x="34" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="30" height="40" rx="3" fill="#e5e5e5" stroke="#d4d4d8" stroke-width="0.75"/>
+        <path d="M5 6 L22 6 C23.1 6 24 6.9 24 8 L24 40 C24 41.1 23.1 42 22 42 L5 42 C3.9 42 3 41.1 3 40 L3 8 C3 6.9 3.9 6 5 6 Z" fill="#fafafa" stroke="#2563eb" stroke-width="1"/>
+        <line x1="10" y1="42" x2="22" y2="6" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M10 42 L22 6 L23.5 6 L11.5 42 Z" fill="#2563eb" opacity="0.2"/>
+        <line x1="7" y1="14" x2="16" y2="14" stroke="#a1a1aa" stroke-width="1" stroke-linecap="round"/>
+        <line x1="7" y1="19" x2="20" y2="19" stroke="#d4d4d8" stroke-width="0.75" stroke-linecap="round"/>
+        <line x1="7" y1="24" x2="18" y2="24" stroke="#d4d4d8" stroke-width="0.75" stroke-linecap="round"/>
+        <text x="34" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="6" y="4" width="28" height="40" rx="2" fill="#1e1e22" stroke="#3b82f6" stroke-width="1"/><path d="M10 6 L28 6 C29.1 6 30 6.9 30 8 L30 40 C30 41.1 29.1 42 28 42 L10 42 C8.9 42 8 41.1 8 40 L8 8 C8 6.9 8.9 6 10 6 Z" fill="#1e1e22" stroke="#3b82f6" stroke-width="0.75"/><line x1="14" y1="42" x2="28" y2="6" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/><path d="M14 42 L28 6 L29 6 L15 42 Z" fill="#3b82f6" opacity="0.3"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="4" y="3" width="20" height="26" rx="2" fill="#1e1e22" stroke="#3b82f6" stroke-width="0.75"/><line x1="10" y1="29" x2="20" y2="5" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/><path d="M10 29 L20 5 L21 5 L11 29 Z" fill="#3b82f6" opacity="0.3"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1.5" width="10" height="13" rx="1" fill="#1e1e22" stroke="#3b82f6" stroke-width="0.5"/><line x1="5" y1="14.5" x2="10" y2="2.5" stroke="#3b82f6" stroke-width="0.8" stroke-linecap="round"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONCEPT 4: COMPOSITOR ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">04</div>
+    <div class="concept-title">Compositor</div>
+    <div class="concept-subtitle">A typesetting block — the physical piece of metal used in letterpress. The T is carved into it like a punch. Nods to the LaTeX pipeline without being literal.</div>
+    <div class="concept-tags">
+      <span class="tag">typesetting</span>
+      <span class="tag">tactile</span>
+      <span class="tag">craft heritage</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Block body -->
+        <rect x="32" y="40" width="96" height="80" rx="6" fill="#2a2a2e" stroke="#4a4a4e" stroke-width="1"/>
+        <!-- Top face (3D) -->
+        <path d="M32 40 L44 28 L140 28 L128 40 Z" fill="#3b3b40" stroke="#4a4a4e" stroke-width="1"/>
+        <!-- Right face (3D) -->
+        <path d="M128 40 L140 28 L140 108 L128 120 Z" fill="#222226" stroke="#4a4a4e" stroke-width="1"/>
+        <!-- T engraved -->
+        <path d="M56 64 L104 64 M80 64 L80 104" stroke="#3b82f6" stroke-width="6" stroke-linecap="round"/>
+        <!-- T shadow/depth -->
+        <path d="M58 66 L106 66 M82 66 L82 106" stroke="#2563eb" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="8" width="28" height="28" rx="3" fill="#2a2a2e" stroke="#4a4a4e" stroke-width="0.75"/>
+        <path d="M2 8 L8 4 L36 4 L30 8 Z" fill="#3b3b40" stroke="#4a4a4e" stroke-width="0.5"/>
+        <path d="M30 8 L36 4 L36 32 L30 36 Z" fill="#222226" stroke="#4a4a4e" stroke-width="0.5"/>
+        <path d="M10 14 L28 14 M19 14 L19 30" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+        <text x="44" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="8" width="28" height="28" rx="3" fill="#e5e5e5" stroke="#d4d4d8" stroke-width="0.75"/>
+        <path d="M2 8 L8 4 L36 4 L30 8 Z" fill="#d4d4d8" stroke="#a1a1aa" stroke-width="0.5"/>
+        <path d="M30 8 L36 4 L36 32 L30 36 Z" fill="#c8c8cc" stroke="#a1a1aa" stroke-width="0.5"/>
+        <path d="M10 14 L28 14 M19 14 L19 30" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+        <text x="44" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="28" height="24" rx="2" fill="#2a2a2e" stroke="#4a4a4e" stroke-width="0.75"/><path d="M8 12 L12 8 L40 8 L36 12 Z" fill="#3b3b40" stroke="#4a4a4e" stroke-width="0.5"/><path d="M36 12 L40 8 L40 32 L36 36 Z" fill="#222226" stroke="#4a4a4e" stroke-width="0.5"/><path d="M16 19 L30 19 M23 19 L23 32" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="5" y="8" width="20" height="16" rx="2" fill="#2a2a2e" stroke="#4a4a4e" stroke-width="0.5"/><path d="M5 8 L8 5 L28 5 L25 8 Z" fill="#3b3b40"/><path d="M25 8 L28 5 L28 21 L25 24 Z" fill="#222226"/><path d="M11 12 L21 12 M16 12 L16 22" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="4" width="10" height="8" rx="1" fill="#2a2a2e" stroke="#4a4a4e" stroke-width="0.5"/><path d="M2.5 4 L4 2.5 L14 2.5 L12.5 4 Z" fill="#3b3b40"/><path d="M5.5 6 L10.5 6 M8 6 L8 11" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONCEPT 5: PIN ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">05</div>
+    <div class="concept-title">Pin</div>
+    <div class="concept-subtitle">A tailor's pin that doubles as the letter T. The head is the crossbar, the shaft is the stem. Single continuous stroke. Maximum simplicity.</div>
+    <div class="concept-tags">
+      <span class="tag">ultra-minimal</span>
+      <span class="tag">single stroke</span>
+      <span class="tag">iconic</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pin head (crossbar) -->
+        <path d="M40 52 C40 44 48 36 56 36 L104 36 C112 36 120 44 120 52 L120 56 C120 60 116.4 64 112 64 L48 64 C43.6 64 40 60 40 56 Z" fill="#3b82f6"/>
+        <!-- Pin shaft (stem) -->
+        <rect x="74" y="64" width="12" height="64" rx="6" fill="#3b82f6"/>
+        <!-- Pin point -->
+        <path d="M74 120 L80 140 L86 120 Z" fill="#60a5fa"/>
+        <!-- Highlight -->
+        <ellipse cx="80" cy="48" rx="24" ry="6" fill="#60a5fa" opacity="0.3"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 12 C8 8 11 4 16 4 L36 4 C41 4 44 8 44 12 L44 14 C44 16 42 18 40 18 L12 18 C10 18 8 16 8 14 Z" fill="#3b82f6"/>
+        <rect x="23" y="18" width="6" height="24" rx="3" fill="#3b82f6"/>
+        <path d="M23 38 L26 46 L29 38 Z" fill="#60a5fa"/>
+        <text x="52" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 12 C8 8 11 4 16 4 L36 4 C41 4 44 8 44 12 L44 14 C44 16 42 18 40 18 L12 18 C10 18 8 16 8 14 Z" fill="#2563eb"/>
+        <rect x="23" y="18" width="6" height="24" rx="3" fill="#2563eb"/>
+        <path d="M23 38 L26 46 L29 38 Z" fill="#3b82f6"/>
+        <text x="52" y="40" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M12 14 C12 10 15 7 19 7 L29 7 C33 7 36 10 36 14 L36 16 C36 17.5 34.5 19 33 19 L15 19 C13.5 19 12 17.5 12 16 Z" fill="#3b82f6"/><rect x="22" y="19" width="4" height="18" rx="2" fill="#3b82f6"/><path d="M22 34 L24 42 L26 34 Z" fill="#60a5fa"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M8 10 C8 7 10 5 13 5 L19 5 C22 5 24 7 24 10 L24 11.5 C24 12.5 23 13.5 22 13.5 L10 13.5 C9 13.5 8 12.5 8 11.5 Z" fill="#3b82f6"/><rect x="15" y="13.5" width="3" height="12" rx="1.5" fill="#3b82f6"/><path d="M15 23.5 L16 29 L17 23.5 Z" fill="#60a5fa"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 5.5 C4 3.8 5 2.5 6.5 2.5 L9.5 2.5 C11 2.5 12 3.8 12 5.5 L12 6.2 C12 6.8 11.5 7.2 11 7.2 L5 7.2 C4.5 7.2 4 6.8 4 6.2 Z" fill="#3b82f6"/><rect x="7.2" y="7.2" width="1.6" height="5.8" rx="0.8" fill="#3b82f6"/><path d="M7.2 11.8 L8 14.5 L8.8 11.8 Z" fill="#60a5fa"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONCEPT 6: DIFF ═══════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-info">
+    <div class="concept-number">06</div>
+    <div class="concept-title">Diff</div>
+    <div class="concept-subtitle">The letter T constructed from a deletion and addition — the proofreading marks that define the app's UI. A red strikethrough on the crossbar's left half, green on the right. The product IS the logo.</div>
+    <div class="concept-tags">
+      <span class="tag">proofreading marks</span>
+      <span class="tag">product-specific</span>
+      <span class="tag">unmistakable</span>
+    </div>
+  </div>
+  <div class="concept-showcase">
+    <div class="showcase-card">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Crossbar - left half (deleted) -->
+        <line x1="36" y1="56" x2="80" y2="56" stroke="#ef4444" stroke-width="8" stroke-linecap="round"/>
+        <!-- Crossbar - right half (added) -->
+        <line x1="80" y1="56" x2="124" y2="56" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+        <!-- Stem - deleted -->
+        <line x1="68" y1="56" x2="68" y2="124" stroke="#ef4444" stroke-width="8" stroke-linecap="round"/>
+        <!-- Stem - added (overlapping) -->
+        <line x1="92" y1="56" x2="92" y2="124" stroke="#22c55e" stroke-width="8" stroke-linecap="round"/>
+        <!-- Proofreading insertion caret -->
+        <path d="M76 130 L80 138 L84 130" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="showcase-card dark">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="4" y1="14" x2="22" y2="14" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+        <line x1="22" y1="14" x2="40" y2="14" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+        <line x1="17" y1="14" x2="17" y2="36" stroke="#ef4444" stroke-width="4" stroke-linecap="round"/>
+        <line x1="27" y1="14" x2="27" y2="36" stroke="#22c55e" stroke-width="4" stroke-linecap="round"/>
+        <text x="48" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card light">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="4" y1="14" x2="22" y2="14" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+        <line x1="22" y1="14" x2="40" y2="14" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+        <line x1="17" y1="14" x2="17" y2="36" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+        <line x1="27" y1="14" x2="27" y2="36" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+        <text x="48" y="38" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700" fill="#111111" letter-spacing="-0.02em">tailr</text>
+      </svg>
+    </div>
+    <div class="showcase-card">
+      <div class="sizes-row">
+        <div class="size-item">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><line x1="10" y1="16" x2="24" y2="16" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><line x1="24" y1="16" x2="38" y2="16" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="16" x2="20" y2="38" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/><line x1="28" y1="16" x2="28" y2="38" stroke="#22c55e" stroke-width="3" stroke-linecap="round"/></svg>
+          <div class="size-label">48px</div>
+        </div>
+        <div class="size-item">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><line x1="7" y1="10" x2="16" y2="10" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><line x1="16" y1="10" x2="25" y2="10" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><line x1="13" y1="10" x2="13" y2="26" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/><line x1="19" y1="10" x2="19" y2="26" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <div class="size-label">32px</div>
+        </div>
+        <div class="size-item">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="3.5" y1="5" x2="8" y2="5" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="5" x2="12.5" y2="5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><line x1="6.5" y1="5" x2="6.5" y2="13" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round"/><line x1="9.5" y1="5" x2="9.5" y2="13" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div class="size-label">16px</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+</body>
+</html>

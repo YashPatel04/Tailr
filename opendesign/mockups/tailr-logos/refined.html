@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tailr — Redline Logo Refinements</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0e;
+    --surface: #141416;
+    --surface-raised: #1a1a1c;
+    --border: #262628;
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --paper: #faf9f7;
+    --paper-dark: #e8e6e1;
+    --cut-edge: #3b82f6;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    padding: 48px 32px;
+    min-height: 100vh;
+  }
+  .page-header {
+    text-align: center;
+    margin-bottom: 72px;
+  }
+  .page-header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+  .page-header .accent-line {
+    width: 40px;
+    height: 2px;
+    background: var(--accent);
+    margin: 16px auto 0;
+    border-radius: 1px;
+  }
+
+  .section {
+    max-width: 1200px;
+    margin: 0 auto 96px;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 560px;
+  }
+
+  .variations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .variation-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .variation-card:hover {
+    border-color: var(--accent);
+  }
+  .variation-preview {
+    padding: 48px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+  }
+  .variation-preview.dark {
+    background: #050505;
+  }
+  .variation-preview.light {
+    background: #f7f7f5;
+  }
+  .variation-meta {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .variation-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .variation-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .wordmark-showcase {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .wordmark-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .wordmark-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wordmark-card.light {
+    background: #f7f7f5;
+    border-color: #e5e5e0;
+  }
+  .wordmark-card.dark {
+    background: #050505;
+  }
+
+  .sizes-showcase {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .size-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .size-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .favicon-grid {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .favicon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .favicon-bg {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .favicon-bg.dark { background: #050505; }
+  .favicon-bg.light { background: #f7f7f5; border-color: #e5e5e0; }
+  .favicon-bg.accent { background: var(--accent); border-color: var(--accent); }
+  .favicon-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .variations-grid { grid-template-columns: 1fr; }
+    .wordmark-row { grid-template-columns: 1fr; }
+    .sizes-showcase { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Tailr — Redline Logo System</h1>
+  <p>Refined, detailed, and finished. Six variations on the document-cut theme.</p>
+  <div class="accent-line"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 1: VARIATIONS -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">01 — Mark Variations</div>
+  <div class="section-title">The Document Cut</div>
+  <div class="section-desc">Each variation starts from the same idea: a resume page with a diagonal cut. The cut is the action — tailoring, editing, proofreading. The edge color is the brand accent.</div>
+
+  <div class="variations-grid">
+
+    <!-- Variation 1: Classic Redline -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow1" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+            </filter>
+            <linearGradient id="paperGrad1" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+            <linearGradient id="edgeGrad1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+          </defs>
+          <!-- Back paper shadow -->
+          <rect x="42" y="30" width="116" height="140" rx="8" fill="#1a1a1c" opacity="0.5"/>
+          <!-- Main paper -->
+          <path d="M38 26 L162 26 C166.4 26 170 29.6 170 34 L170 166 C170 170.4 166.4 174 162 174 L38 174 C33.6 174 30 170.4 30 166 L30 34 C30 29.6 33.6 26 38 26 Z" fill="url(#paperGrad1)" filter="url(#shadow1)"/>
+          <!-- Paper texture lines -->
+          <line x1="46" y1="52" x2="110" y2="52" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="62" x2="130" y2="62" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="70" x2="120" y2="70" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="86" x2="100" y2="86" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="96" x2="140" y2="96" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="104" x2="125" y2="104" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="120" x2="90" y2="120" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="130" x2="135" y2="130" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="138" x2="115" y2="138" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <!-- Diagonal cut line -->
+          <line x1="52" y1="174" x2="148" y2="26" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+          <!-- Cut edge highlight (the "notch") -->
+          <path d="M52 174 L148 26 L152 26 L56 174 Z" fill="url(#edgeGrad1)" opacity="0.35"/>
+          <!-- Cut edge bevel highlight -->
+          <path d="M50 172 L146 24" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <!-- Corner fold detail -->
+          <path d="M154 26 L162 26 L162 34" stroke="#d4d0c8" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Classic Redline</div>
+        <div class="variation-note">Document page with a single clean diagonal cut. Colored edge reveals the tailoring action. Most minimal of the set.</div>
+      </div>
+    </div>
+
+    <!-- Variation 2: Scissors Cut -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow2" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+            </filter>
+            <linearGradient id="paperGrad2" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+            <linearGradient id="bladeGrad2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e5e5e5"/>
+              <stop offset="50%" stop-color="#c0c0c0"/>
+              <stop offset="100%" stop-color="#a0a0a0"/>
+            </linearGradient>
+            <linearGradient id="handleGrad2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+          <!-- Back paper shadow -->
+          <rect x="46" y="32" width="112" height="136" rx="7" fill="#1a1a1c" opacity="0.5"/>
+          <!-- Main paper -->
+          <path d="M40 28 L160 28 C164.4 28 168 31.6 168 36 L168 164 C168 168.4 164.4 172 160 172 L40 172 C35.6 172 32 168.4 32 164 L32 36 C32 31.6 35.6 28 40 28 Z" fill="url(#paperGrad2)" filter="url(#shadow2)"/>
+          <!-- Paper content lines -->
+          <line x1="48" y1="54" x2="108" y2="54" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="64" x2="128" y2="64" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="72" x2="118" y2="72" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="88" x2="96" y2="88" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="98" x2="138" y2="98" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="106" x2="122" y2="106" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="122" x2="88" y2="122" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="132" x2="132" y2="132" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <!-- Diagonal cut line -->
+          <line x1="56" y1="172" x2="144" y2="28" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+          <!-- Cut edge -->
+          <path d="M56 172 L144 28 L147 28 L59 172 Z" fill="#ef4444" opacity="0.2"/>
+
+          <!-- Scissors -->
+          <!-- Top blade (left to right, cutting through) -->
+          <path d="M52 140 Q90 100 150 30 L156 36 Q96 106 58 146 Z" fill="url(#bladeGrad2)" stroke="#999" stroke-width="0.5"/>
+          <!-- Bottom blade (right to left) -->
+          <path d="M58 146 Q100 100 144 24 L150 30 Q106 106 64 152 Z" fill="#b0b0b0" stroke="#888" stroke-width="0.5"/>
+          <!-- Pivot screw -->
+          <circle cx="102" cy="86" r="5" fill="#555" stroke="#777" stroke-width="1"/>
+          <circle cx="102" cy="86" r="2" fill="#333"/>
+          <!-- Top handle -->
+          <path d="M52 140 C30 155 20 175 35 185 C50 195 65 175 58 146" fill="none" stroke="url(#handleGrad2)" stroke-width="5" stroke-linecap="round"/>
+          <!-- Bottom handle -->
+          <path d="M64 152 C90 170 110 185 95 195 C80 205 70 185 58 146" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/>
+          <!-- Blade shine -->
+          <path d="M60 138 Q95 102 148 32" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Scissors Cut</div>
+        <div class="variation-note">Scissors mid-cut through the document. Blades follow the diagonal line. Handles in brand blue. Action frozen in motion.</div>
+      </div>
+    </div>
+
+    <!-- Variation 3: Diagonal Stitch -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow3" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+            </filter>
+            <linearGradient id="paperGrad3" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Back paper shadow -->
+          <rect x="42" y="30" width="116" height="140" rx="8" fill="#1a1a1c" opacity="0.5"/>
+          <!-- Main paper -->
+          <path d="M38 26 L162 26 C166.4 26 170 29.6 170 34 L170 166 C170 170.4 166.4 174 162 174 L38 174 C33.6 174 30 170.4 30 166 L30 34 C30 29.6 33.6 26 38 26 Z" fill="url(#paperGrad3)" filter="url(#shadow3)"/>
+          <!-- Paper content lines -->
+          <line x1="46" y1="52" x2="110" y2="52" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="62" x2="130" y2="62" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="70" x2="120" y2="70" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="86" x2="100" y2="86" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="96" x2="140" y2="96" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="104" x2="125" y2="104" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="120" x2="90" y2="120" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="130" x2="135" y2="130" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="138" x2="115" y2="138" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Stitch holes along diagonal -->
+          <circle cx="58" cy="158" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="74" cy="134" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="90" cy="110" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="106" cy="86" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="122" cy="62" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="138" cy="38" r="2.5" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+
+          <!-- Stitch thread -->
+          <line x1="58" y1="158" x2="74" y2="134" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="74" y1="134" x2="90" y2="110" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="90" y1="110" x2="106" y2="86" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="106" y1="86" x2="122" y2="62" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="122" y1="62" x2="138" y2="38" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- Needle at bottom -->
+          <line x1="52" y1="168" x2="58" y2="158" stroke="#a0a0a0" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="52" cy="168" r="3" fill="#3b82f6"/>
+
+          <!-- Thread tail at top -->
+          <path d="M138 38 Q142 32 148 28" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <circle cx="148" cy="28" r="2.5" fill="#3b82f6"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Diagonal Stitch</div>
+        <div class="variation-note">Thread sewn diagonally across the page. Stitch holes, needle at one end, thread tail at the other. Craft meets precision.</div>
+      </div>
+    </div>
+
+    <!-- Variation 4: Layered Cut -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow4" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000" flood-opacity="0.35"/>
+            </filter>
+            <linearGradient id="paperGrad4" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#ebe8e2"/>
+            </linearGradient>
+            <linearGradient id="paperGrad4b" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#f5f3ef"/>
+              <stop offset="100%" stop-color="#e0ddd6"/>
+            </linearGradient>
+            <linearGradient id="paperGrad4c" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#eae7e0"/>
+              <stop offset="100%" stop-color="#d5d2cb"/>
+            </linearGradient>
+            <linearGradient id="edgeGrad4" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+          <!-- Back layer -->
+          <rect x="50" y="36" width="108" height="132" rx="7" fill="url(#paperGrad4c)" filter="url(#shadow4)" transform="rotate(-2 104 102)"/>
+          <!-- Middle layer -->
+          <rect x="44" y="32" width="112" height="136" rx="7" fill="url(#paperGrad4b)" filter="url(#shadow4)" transform="rotate(-1 100 100)"/>
+          <!-- Front layer -->
+          <path d="M38 26 L162 26 C166.4 26 170 29.6 170 34 L170 166 C170 170.4 166.4 174 162 174 L38 174 C33.6 174 30 170.4 30 166 L30 34 C30 29.6 33.6 26 38 26 Z" fill="url(#paperGrad4)" filter="url(#shadow4)"/>
+
+          <!-- Content on front layer -->
+          <line x1="46" y1="52" x2="110" y2="52" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="62" x2="130" y2="62" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="70" x2="120" y2="70" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="86" x2="100" y2="86" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="96" x2="140" y2="96" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="104" x2="125" y2="104" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="120" x2="90" y2="120" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="130" x2="135" y2="130" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Cut through all three layers -->
+          <line x1="54" y1="174" x2="146" y2="26" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+          <!-- Layer edges visible at cut -->
+          <path d="M54 174 L146 26 L149 25.5 L57 173.5 Z" fill="url(#edgeGrad4)" opacity="0.5"/>
+          <path d="M56 174 L148 26 L150 25 L58 173 Z" fill="#2563eb" opacity="0.25"/>
+          <!-- Highlight on cut -->
+          <path d="M52 172 L144 24" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Layered Cut</div>
+        <div class="variation-note">Three stacked pages, each slightly offset. The cut goes through all layers, revealing colored edges at three depths. Rich and dimensional.</div>
+      </div>
+    </div>
+
+    <!-- Variation 5: Scissors Action -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow5" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+            </filter>
+            <linearGradient id="paperGrad5" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+            <linearGradient id="bladeGrad5a" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f0f0f0"/>
+              <stop offset="50%" stop-color="#c8c8c8"/>
+              <stop offset="100%" stop-color="#a0a0a0"/>
+            </linearGradient>
+            <linearGradient id="bladeGrad5b" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#d8d8d8"/>
+              <stop offset="100%" stop-color="#909090"/>
+            </linearGradient>
+            <linearGradient id="handleGrad5a" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+            <linearGradient id="handleGrad5b" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M40 30 L160 30 C164.4 30 168 33.6 168 38 L168 162 C168 166.4 164.4 170 160 170 L40 170 C35.6 170 32 166.4 32 162 L32 38 C32 33.6 35.6 30 40 30 Z" fill="url(#paperGrad5)" filter="url(#shadow5)"/>
+          <!-- Paper lines -->
+          <line x1="48" y1="56" x2="108" y2="56" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="66" x2="128" y2="66" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="74" x2="118" y2="74" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="90" x2="96" y2="90" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="100" x2="138" y2="100" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="108" x2="122" y2="108" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="48" y1="124" x2="88" y2="124" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="48" y1="134" x2="132" y2="134" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Cut line -->
+          <line x1="56" y1="170" x2="144" y2="30" stroke="#ef4444" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+          <path d="M56 170 L144 30 L146 29 L58 169 Z" fill="#ef4444" opacity="0.15"/>
+
+          <!-- Scissors - open wide, cutting -->
+          <!-- Top blade (from upper left to lower right) -->
+          <path d="M48 20 Q100 80 154 160 L158 156 Q104 76 52 16 Z" fill="url(#bladeGrad5a)" stroke="#999" stroke-width="0.5"/>
+          <!-- Bottom blade (crossing under) -->
+          <path d="M52 16 Q110 70 164 150 L168 146 Q114 66 56 12 Z" fill="url(#bladeGrad5b)" stroke="#888" stroke-width="0.5"/>
+          <!-- Pivot -->
+          <circle cx="106" cy="82" r="6" fill="#555" stroke="#777" stroke-width="1"/>
+          <circle cx="106" cy="82" r="2.5" fill="#333"/>
+          <!-- Top handle (left, blue) -->
+          <path d="M48 20 C25 10 10 25 18 40 C26 55 40 45 52 20" fill="none" stroke="url(#handleGrad5a)" stroke-width="6" stroke-linecap="round"/>
+          <!-- Bottom handle (right, dark blue) -->
+          <path d="M56 12 C75 5 90 15 82 30 C74 45 60 35 52 16" fill="none" stroke="url(#handleGrad5b)" stroke-width="6" stroke-linecap="round"/>
+          <!-- Blade shine -->
+          <path d="M54 18 Q104 76 156 158" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+          <!-- Small paper curl at cut start -->
+          <path d="M56 170 Q52 168 50 172" stroke="#d4d0c8" stroke-width="1" fill="none"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Scissors Action</div>
+        <div class="variation-note">Scissors in full open position, blades crossing the page diagonally. Handles frame the document. Most dynamic of the set.</div>
+      </div>
+    </div>
+
+    <!-- Variation 6: Thread & Needle -->
+    <div class="variation-card">
+      <div class="variation-preview dark">
+        <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow6" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+            </filter>
+            <linearGradient id="paperGrad6" x1="0" y1="0" x2="200" y2="200">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M38 26 L162 26 C166.4 26 170 29.6 170 34 L170 166 C170 170.4 166.4 174 162 174 L38 174 C33.6 174 30 170.4 30 166 L30 34 C30 29.6 33.6 26 38 26 Z" fill="url(#paperGrad6)" filter="url(#shadow6)"/>
+          <!-- Paper lines -->
+          <line x1="46" y1="52" x2="110" y2="52" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="62" x2="130" y2="62" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="70" x2="120" y2="70" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="86" x2="100" y2="86" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="96" x2="140" y2="96" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="104" x2="125" y2="104" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+          <line x1="46" y1="120" x2="90" y2="120" stroke="#d4d0c8" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="46" y1="130" x2="135" y2="130" stroke="#e0dcd4" stroke-width="2" stroke-linecap="round"/>
+
+          <!-- Diagonal stitch path -->
+          <!-- Holes -->
+          <circle cx="56" cy="160" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="74" cy="136" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="92" cy="112" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="110" cy="88" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="128" cy="64" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+          <circle cx="146" cy="40" r="3" fill="none" stroke="#c0b8a8" stroke-width="1.5"/>
+
+          <!-- Thread segments with slight curve for realism -->
+          <path d="M56 160 Q65 148 74 136" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M74 136 Q83 124 92 112" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M92 112 Q101 100 110 88" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M110 88 Q119 76 128 64" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M128 64 Q137 52 146 40" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+          <!-- Needle detail at bottom -->
+          <line x1="50" y1="172" x2="56" y2="160" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Needle eye -->
+          <ellipse cx="53" cy="166" rx="2" ry="3" fill="none" stroke="#888" stroke-width="1"/>
+          <!-- Thread knot at needle -->
+          <circle cx="52" cy="168" r="3" fill="#3b82f6"/>
+          <!-- Thread end dangling -->
+          <path d="M52 171 Q48 180 52 188" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+          <!-- Thread spool / tail at top -->
+          <circle cx="146" cy="40" r="4" fill="#3b82f6"/>
+          <path d="M146 36 Q150 28 154 22" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M154 22 Q158 18 156 14" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+          <!-- Subtle thread shadow under each segment -->
+          <path d="M57 161 Q66 149 75 137" stroke="#1d4ed8" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.3"/>
+          <path d="M75 137 Q84 125 93 113" stroke="#1d4ed8" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="variation-meta">
+        <div class="variation-name">Thread & Needle</div>
+        <div class="variation-note">Full sewing scene: needle with thread knot, curved stitch segments across the page, spool tail at top. Most narrative and tactile.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 2: WORDMARKS -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">02 — Wordmark Pairings</div>
+  <div class="section-title">Mark + Type</div>
+  <div class="section-desc">Each mark paired with the Space Grotesk wordmark. Shown on dark and light backgrounds at the intended primary size.</div>
+
+  <div class="wordmark-showcase">
+
+    <!-- Row 1: Classic Redline + Scissors Cut -->
+    <div class="wordmark-row">
+      <div class="wordmark-card dark">
+        <svg width="280" height="64" viewBox="0 0 280 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadow" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+            </filter>
+            <linearGradient id="wmPaper" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+            <linearGradient id="wmEdge" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#60a5fa"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+          </defs>
+          <!-- Mark -->
+          <path d="M6 8 L42 8 C44.2 8 46 9.8 46 12 L46 52 C46 54.2 44.2 56 42 56 L6 56 C3.8 56 2 54.2 2 52 L2 12 C2 9.8 3.8 8 6 8 Z" fill="url(#wmPaper)" filter="url(#wmShadow)"/>
+          <line x1="8" y1="18" x2="24" y2="18" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="8" y1="24" x2="32" y2="24" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="8" y1="30" x2="28" y2="30" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="8" y1="36" x2="20" y2="36" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="8" y1="42" x2="34" y2="42" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="10" y1="56" x2="38" y2="8" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M10 56 L38 8 L40 8 L12 56 Z" fill="url(#wmEdge)" opacity="0.35"/>
+          <!-- Wordmark -->
+          <text x="56" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+      <div class="wordmark-card light">
+        <svg width="280" height="64" viewBox="0 0 280 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadowL" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/>
+            </filter>
+            <linearGradient id="wmPaperL" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Mark -->
+          <path d="M6 8 L42 8 C44.2 8 46 9.8 46 12 L46 52 C46 54.2 44.2 56 42 56 L6 56 C3.8 56 2 54.2 2 52 L2 12 C2 9.8 3.8 8 6 8 Z" fill="url(#wmPaperL)" filter="url(#wmShadowL)"/>
+          <line x1="8" y1="18" x2="24" y2="18" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="8" y1="24" x2="32" y2="24" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="8" y1="30" x2="28" y2="30" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="8" y1="36" x2="20" y2="36" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="8" y1="42" x2="34" y2="42" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="10" y1="56" x2="38" y2="8" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M10 56 L38 8 L40 8 L12 56 Z" fill="#3b82f6" opacity="0.2"/>
+          <!-- Wordmark -->
+          <text x="56" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#18181b" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Row 2: Scissors Cut wordmark -->
+    <div class="wordmark-row">
+      <div class="wordmark-card dark">
+        <svg width="320" height="64" viewBox="0 0 320 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadow2" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+            </filter>
+            <linearGradient id="wmPaper2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+            <linearGradient id="wmBlade2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#e5e5e5"/>
+              <stop offset="100%" stop-color="#a0a0a0"/>
+            </linearGradient>
+            <linearGradient id="wmHandle2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#1d4ed8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M4 8 L48 8 C50.2 8 52 9.8 52 12 L52 52 C52 54.2 50.2 56 48 56 L4 56 C1.8 56 0 54.2 0 52 L0 12 C0 9.8 1.8 8 4 8 Z" fill="url(#wmPaper2)" filter="url(#wmShadow2)"/>
+          <line x1="6" y1="16" x2="18" y2="16" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="22" x2="28" y2="22" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="28" x2="24" y2="28" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="34" x2="16" y2="34" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="40" x2="30" y2="40" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <!-- Cut -->
+          <line x1="8" y1="56" x2="44" y2="8" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+          <!-- Scissor -->
+          <path d="M6 48 Q22 32 44 6 L46 8 Q24 34 8 50 Z" fill="url(#wmBlade2)" stroke="#999" stroke-width="0.5"/>
+          <path d="M8 50 Q26 30 46 4 L48 6 Q28 32 10 52 Z" fill="#b0b0b0" stroke="#888" stroke-width="0.5"/>
+          <circle cx="26" cy="26" r="3" fill="#555" stroke="#777" stroke-width="0.75"/>
+          <path d="M6 48 C0 52 -2 58 2 60 C6 62 8 58 8 50" fill="none" stroke="url(#wmHandle2)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10 52 C16 48 20 52 18 56 C16 60 12 56 10 50" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+          <!-- Wordmark -->
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+      <div class="wordmark-card light">
+        <svg width="320" height="64" viewBox="0 0 320 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadow2L" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.12"/>
+            </filter>
+            <linearGradient id="wmPaper2L" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M4 8 L48 8 C50.2 8 52 9.8 52 12 L52 52 C52 54.2 50.2 56 48 56 L4 56 C1.8 56 0 54.2 0 52 L0 12 C0 9.8 1.8 8 4 8 Z" fill="url(#wmPaper2L)" filter="url(#wmShadow2L)"/>
+          <line x1="6" y1="16" x2="18" y2="16" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="22" x2="28" y2="22" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="28" x2="24" y2="28" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="34" x2="16" y2="34" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="40" x2="30" y2="40" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <!-- Cut -->
+          <line x1="8" y1="56" x2="44" y2="8" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+          <!-- Scissor -->
+          <path d="M6 48 Q22 32 44 6 L46 8 Q24 34 8 50 Z" fill="#d0d0d0" stroke="#aaa" stroke-width="0.5"/>
+          <path d="M8 50 Q26 30 46 4 L48 6 Q28 32 10 52 Z" fill="#c0c0c0" stroke="#999" stroke-width="0.5"/>
+          <circle cx="26" cy="26" r="3" fill="#666" stroke="#888" stroke-width="0.75"/>
+          <path d="M6 48 C0 52 -2 58 2 60 C6 62 8 58 8 50" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round"/>
+          <path d="M10 52 C16 48 20 52 18 56 C16 60 12 56 10 50" fill="none" stroke="#1d4ed8" stroke-width="3" stroke-linecap="round"/>
+          <!-- Wordmark -->
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#18181b" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Row 3: Diagonal Stitch wordmark -->
+    <div class="wordmark-row">
+      <div class="wordmark-card dark">
+        <svg width="320" height="64" viewBox="0 0 320 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadow3" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+            </filter>
+            <linearGradient id="wmPaper3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M4 8 L48 8 C50.2 8 52 9.8 52 12 L52 52 C52 54.2 50.2 56 48 56 L4 56 C1.8 56 0 54.2 0 52 L0 12 C0 9.8 1.8 8 4 8 Z" fill="url(#wmPaper3)" filter="url(#wmShadow3)"/>
+          <line x1="6" y1="16" x2="18" y2="16" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="22" x2="28" y2="22" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="28" x2="24" y2="28" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="34" x2="16" y2="34" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="40" x2="30" y2="40" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <!-- Stitch holes -->
+          <circle cx="10" cy="50" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="18" cy="40" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="26" cy="30" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="34" cy="20" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="42" cy="10" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <!-- Thread -->
+          <line x1="10" y1="50" x2="18" y2="40" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="40" x2="26" y2="30" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+          <line x1="26" y1="30" x2="34" y2="20" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+          <line x1="34" y1="20" x2="42" y2="10" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+          <!-- Needle -->
+          <line x1="6" y1="56" x2="10" y2="50" stroke="#a0a0a0" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="6" cy="56" r="2.5" fill="#3b82f6"/>
+          <!-- Wordmark -->
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#e4e4e7" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+      <div class="wordmark-card light">
+        <svg width="320" height="64" viewBox="0 0 320 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="wmShadow3L" x="-10%" y="-10%" width="130%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.12"/>
+            </filter>
+            <linearGradient id="wmPaper3L" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#f0ede8"/>
+            </linearGradient>
+          </defs>
+          <!-- Paper -->
+          <path d="M4 8 L48 8 C50.2 8 52 9.8 52 12 L52 52 C52 54.2 50.2 56 48 56 L4 56 C1.8 56 0 54.2 0 52 L0 12 C0 9.8 1.8 8 4 8 Z" fill="url(#wmPaper3L)" filter="url(#wmShadow3L)"/>
+          <line x1="6" y1="16" x2="18" y2="16" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="22" x2="28" y2="22" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="28" x2="24" y2="28" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="34" x2="16" y2="34" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="6" y1="40" x2="30" y2="40" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+          <!-- Stitch holes -->
+          <circle cx="10" cy="50" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="18" cy="40" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="26" cy="30" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="34" cy="20" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <circle cx="42" cy="10" r="2" fill="none" stroke="#c0b8a8" stroke-width="1"/>
+          <!-- Thread -->
+          <line x1="10" y1="50" x2="18" y2="40" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          <line x1="18" y1="40" x2="26" y2="30" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          <line x1="26" y1="30" x2="34" y2="20" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          <line x1="34" y1="20" x2="42" y2="10" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+          <!-- Needle -->
+          <line x1="6" y1="56" x2="10" y2="50" stroke="#888" stroke-width="1" stroke-linecap="round"/>
+          <circle cx="6" cy="56" r="2.5" fill="#2563eb"/>
+          <!-- Wordmark -->
+          <text x="62" y="48" font-family="Space Grotesk, sans-serif" font-size="40" font-weight="700" fill="#18181b" letter-spacing="-0.02em">tailr</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: SIZES -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">03 — Scale Test</div>
+  <div class="section-title">Works at Every Size</div>
+  <div class="section-desc">The Classic Redline mark tested at common sizes: app icon (48px), favicon (32px), and tiny (16px). Each retains recognizability.</div>
+
+  <div class="sizes-showcase">
+    <div class="size-card">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="s1" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <rect x="6" y="4" width="36" height="40" rx="3" fill="#faf9f7" filter="url(#s1)"/>
+        <line x1="10" y1="12" x2="22" y2="12" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="10" y1="17" x2="30" y2="17" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+        <line x1="10" y1="22" x2="26" y2="22" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+        <line x1="10" y1="27" x2="18" y2="27" stroke="#d4d0c8" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="10" y1="32" x2="32" y2="32" stroke="#e0dcd4" stroke-width="1" stroke-linecap="round"/>
+        <line x1="12" y1="44" x2="36" y2="4" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M12 44 L36 4 L38 4 L14 44 Z" fill="#3b82f6" opacity="0.25"/>
+      </svg>
+      <div class="size-label">48px — App Icon</div>
+    </div>
+    <div class="size-card">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="3" width="24" height="26" rx="2" fill="#faf9f7"/>
+        <line x1="6" y1="8" x2="14" y2="8" stroke="#d4d0c8" stroke-width="1" stroke-linecap="round"/>
+        <line x1="6" y1="12" x2="20" y2="12" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+        <line x1="6" y1="16" x2="16" y2="16" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+        <line x1="8" y1="29" x2="24" y2="3" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M8 29 L24 3 L25 3 L9 29 Z" fill="#3b82f6" opacity="0.2"/>
+      </svg>
+      <div class="size-label">32px — Favicon</div>
+    </div>
+    <div class="size-card">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="1.5" width="12" height="13" rx="1" fill="#faf9f7" stroke="#e0dcd4" stroke-width="0.5"/>
+        <line x1="3.5" y1="4" x2="7" y2="4" stroke="#d4d0c8" stroke-width="0.75" stroke-linecap="round"/>
+        <line x1="3.5" y1="6.5" x2="9" y2="6.5" stroke="#e0dcd4" stroke-width="0.5" stroke-linecap="round"/>
+        <line x1="4" y1="14.5" x2="12" y2="2" stroke="#2563eb" stroke-width="0.8" stroke-linecap="round"/>
+        <path d="M4 14.5 L12 2 L12.5 2 L4.5 14.5 Z" fill="#3b82f6" opacity="0.25"/>
+      </svg>
+      <div class="size-label">16px — Tiny</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: FAVICON OPTIONS -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-label">04 — Favicon Treatments</div>
+  <div class="section-title">Browser Tab Identity</div>
+  <div class="section-desc">Different background treatments for the 32px mark. The accent-background version is bold and instantly recognizable in a tab bar.</div>
+
+  <div class="favicon-grid">
+    <div class="favicon-item">
+      <div class="favicon-bg dark">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="3" width="24" height="26" rx="2" fill="#faf9f7"/>
+          <line x1="6" y1="8" x2="14" y2="8" stroke="#d4d0c8" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="12" x2="20" y2="12" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="6" y1="16" x2="16" y2="16" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="8" y1="29" x2="24" y2="3" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 29 L24 3 L25 3 L9 29 Z" fill="#3b82f6" opacity="0.2"/>
+        </svg>
+      </div>
+      <div class="favicon-label">Dark bg</div>
+    </div>
+    <div class="favicon-item">
+      <div class="favicon-bg light">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="3" width="24" height="26" rx="2" fill="#faf9f7" stroke="#e0dcd4" stroke-width="0.5"/>
+          <line x1="6" y1="8" x2="14" y2="8" stroke="#d4d0c8" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="12" x2="20" y2="12" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="6" y1="16" x2="16" y2="16" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="8" y1="29" x2="24" y2="3" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 29 L24 3 L25 3 L9 29 Z" fill="#3b82f6" opacity="0.15"/>
+        </svg>
+      </div>
+      <div class="favicon-label">Light bg</div>
+    </div>
+    <div class="favicon-item">
+      <div class="favicon-bg accent">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="3" width="24" height="26" rx="2" fill="#ffffff"/>
+          <line x1="6" y1="8" x2="14" y2="8" stroke="#d4d0c8" stroke-width="1" stroke-linecap="round"/>
+          <line x1="6" y1="12" x2="20" y2="12" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="6" y1="16" x2="16" y2="16" stroke="#e0dcd4" stroke-width="0.75" stroke-linecap="round"/>
+          <line x1="8" y1="29" x2="24" y2="3" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/>
+          <path d="M8 29 L24 3 L25 3 L9 29 Z" fill="#3b82f6" opacity="0.2"/>
+        </svg>
+      </div>
+      <div class="favicon-label">Accent bg</div>
+    </div>
+    <div class="favicon-item">
+      <div class="favicon-bg dark">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <line x1="6" y1="28" x2="26" y2="4" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+          <path d="M6 28 L26 4 L28 4 L8 28 Z" fill="#3b82f6" opacity="0.3"/>
+        </svg>
+      </div>
+      <div class="favicon-label">Minimal</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

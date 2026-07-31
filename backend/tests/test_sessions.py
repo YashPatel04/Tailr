@@ -1,10 +1,10 @@
 import uuid
 
 import pytest
+from app.tests.factories import create_session, create_user
 from httpx import AsyncClient
 
 from app.models.models import MasterResume, User
-from app.tests.factories import create_session, create_user
 from app.utils.tokens import create_access_token
 
 
