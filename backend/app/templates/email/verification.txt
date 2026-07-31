@@ -1,5 +1,0 @@
-Verify your email address for Resume Tailor. Click the link to confirm:
-
-{verify_url}
-
-This link expires in 1 hour.

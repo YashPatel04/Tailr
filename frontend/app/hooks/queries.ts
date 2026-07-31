@@ -1,4 +1,4 @@
-import type { ResumeContent } from "@/types"
+import type { ResumeContent, UserPreferences, ModelInfo } from "@/types"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 
@@ -14,6 +14,64 @@ export function useProviders() {
   return useQuery({
     queryKey: ["providers"],
     queryFn: () => apiRequest<any[]>("GET", "/api/providers"),
+  })
+}
+
+export function useModels(providerId: string) {
+  return useQuery({
+    queryKey: ["providers", providerId, "models"],
+    queryFn: () => apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${providerId}/models`),
+    enabled: !!providerId,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useAllModels(providers: { id: string }[] | undefined) {
+  const queries = (providers || []).map((p) => ({
+    queryKey: ["providers", p.id, "models"],
+    queryFn: () => apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${p.id}/models`),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  }))
+
+  return useQuery({
+    queryKey: ["all-models", (providers || []).map((p) => p.id).join(",")],
+    queryFn: async () => {
+      if (!providers || providers.length === 0) return []
+      const results = await Promise.allSettled(
+        providers.map((p) =>
+          apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${p.id}/models`)
+        )
+      )
+      return providers.map((p, i) => {
+        const result = results[i]
+        if (result.status === "fulfilled") {
+          return { providerId: p.id, models: result.value.models, available: true }
+        }
+        return { providerId: p.id, models: [] as ModelInfo[], available: false }
+      })
+    },
+    enabled: !!providers && providers.length > 0,
+  })
+}
+
+export function useUserPreferences() {
+  return useQuery<UserPreferences>({
+    queryKey: ["user", "preferences"],
+    queryFn: () => apiRequest<UserPreferences>("GET", "/api/users/me/preferences"),
+  })
+}
+
+export function useUpdatePreferences() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (prefs: Partial<UserPreferences>) =>
+      apiRequest<UserPreferences>("PUT", "/api/users/me/preferences", prefs),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user", "preferences"] })
+      queryClient.invalidateQueries({ queryKey: ["user", "me"] })
+    },
   })
 }
 

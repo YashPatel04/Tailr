@@ -1,18 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useAnalyzeMutation } from "@/hooks/useAnalyzeMutation"
-import { apiRequest, getCsrfToken } from "@/lib/api"
-import { getApiBaseUrl } from "@/lib/env"
+import { apiRequest } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
+import { ModelPicker } from "./ModelPicker"
 
 type Step = "input" | "extracted" | "error"
 
 export function JDSetupForm() {
+  const router = useRouter()
   const [step, setStep] = useState<Step>("input")
   const [jdText, setJdText] = useState("")
+  const [jdUrl, setJdUrl] = useState("")
   const [useUrl, setUseUrl] = useState(false)
   const [company, setCompany] = useState("")
   const [role, setRole] = useState("")
@@ -20,15 +23,18 @@ export function JDSetupForm() {
   const [mode, setMode] = useState<string>("polish")
   const [clarifyingQuestion, setClarifyingQuestion] = useState("")
   const [submitting, setSubmitting] = useState(false)
+  const [pickedProviderId, setPickedProviderId] = useState<string | null>(null)
+  const [pickedModel, setPickedModel] = useState<string | null>(null)
 
-  const { setActiveSession, setSetupOpen } = useSessionStore()
+  const { setActiveSession, setSetupOpen, setSelectedModel: storeSetSelectedModel } = useSessionStore()
   const analyzeMutation = useAnalyzeMutation()
   const queryClient = useQueryClient()
 
   const handleAnalyze = async () => {
-    if (!jdText.trim()) return
+    const content = useUrl ? jdUrl : jdText
+    if (!content.trim()) return
     const payload = useUrl
-      ? { job_description_url: jdText }
+      ? { job_description_url: jdUrl }
       : { job_description: jdText }
 
     try {
@@ -55,28 +61,18 @@ export function JDSetupForm() {
         company_name: company,
         role_title: role,
         job_description: useUrl ? undefined : jdText,
-        job_description_url: useUrl ? jdText : undefined,
+        job_description_url: useUrl ? jdUrl : undefined,
         tailoring_mode: mode,
+        current_provider_id: pickedProviderId,
+        current_model: pickedModel,
       })
 
       setActiveSession(session.id)
       setSetupOpen(false)
-
-      const csrfToken = await getCsrfToken()
-      fetch(`${getApiBaseUrl()}/api/sessions/${session.id}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken,
-        },
-        body: JSON.stringify({
-          content: "Tailor my resume for this role. Highlight relevant experience and skills that match the job description.",
-          role: "user",
-          mode: "edit",
-          tailoring_mode: mode,
-        }),
-        credentials: "include",
-      }).catch(() => {})
+      if (pickedProviderId && pickedModel) {
+        storeSetSelectedModel(pickedProviderId, pickedModel)
+      }
+      router.push(`/session/${session.id}`)
 
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
       toast.success("Session created")
@@ -103,28 +99,48 @@ export function JDSetupForm() {
           </div>
           <div className="flex gap-1">
             <button
-              onClick={() => { setUseUrl(false); setJdText("") }}
+              onClick={() => setUseUrl(false)}
               className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${!useUrl ? "bg-brass text-white" : "bg-[#f4f4f4] dark:bg-[#2b2b2b] text-slate dark:text-[#8e8e8e] hover:bg-[#e8e8e8] dark:hover:bg-[#4d4d5e]"}`}
             >
               Paste JD
             </button>
             <button
-              onClick={() => { setUseUrl(true); setJdText("") }}
+              onClick={() => setUseUrl(true)}
               className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${useUrl ? "bg-brass text-white" : "bg-[#f4f4f4] dark:bg-[#2b2b2b] text-slate dark:text-[#8e8e8e] hover:bg-[#e8e8e8] dark:hover:bg-[#4d4d5e]"}`}
             >
               JD URL
             </button>
           </div>
-          <textarea
-            value={jdText}
-            onChange={(e) => setJdText(e.target.value)}
-            placeholder={useUrl ? "Paste job posting URL..." : "Paste job description..."}
-            rows={5}
-            className="w-full rounded-lg border border-muted px-3 py-2 text-sm text-ink dark:text-[#ececec] placeholder:text-[#8e8e8e] outline-none focus:border-brass focus:ring-1 focus:ring-brass/30 resize-none bg-paper dark:bg-[#2b2b2b]"
-          />
+          {useUrl ? (
+            <input
+              value={jdUrl}
+              onChange={(e) => setJdUrl(e.target.value)}
+              placeholder="Paste job posting URL..."
+              className="w-full rounded-lg border border-muted px-3 py-2 text-sm text-ink dark:text-[#ececec] placeholder:text-[#8e8e8e] outline-none focus:border-brass focus:ring-1 focus:ring-brass/30 bg-paper dark:bg-[#2b2b2b]"
+            />
+          ) : (
+            <textarea
+              value={jdText}
+              onChange={(e) => setJdText(e.target.value)}
+              placeholder="Paste job description..."
+              rows={5}
+              className="w-full rounded-lg border border-muted px-3 py-2 text-sm text-ink dark:text-[#ececec] placeholder:text-[#8e8e8e] outline-none focus:border-brass focus:ring-1 focus:ring-brass/30 resize-none bg-paper dark:bg-[#2b2b2b]"
+            />
+          )}
+          <div>
+            <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">Model</div>
+            <ModelPicker
+              selectedProviderId={pickedProviderId}
+              selectedModel={pickedModel}
+              onSelect={(pid, model) => {
+                setPickedProviderId(pid)
+                setPickedModel(model)
+              }}
+            />
+          </div>
           <button
             onClick={handleAnalyze}
-            disabled={!jdText.trim() || analyzeMutation.isPending}
+            disabled={(!useUrl && !jdText.trim()) || (useUrl && !jdUrl.trim()) || analyzeMutation.isPending}
             className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
           >
             {analyzeMutation.isPending ? "Analyzing..." : "Analyze Job Posting"}
@@ -164,9 +180,20 @@ export function JDSetupForm() {
               </button>
             ))}
           </div>
+          <div>
+            <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">Model</div>
+            <ModelPicker
+              selectedProviderId={pickedProviderId}
+              selectedModel={pickedModel}
+              onSelect={(pid, model) => {
+                setPickedProviderId(pid)
+                setPickedModel(model)
+              }}
+            />
+          </div>
           <button
             onClick={handleCreateSession}
-            disabled={!company || !role || submitting}
+            disabled={!company || !role || submitting || !pickedModel}
             className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
           >
             {submitting ? "Creating..." : "Start Session"}
@@ -223,9 +250,20 @@ export function JDSetupForm() {
             ))}
           </div>
         </div>
+        <div>
+          <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">Model</div>
+          <ModelPicker
+            selectedProviderId={pickedProviderId}
+            selectedModel={pickedModel}
+            onSelect={(pid, model) => {
+              setPickedProviderId(pid)
+              setPickedModel(model)
+            }}
+          />
+        </div>
         <button
           onClick={handleCreateSession}
-          disabled={!company || !role || submitting}
+          disabled={!company || !role || submitting || !pickedModel}
           className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
         >
           {submitting ? "Creating..." : "Start Session"}

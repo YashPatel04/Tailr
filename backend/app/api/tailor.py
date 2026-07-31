@@ -29,6 +29,8 @@ class ChatMessageRequest(BaseModel):
     mode: str = "edit"
     tailoring_mode: str | None = None
     proposal_context: str | None = None
+    llm_provider_id: str | None = None
+    model: str | None = None
 
 
 async def _emit(event_type: str, data: dict) -> str:
@@ -111,34 +113,67 @@ async def chat_stream(
 
             yield await _emit("thinking", {"message": "Thinking..."})
 
-            provider_id = session.llm_provider_id
-            if not provider_id:
-                p_result = await db.execute(
-                    select(LLMProvider).where(
-                        LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+            provider_id = body.llm_provider_id
+            model_name = body.model
+
+            if (
+                (not provider_id or not model_name)
+                and session.current_provider_id
+                and session.current_model
+            ):
+                provider_id = provider_id or str(session.current_provider_id)
+                model_name = model_name or session.current_model
+
+            if not provider_id or not model_name:
+                last_msg_result = await db.execute(
+                    select(ChatMessage)
+                    .where(
+                        ChatMessage.session_id == session.id,
+                        ChatMessage.role == "assistant",
+                        ChatMessage.llm_provider_id.isnot(None),
                     )
+                    .order_by(ChatMessage.created_at.desc())
+                    .limit(1)
                 )
-                default_provider = p_result.scalar_one_or_none()
-                if not default_provider:
-                    p_result = await db.execute(
-                        select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-                    )
-                    default_provider = p_result.scalars().first()
-                if default_provider:
-                    provider_id = default_provider.id
+                last_msg = last_msg_result.scalar_one_or_none()
+                if last_msg:
+                    provider_id = provider_id or str(last_msg.llm_provider_id)
+                    model_name = model_name or last_msg.model
 
             if not provider_id:
-                logger.warning("[chat] session=%s no LLM provider found", session_id)
-                yield await _emit("error", {"message": "No LLM provider configured"})
+                p_result = await db.execute(
+                    select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+                )
+                any_provider = p_result.scalars().first()
+                if any_provider:
+                    provider_id = str(any_provider.id)
+
+            if not provider_id or not model_name:
+                logger.warning(
+                    "[chat] session=%s no LLM provider or model specified", session_id
+                )
+                yield await _emit(
+                    "error",
+                    {"message": "Select a model from the dropdown before sending."},
+                )
                 return
 
             p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
             provider = p_result.scalar_one_or_none()
+
+            user = current_user
+            adapter = get_adapter(
+                provider,
+                model=model_name,
+                temperature=user.default_temperature,
+                max_tokens=user.default_max_tokens,
+                top_p=user.default_top_p,
+            )
             logger.info(
                 "[chat] session=%s provider=%s model=%s",
                 session_id,
                 provider.provider_type,
-                provider.model,
+                model_name,
             )
 
             doc_result = await db.execute(
@@ -178,7 +213,6 @@ async def chat_stream(
 
             if body.proposal_context:
                 messages.append({"role": "user", "content": body.proposal_context})
-            adapter = get_adapter(provider)
 
             yield await _emit("writing", {"message": "Writing changes..."})
 
@@ -194,6 +228,8 @@ async def chat_stream(
                     role="assistant",
                     content=raw_content,
                     metadata_json={"mode": "plan"},
+                    llm_provider_id=provider_id,
+                    model=model_name,
                 )
                 db.add(assistant_msg)
                 await db.commit()

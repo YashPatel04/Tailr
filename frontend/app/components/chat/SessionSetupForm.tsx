@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useProviders } from "@/hooks/queries"
-import { apiRequest, getCsrfToken } from "@/lib/api"
-import { getApiBaseUrl } from "@/lib/env"
+import { apiRequest } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
 
@@ -39,20 +38,6 @@ export function SessionSetupForm() {
 
       setActiveSession(session.id)
       setSetupOpen(false)
-
-      const csrfToken = await getCsrfToken()
-      fetch(`${getApiBaseUrl()}/api/sessions/${session.id}/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken,
-        },
-        body: JSON.stringify({
-          content: "Tailor my resume for this role. Highlight relevant experience and skills that match the job description.",
-          role: "user",
-        }),
-        credentials: "include",
-      }).catch(() => {})
 
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
       toast.success("Session created")

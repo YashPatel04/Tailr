@@ -1,5 +1,4 @@
 import hashlib
-import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -39,10 +38,6 @@ def decode_refresh_token(token: str) -> dict:
     if payload.get("type") != "refresh":
         raise JWTError("Invalid token type")
     return payload
-
-
-def generate_email_token() -> str:
-    return secrets.token_urlsafe(32)
 
 
 def hash_token(token: str) -> str:

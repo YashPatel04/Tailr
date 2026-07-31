@@ -28,7 +28,8 @@ class SessionCreate(BaseModel):
     job_description: str | None = None
     job_description_url: str | None = None
     tailoring_mode: str = "polish"
-    llm_provider_id: str | None = None
+    current_provider_id: str | None = None
+    current_model: str | None = None
     notes: str | None = None
 
 
@@ -76,20 +77,20 @@ async def analyze_jd(
         }
 
     p_result = await db.execute(
-        select(LLMProvider).where(
-            LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
-        )
+        select(LLMProvider).where(LLMProvider.user_id == current_user.id)
     )
-    provider = p_result.scalar_one_or_none()
-    if not provider:
-        p_result = await db.execute(
-            select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-        )
-        provider = p_result.scalars().first()
+    provider = p_result.scalars().first()
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")
 
-    adapter = get_adapter(provider)
+    user = current_user
+    adapter = get_adapter(
+        provider,
+        model="gpt-4o",
+        temperature=user.default_temperature,
+        max_tokens=user.default_max_tokens,
+        top_p=user.default_top_p,
+    )
     messages = [
         {"role": "system", "content": "You are a job description parser. Return only valid JSON."},
         {"role": "user", "content": EXTRACT_FIELDS_PROMPT.format(jd_text=jd_text[:5000])},
@@ -133,7 +134,8 @@ class SessionUpdate(BaseModel):
     role_title: str | None = None
     notes: str | None = None
     tags: list[str] | None = None
-    llm_provider_id: str | None = None
+    current_provider_id: str | None = None
+    current_model: str | None = None
     is_archived: bool | None = None
 
 
@@ -176,7 +178,8 @@ def _session_to_dict(s: Session) -> dict:
         "role_title": s.role_title,
         "job_description": s.job_description,
         "tailoring_mode": s.tailoring_mode,
-        "llm_provider_id": str(s.llm_provider_id) if s.llm_provider_id else None,
+        "current_provider_id": str(s.current_provider_id) if s.current_provider_id else None,
+        "current_model": s.current_model,
         "notes": s.notes,
         "research_summary_json": s.research_summary_json,
         "tags": s.tags or [],
@@ -202,18 +205,6 @@ async def create_session(
         except Exception:
             jd_text = body.job_description or ""
 
-    if body.llm_provider_id:
-        from app.models.models import LLMProvider
-
-        prov_result = await db.execute(
-            select(LLMProvider).where(
-                LLMProvider.id == body.llm_provider_id,
-                LLMProvider.user_id == current_user.id,
-            )
-        )
-        if not prov_result.scalar_one_or_none():
-            raise HTTPException(status_code=400, detail="Invalid LLM provider")
-
     session = Session(
         id=uuid4(),
         user_id=current_user.id,
@@ -222,7 +213,8 @@ async def create_session(
         role_title=body.role_title,
         job_description=jd_text,
         tailoring_mode=body.tailoring_mode,
-        llm_provider_id=body.llm_provider_id,
+        current_provider_id=body.current_provider_id,
+        current_model=body.current_model,
         notes=body.notes,
     )
     db.add(session)
@@ -401,6 +393,8 @@ async def get_messages(
             "role": m.role,
             "content": m.content,
             "metadata_json": m.metadata_json,
+            "llm_provider_id": str(m.llm_provider_id) if m.llm_provider_id else None,
+            "model": m.model,
             "created_at": str(m.created_at),
         }
         for m in messages
@@ -473,6 +467,8 @@ async def upload_master_resume(
     current_user: CurrentUser,
     file: UploadFile | None = None,
     tex_source: str | None = Body(None, embed=True),
+    provider_id: str | None = Body(None, embed=True),
+    model: str | None = Body(None, embed=True),
     db: AsyncSession = Depends(get_db),
 ):
     if file:
@@ -486,13 +482,15 @@ async def upload_master_resume(
     from app.services.importers.tex_llm_importer import import_from_tex
     from app.services.llm.factory import get_adapter
 
-    p_result = await db.execute(
-        select(LLMProvider).where(
-            LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+    if provider_id:
+        p_result = await db.execute(
+            select(LLMProvider).where(
+                LLMProvider.id == provider_id,
+                LLMProvider.user_id == current_user.id,
+            )
         )
-    )
-    provider = p_result.scalar_one_or_none()
-    if not provider:
+        provider = p_result.scalar_one_or_none()
+    else:
         p_result = await db.execute(
             select(LLMProvider).where(LLMProvider.user_id == current_user.id)
         )
@@ -501,8 +499,15 @@ async def upload_master_resume(
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider to import resume")
 
+    user = current_user
     try:
-        adapter = get_adapter(provider)
+        adapter = get_adapter(
+            provider,
+            model=model or "gpt-4o",
+            temperature=user.default_temperature,
+            max_tokens=user.default_max_tokens,
+            top_p=user.default_top_p,
+        )
         resume_content = await import_from_tex(tex_source, adapter)
         content_json = resume_content.model_dump(mode="json")
     except Exception as e:
@@ -534,6 +539,8 @@ async def upload_master_resume(
 async def import_master_resume_sse(
     current_user: CurrentUser,
     tex_source: str = Body(..., embed=True),
+    provider_id: str | None = Body(None, embed=True),
+    model: str | None = Body(None, embed=True),
     db: AsyncSession = Depends(get_db),
 ):
     async def event_stream():
@@ -543,13 +550,15 @@ async def import_master_resume_sse(
             from app.services.importers.tex_llm_importer import import_from_tex
             from app.services.llm.factory import get_adapter
 
-            p_result = await db.execute(
-                select(LLMProvider).where(
-                    LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
+            if provider_id:
+                p_result = await db.execute(
+                    select(LLMProvider).where(
+                        LLMProvider.id == provider_id,
+                        LLMProvider.user_id == current_user.id,
+                    )
                 )
-            )
-            provider = p_result.scalar_one_or_none()
-            if not provider:
+                provider = p_result.scalar_one_or_none()
+            else:
                 p_result = await db.execute(
                     select(LLMProvider).where(LLMProvider.user_id == current_user.id)
                 )
@@ -559,7 +568,14 @@ async def import_master_resume_sse(
                 yield await _emit("error", {"message": "No LLM provider configured"})
                 return
 
-            adapter = get_adapter(provider)
+            user = current_user
+            adapter = get_adapter(
+                provider,
+                model=model or "gpt-4o",
+                temperature=user.default_temperature,
+                max_tokens=user.default_max_tokens,
+                top_p=user.default_top_p,
+            )
 
             yield await _emit("extracting", {"message": "Extracting content with AI..."})
 
@@ -639,27 +655,12 @@ async def generate_cover_letter(
     if not master:
         raise HTTPException(status_code=400, detail="Upload a master resume first")
 
-    provider_id = session.llm_provider_id
-    if not provider_id:
-        p_result = await db.execute(
-            select(LLMProvider).where(
-                LLMProvider.user_id == current_user.id, LLMProvider.is_default == True
-            )
-        )
-        default_provider = p_result.scalar_one_or_none()
-        if not default_provider:
-            p_result = await db.execute(
-                select(LLMProvider).where(LLMProvider.user_id == current_user.id)
-            )
-            default_provider = p_result.scalars().first()
-        if not default_provider:
-            raise HTTPException(status_code=400, detail="Configure an LLM provider first")
-        provider_id = default_provider.id
-
-    p_result = await db.execute(select(LLMProvider).where(LLMProvider.id == provider_id))
-    provider = p_result.scalar_one_or_none()
+    p_result = await db.execute(
+        select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+    )
+    provider = p_result.scalars().first()
     if not provider:
-        raise HTTPException(status_code=400, detail="LLM provider not found")
+        raise HTTPException(status_code=400, detail="Configure an LLM provider first")
 
     job_desc = session.job_description or ""
     company = session.company_name or ""
@@ -673,7 +674,14 @@ async def generate_cover_letter(
     master_tex = renderer.render_tex(content)
 
     messages = build_cover_letter_prompt(master_tex, job_desc, company, role)
-    adapter = get_adapter(provider)
+    user = current_user
+    adapter = get_adapter(
+        provider,
+        model="gpt-4o",
+        temperature=user.default_temperature,
+        max_tokens=user.default_max_tokens,
+        top_p=user.default_top_p,
+    )
     response = await adapter.chat(messages, stream=False)
     raw_content = response.content if hasattr(response, "content") else ""
 

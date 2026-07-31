@@ -1,135 +1,32 @@
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 
-
-@pytest.mark.asyncio
-async def test_register(client: AsyncClient):
-    resp = await client.post(
-        "/api/auth/register",
-        json={
-            "email": "new@test.com",
-            "password": "testpassword123",
-        },
-    )
-    assert resp.status_code == 200
-    assert resp.json()["message"] == "Check your inbox to verify your email."
+from app.models.models import RefreshToken, User
+from app.utils.tokens import create_access_token, create_refresh_token, hash_token
 
 
-@pytest.mark.asyncio
-async def test_register_duplicate_email_silent(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-
+async def _create_oauth_user(db, email="oauth@test.com", provider="github"):
     user = User(
-        id=uuid.uuid4(),
-        email="dup@test.com",
-        password_hash=hash_password("password123"),
-        is_verified=True,
+        id=uuid4(),
+        email=email,
+        oauth_provider=provider,
+        oauth_id=f"{provider}_{uuid4().hex[:8]}",
     )
-    db_session.add(user)
-    await db_session.commit()
-
-    resp = await client.post(
-        "/api/auth/register",
-        json={
-            "email": "dup@test.com",
-            "password": "newpassword12345",
-        },
-    )
-    assert resp.status_code == 200
-
-
-@pytest.mark.asyncio
-async def test_login(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-
-    user = User(
-        id=uuid.uuid4(),
-        email="login@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
-    )
-    db_session.add(user)
-    await db_session.commit()
-
-    resp = await client.post(
-        "/api/auth/login",
-        json={
-            "email": "login@test.com",
-            "password": "password123456",
-        },
-    )
-    assert resp.status_code == 200
-    assert resp.json()["email"] == "login@test.com"
-    assert "access_token" in resp.cookies
-    assert "refresh_token" in resp.cookies
-
-
-@pytest.mark.asyncio
-async def test_login_invalid_credentials(client: AsyncClient):
-    resp = await client.post(
-        "/api/auth/login",
-        json={
-            "email": "nonexistent@test.com",
-            "password": "wrongpassword",
-        },
-    )
-    assert resp.status_code == 401
-
-
-@pytest.mark.asyncio
-async def test_login_unverified_email(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-
-    user = User(
-        id=uuid.uuid4(),
-        email="unverified@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=False,
-    )
-    db_session.add(user)
-    await db_session.commit()
-
-    resp = await client.post(
-        "/api/auth/login",
-        json={
-            "email": "unverified@test.com",
-            "password": "password123456",
-        },
-    )
-    assert resp.status_code == 403
+    db.add(user)
+    await db.flush()
+    return user
 
 
 @pytest.mark.asyncio
 async def test_refresh_token(client: AsyncClient, db_session):
-    import uuid
-    from datetime import datetime, timedelta
-
-    from app.models.models import RefreshToken, User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_refresh_token, hash_token
-
-    user = User(
-        id=uuid.uuid4(),
-        email="refresh@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
-    )
-    db_session.add(user)
+    user = await _create_oauth_user(db_session, "refresh@test.com")
 
     refresh_str = create_refresh_token(user.id)
     rt = RefreshToken(
-        id=uuid.uuid4(),
+        id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_str),
         expires_at=datetime.now(UTC) + timedelta(days=7),
@@ -145,24 +42,11 @@ async def test_refresh_token(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_refresh_token_reuse_revokes_all(client: AsyncClient, db_session):
-    import uuid
-    from datetime import datetime, timedelta
-
-    from app.models.models import RefreshToken, User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_refresh_token, hash_token
-
-    user = User(
-        id=uuid.uuid4(),
-        email="reuse@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
-    )
-    db_session.add(user)
+    user = await _create_oauth_user(db_session, "reuse@test.com")
 
     refresh_str = create_refresh_token(user.id)
     rt = RefreshToken(
-        id=uuid.uuid4(),
+        id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_str),
         expires_at=datetime.now(UTC) + timedelta(days=7),
@@ -181,24 +65,11 @@ async def test_refresh_token_reuse_revokes_all(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_logout(client: AsyncClient, db_session):
-    import uuid
-    from datetime import datetime, timedelta
-
-    from app.models.models import RefreshToken, User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_refresh_token, hash_token
-
-    user = User(
-        id=uuid.uuid4(),
-        email="logout@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
-    )
-    db_session.add(user)
+    user = await _create_oauth_user(db_session, "logout@test.com")
 
     refresh_str = create_refresh_token(user.id)
     rt = RefreshToken(
-        id=uuid.uuid4(),
+        id=uuid4(),
         user_id=user.id,
         token_hash=hash_token(refresh_str),
         expires_at=datetime.now(UTC) + timedelta(days=7),
@@ -212,76 +83,8 @@ async def test_logout(client: AsyncClient, db_session):
 
 
 @pytest.mark.asyncio
-async def test_forgot_password(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-
-    user = User(
-        id=uuid.uuid4(),
-        email="forgot@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
-    )
-    db_session.add(user)
-    await db_session.commit()
-
-    resp = await client.post("/api/auth/forgot-password", json={"email": "forgot@test.com"})
-    assert resp.status_code == 200
-
-
-@pytest.mark.asyncio
-async def test_forgot_password_nonexistent_silent(client: AsyncClient):
-    resp = await client.post("/api/auth/forgot-password", json={"email": "nobody@test.com"})
-    assert resp.status_code == 200
-
-
-@pytest.mark.asyncio
-async def test_change_password(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_access_token
-
-    user = User(
-        id=uuid.uuid4(),
-        email="changepw@test.com",
-        password_hash=hash_password("oldpassword12345"),
-        is_verified=True,
-    )
-    db_session.add(user)
-    await db_session.commit()
-
-    access = create_access_token(user.id)
-    client.cookies.set("access_token", access)
-
-    resp = await client.post(
-        "/api/users/me/change-password",
-        json={
-            "current_password": "oldpassword12345",
-            "new_password": "newpassword12345",
-        },
-    )
-    assert resp.status_code == 200
-
-
-@pytest.mark.asyncio
 async def test_delete_account(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_access_token
-
-    user = User(
-        id=uuid.uuid4(),
-        email="delete@test.com",
-        password_hash=hash_password("testpassword123"),
-        is_verified=True,
-    )
-    db_session.add(user)
+    user = await _create_oauth_user(db_session, "delete@test.com")
     await db_session.commit()
 
     access = create_access_token(user.id)

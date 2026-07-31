@@ -26,6 +26,8 @@ interface SessionState {
   editingFieldId: string | null
   activeMode: "plan" | "edit"
   tailoringMode: string
+  selectedProviderId: string | null
+  selectedModel: string | null
   setActiveSession: (id: string | null) => void
   setDocType: (type: "resume" | "cover_letter") => void
   setViewMode: (mode: "diff" | "final") => void
@@ -40,6 +42,7 @@ interface SessionState {
   setEditingFieldId: (id: string | null) => void
   setActiveMode: (mode: "plan" | "edit") => void
   setTailoringMode: (mode: string) => void
+  setSelectedModel: (providerId: string | null, model: string | null) => void
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -57,6 +60,8 @@ export const useSessionStore = create<SessionState>((set) => ({
   editingFieldId: null,
   activeMode: "edit",
   tailoringMode: "polish",
+  selectedProviderId: null,
+  selectedModel: null,
   setActiveSession: (id) =>
     set({
       activeSessionId: id,
@@ -79,4 +84,5 @@ export const useSessionStore = create<SessionState>((set) => ({
   setEditingFieldId: (id) => set({ editingFieldId: id }),
   setActiveMode: (mode) => set({ activeMode: mode }),
   setTailoringMode: (mode) => set({ tailoringMode: mode }),
+  setSelectedModel: (providerId, model) => set({ selectedProviderId: providerId, selectedModel: model }),
 }))

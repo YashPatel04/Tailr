@@ -4,21 +4,18 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.config import settings
 from app.db import get_db
-from app.models.models import EmailVerification, PasswordReset, RefreshToken, User
-from app.services.email import send_email
-from app.utils.password import hash_password, verify_password
+from app.models.models import RefreshToken, User
 from app.utils.tokens import (
     create_access_token,
     create_refresh_token,
     decode_refresh_token,
-    generate_email_token,
     hash_token,
 )
 
@@ -54,159 +51,6 @@ def clear_auth_cookies(response: JSONResponse):
     response.delete_cookie("refresh_token", path="/api/auth/refresh")
 
 
-# --- Schemas ---
-
-
-class RegisterRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=10, max_length=128)
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
-
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str = Field(min_length=10, max_length=128)
-
-
-class UserUpdateRequest(BaseModel):
-    career_context: str | None = None
-
-
-class ChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str = Field(min_length=10, max_length=128)
-
-
-class UserResponse(BaseModel):
-    id: str
-    email: str
-    is_verified: bool
-    oauth_provider: str | None = None
-    career_context: str | None = None
-    created_at: str
-    updated_at: str
-
-    model_config = {"from_attributes": True}
-
-
-# --- Register ---
-
-
-@router.post("/register")
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == body.email))
-    if result.scalar_one_or_none():
-        return {"message": "Check your inbox to verify your email."}
-
-    user = User(
-        id=uuid4(),
-        email=body.email,
-        password_hash=hash_password(body.password),
-        is_verified=False,
-    )
-    db.add(user)
-    await db.flush()
-
-    token = generate_email_token()
-    verification = EmailVerification(
-        id=uuid4(),
-        user_id=user.id,
-        token_hash=hash_token(token),
-        expires_at=datetime.now(UTC) + timedelta(hours=1),
-    )
-    db.add(verification)
-    await db.commit()
-
-    verify_url = f"{settings.FRONTEND_ORIGIN}/verify?token={token}"
-    with open("app/templates/email/verification.txt") as f:
-        body_text = f.read().format(verify_url=verify_url)
-
-    try:
-        send_email(user.email, "Verify your email - Resume Tailor", body_text)
-    except Exception:
-        pass
-
-    return {"message": "Check your inbox to verify your email."}
-
-
-# --- Verify Email ---
-
-
-@router.get("/verify-email")
-async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
-    token_hash = hash_token(token)
-    result = await db.execute(
-        select(EmailVerification).where(
-            EmailVerification.token_hash == token_hash,
-            EmailVerification.used == False,
-        )
-    )
-    verification = result.scalar_one_or_none()
-
-    if not verification or verification.expires_at < datetime.now(UTC):
-        raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-    verification.used = True
-
-    result = await db.execute(select(User).where(User.id == verification.user_id))
-    user = result.scalar_one_or_none()
-    if user:
-        user.is_verified = True
-
-    await db.commit()
-
-    return RedirectResponse(f"{settings.FRONTEND_ORIGIN}/login?verified=1")
-
-
-# --- Login ---
-
-
-@router.post("/login")
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == body.email))
-    user = result.scalar_one_or_none()
-
-    if not user or not user.password_hash or not verify_password(body.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    if not user.is_verified:
-        raise HTTPException(status_code=403, detail="Email not verified")
-
-    access_token = create_access_token(user.id)
-    refresh_token_str = create_refresh_token(user.id)
-
-    refresh_row = RefreshToken(
-        id=uuid4(),
-        user_id=user.id,
-        token_hash=hash_token(refresh_token_str),
-        expires_at=datetime.now(UTC) + timedelta(days=7),
-    )
-    db.add(refresh_row)
-    await db.commit()
-
-    response = JSONResponse(
-        content={
-            "id": str(user.id),
-            "email": user.email,
-            "is_verified": user.is_verified,
-            "oauth_provider": user.oauth_provider,
-            "career_context": user.career_context,
-            "created_at": str(user.created_at),
-            "updated_at": str(user.updated_at),
-        }
-    )
-    set_auth_cookies(response, access_token, refresh_token_str)
-    return response
-
-
 # --- Refresh ---
 
 
@@ -233,11 +77,6 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Token expired")
 
     if token_row.revoked:
-        await db.execute(
-            select(RefreshToken).where(
-                RefreshToken.user_id == token_row.user_id, RefreshToken.revoked == False
-            )
-        )
         tokens_to_revoke = (
             (
                 await db.execute(
@@ -273,75 +112,6 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
     response = JSONResponse(content={"status": "ok"})
     set_auth_cookies(response, access_token, refresh_token_str)
     return response
-
-
-# --- Forgot / Reset Password ---
-
-
-@router.post("/forgot-password")
-async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == body.email))
-    user = result.scalar_one_or_none()
-
-    if user:
-        token = generate_email_token()
-        reset = PasswordReset(
-            id=uuid4(),
-            user_id=user.id,
-            token_hash=hash_token(token),
-            expires_at=datetime.now(UTC) + timedelta(hours=1),
-        )
-        db.add(reset)
-        await db.commit()
-
-        reset_url = f"{settings.FRONTEND_ORIGIN}/reset-password?token={token}"
-        with open("app/templates/email/password_reset.txt") as f:
-            body_text = f.read().format(reset_url=reset_url)
-
-        try:
-            send_email(user.email, "Reset your password - Resume Tailor", body_text)
-        except Exception:
-            pass
-
-    return {"message": "If the email exists, a reset link has been sent."}
-
-
-@router.post("/reset-password")
-async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
-    token_hash = hash_token(body.token)
-    result = await db.execute(
-        select(PasswordReset).where(
-            PasswordReset.token_hash == token_hash, PasswordReset.used == False
-        )
-    )
-    reset = result.scalar_one_or_none()
-
-    if not reset or reset.expires_at < datetime.now(UTC):
-        raise HTTPException(status_code=400, detail="Invalid or expired token")
-
-    reset.used = True
-
-    result = await db.execute(select(User).where(User.id == reset.user_id))
-    user = result.scalar_one_or_none()
-    if user:
-        user.password_hash = hash_password(body.new_password)
-
-    tokens = (
-        (
-            await db.execute(
-                select(RefreshToken).where(
-                    RefreshToken.user_id == reset.user_id, RefreshToken.revoked == False
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    for t in tokens:
-        t.revoked = True
-
-    await db.commit()
-    return {"message": "Password reset successfully"}
 
 
 # --- Logout ---
@@ -435,7 +205,6 @@ async def github_callback(
         if user:
             user.oauth_provider = "github"
             user.oauth_id = github_id
-            user.is_verified = True
 
     if not user:
         user = User(
@@ -443,7 +212,6 @@ async def github_callback(
             email=primary_email or f"github_{github_id}@placeholder.local",
             oauth_provider="github",
             oauth_id=github_id,
-            is_verified=True,
         )
         db.add(user)
 
@@ -532,7 +300,6 @@ async def google_callback(
         if user:
             user.oauth_provider = "google"
             user.oauth_id = google_id
-            user.is_verified = True
 
     if not user:
         user = User(
@@ -540,7 +307,6 @@ async def google_callback(
             email=email or f"google_{google_id}@placeholder.local",
             oauth_provider="google",
             oauth_id=google_id,
-            is_verified=True,
         )
         db.add(user)
 
@@ -574,12 +340,54 @@ async def get_me(current_user: CurrentUser):
     return {
         "id": str(current_user.id),
         "email": current_user.email,
-        "is_verified": current_user.is_verified,
         "oauth_provider": current_user.oauth_provider,
         "career_context": current_user.career_context,
+        "default_temperature": current_user.default_temperature,
+        "default_max_tokens": current_user.default_max_tokens,
+        "default_top_p": current_user.default_top_p,
         "created_at": str(current_user.created_at),
         "updated_at": str(current_user.updated_at),
     }
+
+
+class UserPreferencesUpdate(BaseModel):
+    default_temperature: float | None = None
+    default_max_tokens: int | None = None
+    default_top_p: float | None = None
+
+
+@user_router.get("/me/preferences")
+async def get_preferences(current_user: CurrentUser):
+    return {
+        "default_temperature": current_user.default_temperature,
+        "default_max_tokens": current_user.default_max_tokens,
+        "default_top_p": current_user.default_top_p,
+    }
+
+
+@user_router.put("/me/preferences")
+async def update_preferences(
+    body: UserPreferencesUpdate,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    if body.default_temperature is not None:
+        current_user.default_temperature = body.default_temperature
+    if body.default_max_tokens is not None:
+        current_user.default_max_tokens = body.default_max_tokens
+    if body.default_top_p is not None:
+        current_user.default_top_p = body.default_top_p
+    await db.commit()
+    await db.refresh(current_user)
+    return {
+        "default_temperature": current_user.default_temperature,
+        "default_max_tokens": current_user.default_max_tokens,
+        "default_top_p": current_user.default_top_p,
+    }
+
+
+class UserUpdateRequest(BaseModel):
+    career_context: str | None = None
 
 
 @user_router.patch("/me")
@@ -593,43 +401,11 @@ async def update_me(
     return {
         "id": str(current_user.id),
         "email": current_user.email,
-        "is_verified": current_user.is_verified,
         "oauth_provider": current_user.oauth_provider,
         "career_context": current_user.career_context,
         "created_at": str(current_user.created_at),
         "updated_at": str(current_user.updated_at),
     }
-
-
-@user_router.post("/me/change-password")
-async def change_password(
-    body: ChangePasswordRequest,
-    current_user: CurrentUser,
-    db: AsyncSession = Depends(get_db),
-):
-    if not current_user.password_hash or not verify_password(
-        body.current_password, current_user.password_hash
-    ):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
-
-    current_user.password_hash = hash_password(body.new_password)
-
-    tokens = (
-        (
-            await db.execute(
-                select(RefreshToken).where(
-                    RefreshToken.user_id == current_user.id, RefreshToken.revoked == False
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    for t in tokens:
-        t.revoked = True
-
-    await db.commit()
-    return {"message": "Password changed"}
 
 
 @user_router.delete("/me")

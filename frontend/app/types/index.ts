@@ -1,10 +1,12 @@
 export interface User {
   id: string
   email: string
-  is_verified: boolean
   oauth_provider: string | null
   oauth_id: string | null
   career_context: string | null
+  default_temperature: number
+  default_max_tokens: number
+  default_top_p: number
   created_at: string
   updated_at: string
 }
@@ -15,12 +17,18 @@ export interface LLMProvider {
   provider_type: "openai" | "anthropic" | "ollama" | "custom"
   api_key_last_four: string | null
   base_url: string | null
-  model: string
-  temperature: number
-  top_p: number
-  max_tokens: number
-  is_default: boolean
   created_at: string
+}
+
+export interface UserPreferences {
+  default_temperature: number
+  default_max_tokens: number
+  default_top_p: number
+}
+
+export interface ModelInfo {
+  id: string
+  display_name: string
 }
 
 export interface MasterResume {
@@ -41,7 +49,6 @@ export interface Session {
   role_title: string
   job_description: string | null
   tailoring_mode: "polish" | "refine" | "rewrite"
-  llm_provider_id: string | null
   notes: string | null
   research_summary_json: ResearchSummary | null
   tags: string[]
@@ -94,6 +101,8 @@ export interface ChatMessage {
   content: string
   metadata_json: Record<string, unknown> | null
   patch_id: string | null
+  llm_provider_id: string | null
+  model: string | null
   created_at: string
 }
 

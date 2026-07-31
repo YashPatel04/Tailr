@@ -21,7 +21,7 @@ describe("Sidebar", () => {
         HttpResponse.json({ today: [{ id: "1", company_name: "TestCo", role_title: "Dev", created_at: "2026-01-01", updated_at: "2026-01-01" }], yesterday: [], previous_7_days: [], older: [] })
       ),
       http.get("http://localhost:8000/api/users/me", () =>
-        HttpResponse.json({ id: "1", email: "test@test.com", is_verified: true, career_context: null, oauth_provider: null, created_at: "2026-01-01", updated_at: "2026-01-01" })
+        HttpResponse.json({ id: "1", email: "test@test.com", career_context: null, oauth_provider: null, created_at: "2026-01-01", updated_at: "2026-01-01" })
       ),
     )
   })

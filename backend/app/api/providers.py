@@ -1,11 +1,13 @@
 from uuid import uuid4
 
+import redis.asyncio as redis
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
+from app.config import settings
 from app.db import get_db
 from app.models.models import LLMProvider
 from app.services.llm.factory import get_adapter
@@ -13,17 +15,15 @@ from app.utils.crypto import encrypt
 
 router = APIRouter(prefix="/api/providers", tags=["providers"])
 
+_redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
+CACHE_TTL = 900  # 15 minutes
+
 
 class ProviderCreate(BaseModel):
     name: str
     provider_type: str = Field(pattern="^(openai|anthropic|ollama|custom)$")
     api_key: str | None = None
     base_url: str | None = None
-    model: str
-    temperature: float = 0.7
-    top_p: float = 1.0
-    max_tokens: int = 4096
-    is_default: bool = False
 
 
 class ProviderResponse(BaseModel):
@@ -32,11 +32,6 @@ class ProviderResponse(BaseModel):
     provider_type: str
     api_key_last_four: str | None = None
     base_url: str | None = None
-    model: str
-    temperature: float
-    top_p: float
-    max_tokens: int
-    is_default: bool
     created_at: str
 
     model_config = {"from_attributes": True}
@@ -53,11 +48,6 @@ def _provider_to_response(p: LLMProvider) -> ProviderResponse:
         provider_type=p.provider_type,
         api_key_last_four=last_four,
         base_url=p.base_url,
-        model=p.model,
-        temperature=p.temperature or 0.7,
-        top_p=p.top_p or 1.0,
-        max_tokens=p.max_tokens or 4096,
-        is_default=p.is_default or False,
         created_at=str(p.created_at),
     )
 
@@ -77,13 +67,6 @@ async def list_providers(current_user: CurrentUser, db: AsyncSession = Depends(g
 async def create_provider(
     body: ProviderCreate, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
 ):
-    if body.is_default:
-        await db.execute(
-            update(LLMProvider)
-            .where(LLMProvider.user_id == current_user.id)
-            .values(is_default=False)
-        )
-
     provider = LLMProvider(
         id=uuid4(),
         user_id=current_user.id,
@@ -91,11 +74,6 @@ async def create_provider(
         provider_type=body.provider_type,
         api_key_encrypted=encrypt(body.api_key) if body.api_key else None,
         base_url=body.base_url,
-        model=body.model,
-        temperature=body.temperature,
-        top_p=body.top_p,
-        max_tokens=body.max_tokens,
-        is_default=body.is_default,
     )
     db.add(provider)
     await db.commit()
@@ -134,26 +112,20 @@ async def update_provider(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
-    if body.is_default:
-        await db.execute(
-            update(LLMProvider)
-            .where(LLMProvider.user_id == current_user.id)
-            .values(is_default=False)
-        )
-
     provider.name = body.name
     provider.provider_type = body.provider_type
     if body.api_key:
         provider.api_key_encrypted = encrypt(body.api_key)
     provider.base_url = body.base_url
-    provider.model = body.model
-    provider.temperature = body.temperature
-    provider.top_p = body.top_p
-    provider.max_tokens = body.max_tokens
-    provider.is_default = body.is_default
 
     await db.commit()
     await db.refresh(provider)
+
+    try:
+        await _redis.delete(f"models:{provider_id}")
+    except Exception:
+        pass
+
     return _provider_to_response(provider)
 
 
@@ -172,6 +144,12 @@ async def delete_provider(
 
     await db.delete(provider)
     await db.commit()
+
+    try:
+        await _redis.delete(f"models:{provider_id}")
+    except Exception:
+        pass
+
     return {"status": "ok"}
 
 
@@ -188,14 +166,54 @@ async def test_provider(
     if not provider:
         raise HTTPException(status_code=404, detail="Provider not found")
 
+    from app.services.llm.factory import get_adapter
+
     try:
         adapter = get_adapter(provider)
-        response = await adapter.chat(
-            [{"role": "user", "content": "Hello, respond with just 'ok'."}]
-        )
-        content = response.content if hasattr(response, "content") else ""
-        if "ok" in content.lower():
-            return {"status": "ok", "message": "Provider test successful"}
-        return {"status": "ok", "message": f"Response: {content[:100]}"}
+        models = await adapter.list_models()
+        return {"status": "ok", "model_count": len(models)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Provider test failed: {str(e)}")
+
+
+@router.get("/{provider_id}/models")
+async def list_provider_models(
+    provider_id: str, current_user: CurrentUser, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(LLMProvider).where(
+            LLMProvider.id == provider_id, LLMProvider.user_id == current_user.id
+        )
+    )
+    provider = result.scalar_one_or_none()
+    if not provider:
+        raise HTTPException(status_code=404, detail="Provider not found")
+
+    cache_key = f"models:{provider_id}"
+    try:
+        cached = await _redis.get(cache_key)
+        if cached:
+            import json
+
+            return {"models": json.loads(cached), "cached": True}
+    except Exception:
+        pass
+
+    try:
+        adapter = get_adapter(provider)
+        models = await adapter.list_models()
+        model_list = [{"id": m.id, "display_name": m.display_name} for m in models]
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "provider_unavailable", "provider_id": provider_id, "message": str(e)},
+        )
+
+    try:
+        import json
+
+        await _redis.setex(cache_key, CACHE_TTL, json.dumps(model_list))
+    except Exception:
+        pass
+
+    return {"models": model_list, "cached": False}

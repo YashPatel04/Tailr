@@ -1,9 +1,7 @@
 from app.models.models import (
     ChatMessage,
-    EmailVerification,
     LLMProvider,
     MasterResume,
-    PasswordReset,
     Patch,
     RefreshToken,
     Session,
@@ -20,6 +18,4 @@ __all__ = [
     "Patch",
     "ChatMessage",
     "RefreshToken",
-    "EmailVerification",
-    "PasswordReset",
 ]

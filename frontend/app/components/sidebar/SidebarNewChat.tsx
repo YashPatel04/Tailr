@@ -1,15 +1,17 @@
 "use client"
 
 import { Pencil, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/Toaster"
 import { useMasterResume } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useSettingsStore } from "@/components/settings/SettingsModal"
 
 export function SidebarNewChat({ collapsed }: { collapsed: boolean }) {
-  const { data: master } = useMasterResume()
-  const { setSetupOpen } = useSessionStore()
+  const router = useRouter()
+  const { setActiveSession, setSetupOpen } = useSessionStore()
   const openSettings = useSettingsStore((s) => s.open)
+  const { data: master } = useMasterResume()
 
   const handleClick = () => {
     if (!master) {
@@ -17,7 +19,9 @@ export function SidebarNewChat({ collapsed }: { collapsed: boolean }) {
       openSettings("master-resume")
       return
     }
+    setActiveSession(null)
     setSetupOpen(true)
+    router.push("/")
   }
 
   if (collapsed) {

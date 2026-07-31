@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Changes View — Redesign</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper: #ffffff;
+    --ink: #0d0d0d;
+    --slate: #6b6e7b;
+    --brass: #10a37f;
+    --brass-hover: #0d8c6d;
+    --proof-green: #10a37f;
+    --proof-red: #ef4444;
+    --canvas: #f7f7f8;
+    --muted: #e5e5e5;
+    --border-subtle: #e5e5e5;
+    --add-bg: rgba(16, 163, 127, 0.08);
+    --remove-bg: rgba(239, 68, 68, 0.06);
+    --modify-bg: rgba(16, 163, 127, 0.05);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --panel-width: 340px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  .app { display: flex; flex-direction: column; height: 100vh; }
+
+  .topbar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-back {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--slate); font-size: 16px;
+    transition: all 0.15s;
+  }
+  .topbar-back:hover { background: var(--canvas); color: var(--ink); }
+
+  .topbar-title { font-weight: 600; font-size: 15px; color: var(--ink); }
+  .topbar-subtitle { font-size: 13px; color: var(--slate); }
+
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .pill-toggle {
+    display: flex; background: var(--canvas); border-radius: 8px;
+    padding: 3px; gap: 2px; border: 1px solid var(--border-subtle);
+  }
+
+  .pill-btn {
+    font-family: var(--font); font-size: 12px; font-weight: 500;
+    padding: 5px 14px; border: none; border-radius: 6px;
+    background: transparent; color: var(--slate); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .pill-btn.active {
+    background: var(--paper); color: var(--ink);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  .btn {
+    font-family: var(--font); font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--paper); color: var(--ink);
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--canvas); }
+  .btn-primary { background: var(--brass); border-color: var(--brass); color: white; }
+  .btn-primary:hover { background: var(--brass-hover); }
+  .btn-danger-outline {
+    border-color: var(--proof-red); color: var(--proof-red); background: transparent;
+  }
+  .btn-danger-outline:hover { background: rgba(239,68,68,0.06); }
+
+  .summary-strip {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 20px; flex-shrink: 0;
+  }
+
+  .summary-chip {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500;
+  }
+
+  .chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip-dot.green { background: var(--proof-green); }
+  .chip-dot.red { background: var(--proof-red); }
+  .chip-dot.amber { background: #f59e0b; }
+  .chip-count { font-family: ui-monospace, monospace; font-weight: 600; font-size: 14px; }
+  .summary-divider { width: 1px; height: 18px; background: var(--border-subtle); }
+
+  .summary-bar {
+    flex: 1; height: 4px; background: var(--canvas);
+    border-radius: 2px; display: flex; overflow: hidden;
+  }
+  .summary-bar .seg { height: 100%; transition: flex 0.3s; }
+  .seg.green { background: var(--proof-green); }
+  .seg.red { background: var(--proof-red); }
+  .seg.amber { background: #f59e0b; }
+
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  .doc-panel {
+    flex: 1; overflow-y: auto; padding: 32px;
+    display: flex; justify-content: center;
+  }
+
+  .doc-page {
+    width: 100%; max-width: 720px;
+    background: var(--paper);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 48px 56px; position: relative;
+  }
+
+  .resume-name {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.02em; color: var(--ink); margin-bottom: 4px;
+  }
+
+  .resume-contact {
+    font-size: 12px; color: var(--slate);
+    display: flex; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 24px;
+  }
+
+  .resume-section { margin-bottom: 20px; }
+
+  .section-heading {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--brass);
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 4px; margin-bottom: 10px;
+  }
+
+  .entry { margin-bottom: 12px; }
+
+  .entry-header {
+    display: flex; justify-content: space-between;
+    align-items: baseline; margin-bottom: 2px;
+  }
+
+  .entry-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .entry-dates { font-size: 12px; color: var(--slate); flex-shrink: 0; }
+
+  .bullet-list { list-style: none; padding: 0; }
+
+  .bullet {
+    position: relative; padding-left: 14px;
+    font-size: 13px; line-height: 1.55;
+    color: var(--ink); margin-bottom: 2px;
+  }
+  .bullet::before {
+    content: "•"; position: absolute; left: 0;
+    color: var(--slate); font-size: 13px;
+  }
+
+  .skills-grid {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 4px 16px; font-size: 13px;
+  }
+  .skill-cat { font-weight: 600; color: var(--ink); }
+  .skill-items { color: var(--slate); }
+
+  .diff-added {
+    background: var(--add-bg);
+    border-left: 3px solid var(--proof-green);
+    padding: 2px 8px; margin-left: -11px;
+    border-radius: 0 4px 4px 0;
+    position: relative; animation: fadeSlideIn 0.3s ease;
+  }
+
+  .diff-removed {
+    background: var(--remove-bg);
+    border-left: 3px solid var(--proof-red);
+    padding: 2px 8px; margin-left: -11px;
+    border-radius: 0 4px 4px 0;
+    position: relative;
+    text-decoration: line-through;
+    text-decoration-color: rgba(239, 68, 68, 0.5);
+    color: var(--slate);
+    animation: fadeSlideIn 0.3s ease;
+  }
+
+  .diff-modified {
+    background: var(--modify-bg);
+    border-left: 3px solid var(--brass);
+    padding: 2px 8px; margin-left: -11px;
+    border-radius: 0 4px 4px 0;
+    position: relative; animation: fadeSlideIn 0.3s ease;
+  }
+
+  .diff-modified-word {
+    background: rgba(16, 163, 127, 0.18);
+    border-radius: 2px; padding: 0 1px;
+  }
+
+  .change-badge {
+    position: absolute; right: -8px; top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    cursor: pointer; z-index: 3;
+    transition: all 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .change-badge:hover { transform: translateY(-50%) scale(1.15); }
+  .change-badge.add { background: var(--proof-green); color: white; }
+  .change-badge.remove { background: var(--proof-red); color: white; }
+  .change-badge.modify { background: var(--brass); color: white; }
+
+  .diff-added[data-change],
+  .diff-removed[data-change],
+  .diff-modified[data-change] { cursor: pointer; }
+
+  .changes-panel {
+    width: var(--panel-width);
+    background: var(--paper);
+    border-left: 1px solid var(--border-subtle);
+    display: flex; flex-direction: column;
+    flex-shrink: 0; overflow: hidden;
+  }
+
+  .changes-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .changes-header-title {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .changes-header-count {
+    font-family: ui-monospace, monospace;
+    font-size: 11px; background: var(--canvas);
+    padding: 1px 7px; border-radius: 10px; color: var(--slate);
+  }
+
+  .changes-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+  .change-card {
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px; margin-bottom: 8px;
+    overflow: hidden; transition: all 0.15s; cursor: pointer;
+  }
+  .change-card:hover { border-color: var(--brass); }
+  .change-card.active { border-color: var(--brass); box-shadow: 0 0 0 1px var(--brass); }
+  .change-card.resolved { opacity: 0.5; }
+
+  .change-card-top {
+    padding: 10px 12px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+
+  .change-type-icon {
+    width: 22px; height: 22px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+  .change-type-icon.add { background: rgba(16,163,127,0.12); color: var(--proof-green); }
+  .change-type-icon.remove { background: rgba(239,68,68,0.1); color: var(--proof-red); }
+  .change-type-icon.modify { background: rgba(16,163,127,0.08); color: var(--brass); }
+
+  .change-info { flex: 1; min-width: 0; }
+
+  .change-label {
+    font-size: 12px; font-weight: 600; color: var(--ink);
+    margin-bottom: 2px; line-height: 1.3;
+  }
+
+  .change-location { font-size: 11px; color: var(--slate); margin-bottom: 6px; }
+
+  .change-preview {
+    font-size: 12px; line-height: 1.45;
+    border-radius: 4px; padding: 6px 8px;
+    font-family: ui-monospace, monospace;
+  }
+  .change-preview.add { background: var(--add-bg); color: var(--proof-green); }
+  .change-preview.remove {
+    background: var(--remove-bg); color: var(--proof-red);
+    text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.4);
+  }
+  .change-preview.modify-old {
+    background: var(--remove-bg); color: var(--proof-red); margin-bottom: 4px;
+    text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.4);
+  }
+  .change-preview.modify-new { background: var(--add-bg); color: var(--proof-green); }
+  .change-preview .pw {
+    background: rgba(16,163,127,0.2); border-radius: 2px; padding: 0 1px;
+  }
+  .change-preview .pr {
+    background: rgba(239,68,68,0.15); border-radius: 2px; padding: 0 1px;
+    text-decoration: line-through; text-decoration-color: rgba(239,68,68,0.4);
+  }
+
+  .change-reasoning {
+    padding: 8px 12px; background: var(--canvas);
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11px; color: var(--slate); line-height: 1.5;
+    display: none;
+  }
+  .change-card.expanded .change-reasoning { display: block; }
+  .change-reasoning strong { color: var(--ink); }
+
+  .change-actions {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex; gap: 6px;
+  }
+  .change-actions .btn {
+    font-size: 11px; padding: 4px 10px;
+    border-radius: 6px; flex: 1; justify-content: center;
+  }
+
+  .change-card.resolved .change-card-top { padding-bottom: 10px; }
+  .change-card.resolved .change-actions { display: none; }
+  .change-card.resolved .change-reasoning { display: none; }
+
+  .resolved-badge {
+    display: none; font-size: 11px; font-weight: 500;
+    color: var(--brass); padding: 2px 0;
+  }
+  .change-card.resolved .resolved-badge { display: flex; align-items: center; gap: 4px; }
+
+  .changes-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-subtle);
+    display: flex; gap: 8px;
+  }
+  .changes-footer .btn { flex: 1; justify-content: center; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--slate); }
+
+  .change-card.focused {
+    border-color: var(--brass);
+    box-shadow: 0 0 0 2px rgba(16, 163, 127, 0.15);
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-back">&larr;</div>
+    <div>
+      <div class="topbar-title">Google &mdash; Senior Product Manager</div>
+      <div class="topbar-subtitle">3 changes proposed by AI &middot; 2 min ago</div>
+    </div>
+    <div class="topbar-right">
+      <div class="pill-toggle">
+        <button class="pill-btn active" onclick="setView('changes')">Changes</button>
+        <button class="pill-btn" onclick="setView('current')">Current</button>
+      </div>
+      <button class="btn">Export &#9662;</button>
+    </div>
+  </div>
+
+  <div class="summary-strip">
+    <div class="summary-chip">
+      <span class="chip-dot green"></span>
+      <span class="chip-count">1</span>
+      <span>added</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-dot red"></span>
+      <span class="chip-count">1</span>
+      <span>removed</span>
+    </div>
+    <div class="summary-chip">
+      <span class="chip-dot amber"></span>
+      <span class="chip-count">1</span>
+      <span>modified</span>
+    </div>
+    <div class="summary-divider"></div>
+    <div class="summary-bar">
+      <div class="seg green" style="flex:1"></div>
+      <div class="seg red" style="flex:1"></div>
+      <div class="seg amber" style="flex:1"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="doc-panel">
+      <div class="doc-page">
+        <div class="resume-name">Sarah Chen</div>
+        <div class="resume-contact">
+          <span>sarah.chen@email.com</span>
+          <span>&middot;</span>
+          <span>(415) 555-0142</span>
+          <span>&middot;</span>
+          <span>San Francisco, CA</span>
+          <span>&middot;</span>
+          <span>linkedin.com/in/sarahchen</span>
+        </div>
+
+        <div class="resume-section">
+          <div class="section-heading">Summary</div>
+          <div class="diff-modified" data-change="1" onclick="selectChange(1)">
+            Product leader with <span class="diff-modified-word">8+ years</span> of experience building <span class="diff-modified-word">0-to-1 products</span> across B2B SaaS and consumer platforms. <span class="diff-modified-word">Proven track record of driving $50M+ in ARR</span> through data-informed product strategy and cross-functional team leadership.
+            <span class="change-badge modify" onclick="event.stopPropagation();selectChange(1)">~</span>
+          </div>
+        </div>
+
+        <div class="resume-section">
+          <div class="section-heading">Experience</div>
+
+          <div class="entry">
+            <div class="entry-header">
+              <span class="entry-title">Stripe &mdash; Senior Product Manager</span>
+              <span class="entry-dates">2022 &ndash; Present</span>
+            </div>
+            <ul class="bullet-list">
+              <li class="bullet">Led product strategy for Stripe's merchant analytics platform, growing MAU from 12K to 85K in 18 months</li>
+              <li class="bullet">Defined and executed roadmap for real-time revenue dashboard, increasing merchant retention by 23%</li>
+              <li class="bullet diff-added" data-change="2" onclick="selectChange(2)">
+                Partnered with engineering and data science to ship ML-powered anomaly detection, reducing merchant churn by 15%
+                <span class="change-badge add" onclick="event.stopPropagation();selectChange(2)">+</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="entry">
+            <div class="entry-header">
+              <span class="entry-title">Figma &mdash; Product Manager</span>
+              <span class="entry-dates">2019 &ndash; 2022</span>
+            </div>
+            <ul class="bullet-list">
+              <li class="bullet">Owned the design systems product area, launching Variables and branching features used by 500K+ designers</li>
+              <li class="bullet diff-removed" data-change="3" onclick="selectChange(3)">
+                Managed a team of 3 PMs and coordinated with 15+ engineers across two time zones
+                <span class="change-badge remove" onclick="event.stopPropagation();selectChange(3)">&minus;</span>
+              </li>
+              <li class="bullet">Drove enterprise adoption strategy, closing 40+ Fortune 500 accounts through designOps workflows</li>
+            </ul>
+          </div>
+
+          <div class="entry">
+            <div class="entry-header">
+              <span class="entry-title">Airbnb &mdash; Associate Product Manager</span>
+              <span class="entry-dates">2017 &ndash; 2019</span>
+            </div>
+            <ul class="bullet-list">
+              <li class="bullet">Launched Experiences search redesign, improving conversion by 18% through ML-ranked results</li>
+              <li class="bullet">Built and A/B tested the host onboarding flow, reducing drop-off by 32%</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="resume-section">
+          <div class="section-heading">Skills</div>
+          <div class="skills-grid">
+            <span class="skill-cat">Product</span>
+            <span class="skill-items">Strategy, Roadmapping, OKRs, A/B Testing, User Research, PRDs</span>
+            <span class="skill-cat">Technical</span>
+            <span class="skill-items">SQL, Python, Figma, Amplitude, Mixpanel, Jira</span>
+            <span class="skill-cat">Leadership</span>
+            <span class="skill-items">Cross-functional Teams, Stakeholder Management, Executive Communication</span>
+          </div>
+        </div>
+
+        <div class="resume-section">
+          <div class="section-heading">Education</div>
+          <div class="entry">
+            <div class="entry-header">
+              <span class="entry-title">Stanford University &mdash; MBA, Product Management</span>
+              <span class="entry-dates">2015 &ndash; 2017</span>
+            </div>
+          </div>
+          <div class="entry">
+            <div class="entry-header">
+              <span class="entry-title">UC Berkeley &mdash; B.S. Computer Science</span>
+              <span class="entry-dates">2011 &ndash; 2015</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes-panel">
+      <div class="changes-header">
+        <span class="changes-header-title">
+          Proposed Changes
+          <span class="changes-header-count">3</span>
+        </span>
+      </div>
+
+      <div class="changes-list">
+        <div class="change-card active" data-id="1" onclick="selectChange(1)">
+          <div class="change-card-top">
+            <div class="change-type-icon modify">~</div>
+            <div class="change-info">
+              <div class="change-label">Tailored summary for Google PM role</div>
+              <div class="change-location">Summary</div>
+              <div class="change-preview modify-old">
+                Product leader with <span class="pr">5+ years</span> of experience building <span class="pr">digital products</span>...
+              </div>
+              <div class="change-preview modify-new">
+                Product leader with <span class="pw">8+ years</span> of experience building <span class="pw">0-to-1 products</span>...
+              </div>
+            </div>
+          </div>
+          <div class="change-reasoning">
+            <strong>Why:</strong> The job description emphasizes "8+ years of product experience" and "0-to-1 product development." Updated to mirror their exact language and quantify ARR impact.
+          </div>
+          <div class="change-actions">
+            <button class="btn btn-primary" onclick="event.stopPropagation();acceptChange(1)">Accept</button>
+            <button class="btn btn-danger-outline" onclick="event.stopPropagation();rejectChange(1)">Reject</button>
+          </div>
+          <div class="resolved-badge">&#10003; Accepted</div>
+        </div>
+
+        <div class="change-card" data-id="2" onclick="selectChange(2)">
+          <div class="change-card-top">
+            <div class="change-type-icon add">+</div>
+            <div class="change-info">
+              <div class="change-label">Added ML/analytics bullet at Stripe</div>
+              <div class="change-location">Experience &gt; Stripe &gt; Bullet 3</div>
+              <div class="change-preview add">
+                Partnered with engineering and data science to ship ML-powered anomaly detection, reducing merchant churn by 15%
+              </div>
+            </div>
+          </div>
+          <div class="change-reasoning">
+            <strong>Why:</strong> Google's JD lists "experience with ML-powered products" as a preferred qualification. This bullet demonstrates hands-on ML product work with measurable impact.
+          </div>
+          <div class="change-actions">
+            <button class="btn btn-primary" onclick="event.stopPropagation();acceptChange(2)">Accept</button>
+            <button class="btn btn-danger-outline" onclick="event.stopPropagation();rejectChange(2)">Reject</button>
+          </div>
+          <div class="resolved-badge">&#10003; Accepted</div>
+        </div>
+
+        <div class="change-card" data-id="3" onclick="selectChange(3)">
+          <div class="change-card-top">
+            <div class="change-type-icon remove">&minus;</div>
+            <div class="change-info">
+              <div class="change-label">Removed management bullet at Figma</div>
+              <div class="change-location">Experience &gt; Figma &gt; Bullet 2</div>
+              <div class="change-preview remove">
+                Managed a team of 3 PMs and coordinated with 15+ engineers across two time zones
+              </div>
+            </div>
+          </div>
+          <div class="change-reasoning">
+            <strong>Why:</strong> The Google role is an IC (individual contributor) PM position, not a management role. This bullet emphasizes people management which is less relevant and could signal misalignment.
+          </div>
+          <div class="change-actions">
+            <button class="btn btn-primary" onclick="event.stopPropagation();acceptChange(3)">Accept</button>
+            <button class="btn btn-danger-outline" onclick="event.stopPropagation();rejectChange(3)">Reject</button>
+          </div>
+          <div class="resolved-badge">&#10003; Accepted</div>
+        </div>
+      </div>
+
+      <div class="changes-footer">
+        <button class="btn btn-primary" onclick="acceptAll()">Accept All</button>
+        <button class="btn btn-danger-outline" onclick="rejectAll()">Reject All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let activeChange = 1;
+
+function selectChange(id) {
+  activeChange = id;
+  document.querySelectorAll('.change-card').forEach(c => {
+    c.classList.toggle('active', parseInt(c.dataset.id) === id);
+  });
+  const docEl = document.querySelector(`[data-change="${id}"]`);
+  if (docEl) docEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function acceptChange(id) {
+  const card = document.querySelector(`.change-card[data-id="${id}"]`);
+  card.classList.add('resolved');
+  card.querySelector('.resolved-badge').innerHTML = '&#10003; Accepted';
+  const docEl = document.querySelector(`[data-change="${id}"]`);
+  if (docEl) {
+    docEl.style.borderColor = 'var(--proof-green)';
+    docEl.style.background = 'rgba(16,163,127,0.04)';
+  }
+  updateCounts();
+}
+
+function rejectChange(id) {
+  const card = document.querySelector(`.change-card[data-id="${id}"]`);
+  card.classList.add('resolved');
+  card.querySelector('.resolved-badge').innerHTML = '&#10007; Rejected';
+  card.querySelector('.resolved-badge').style.color = 'var(--proof-red)';
+  const docEl = document.querySelector(`[data-change="${id}"]`);
+  if (docEl) docEl.style.display = 'none';
+  updateCounts();
+}
+
+function acceptAll() {
+  [1, 2, 3].forEach(id => acceptChange(id));
+}
+
+function rejectAll() {
+  [1, 2, 3].forEach(id => rejectChange(id));
+}
+
+function updateCounts() {
+  const total = document.querySelectorAll('.change-card').length;
+  const resolved = document.querySelectorAll('.change-card.resolved').length;
+  const remaining = total - resolved;
+  document.querySelector('.changes-header-count').textContent = remaining;
+  if (remaining === 0) {
+    document.querySelector('.summary-strip').style.opacity = '0.4';
+  }
+}
+
+function setView(mode) {
+  document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

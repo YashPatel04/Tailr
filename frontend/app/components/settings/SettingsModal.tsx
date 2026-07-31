@@ -6,16 +6,17 @@ import { X, Moon, Sun } from "lucide-react"
 import { clsx } from "clsx"
 import { createPortal } from "react-dom"
 import { useTheme } from "@/components/theme/ThemeProvider"
-import { useCurrentUser, useProviders, useMasterResume } from "@/hooks/queries"
+import { useCurrentUser, useProviders, useMasterResume, useUserPreferences, useUpdatePreferences } from "@/hooks/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
+import { ModelPicker } from "@/components/chat/ModelPicker"
 import type { ResumeContent } from "@/app/types"
 
 /* ── Store ── */
 interface SettingsModalState {
   isOpen: boolean
-  tab: "profile" | "providers" | "master-resume" | "account"
+  tab: "profile" | "providers" | "preferences" | "master-resume" | "account"
   open: (tab?: SettingsModalState["tab"]) => void
   close: () => void
   setTab: (tab: SettingsModalState["tab"]) => void
@@ -33,6 +34,7 @@ export const useSettingsStore = create<SettingsModalState>((set) => ({
 const TABS = [
   { id: "profile" as const, label: "Profile" },
   { id: "providers" as const, label: "Providers" },
+  { id: "preferences" as const, label: "Preferences" },
   { id: "master-resume" as const, label: "Master Resume" },
   { id: "account" as const, label: "Account" },
 ]
@@ -92,6 +94,7 @@ export function SettingsModal() {
           <div className="flex-1 overflow-y-auto px-6 py-6">
             {tab === "profile" && <ProfileTab />}
             {tab === "providers" && <ProvidersTab />}
+            {tab === "preferences" && <PreferencesTab />}
             {tab === "master-resume" && <MasterResumeTab />}
             {tab === "account" && <AccountTab />}
           </div>
@@ -168,11 +171,8 @@ function ProvidersTab() {
   const [providerType, setProviderType] = useState("openai")
   const [apiKey, setApiKey] = useState("")
   const [baseUrl, setBaseUrl] = useState("")
-  const [model, setModel] = useState("gpt-4o")
-  const [temperature, setTemperature] = useState(0.7)
-  const [maxTokens, setMaxTokens] = useState(4096)
-  const [isDefault, setIsDefault] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState<string | null>(null)
 
   const handleSave = async () => {
     setSaving(true)
@@ -182,14 +182,13 @@ function ProvidersTab() {
         provider_type: providerType,
         api_key: apiKey || undefined,
         base_url: baseUrl || undefined,
-        model,
-        temperature,
-        max_tokens: maxTokens,
-        is_default: isDefault,
       })
       toast.success("Provider added")
       queryClient.invalidateQueries({ queryKey: ["providers"] })
       setShowForm(false)
+      setName("")
+      setApiKey("")
+      setBaseUrl("")
     } catch (err: any) {
       toast.error(err.message || "Failed to add provider")
     } finally {
@@ -198,11 +197,14 @@ function ProvidersTab() {
   }
 
   const handleTest = async (id: string) => {
+    setTesting(id)
     try {
-      await apiRequest("POST", `/api/providers/${id}/test`)
-      toast.success("Provider test passed")
+      const result = await apiRequest<any>("POST", `/api/providers/${id}/test`)
+      toast.success(`Key valid — ${result.model_count} models available`)
     } catch (err: any) {
       toast.error(err.message || "Test failed")
+    } finally {
+      setTesting(null)
     }
   }
 
@@ -220,12 +222,12 @@ function ProvidersTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-ink dark:text-[#ececec]">LLM Providers</h3>
+        <h3 className="text-xl font-semibold text-ink dark:text-[#ececec]">API Keys</h3>
         <button
           onClick={() => setShowForm(true)}
           className="rounded-lg bg-brass px-3 py-1.5 text-sm font-medium text-white hover:bg-brass-hover transition-colors"
         >
-          Add provider
+          Add key
         </button>
       </div>
 
@@ -236,18 +238,19 @@ function ProvidersTab() {
               <div>
                 <h4 className="text-sm font-medium text-ink dark:text-[#ececec]">{p.name}</h4>
                 <p className="text-xs text-slate dark:text-[#8e8e8e] mt-0.5">
-                  {p.provider_type} / {p.model}
-                  {p.is_default && (
-                    <span className="ml-2 text-brass text-xs font-medium">Default</span>
+                  {p.provider_type}
+                  {p.api_key_last_four && (
+                    <span className="ml-2 font-mono">...{p.api_key_last_four}</span>
                   )}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleTest(p.id)}
-                  className="rounded border border-muted px-2.5 py-1 text-xs text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
+                  disabled={testing === p.id}
+                  className="rounded border border-muted px-2.5 py-1 text-xs text-slate dark:text-[#8e8e8e] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] disabled:opacity-50 transition-colors"
                 >
-                  Test
+                  {testing === p.id ? "Testing..." : "Test"}
                 </button>
                 <button
                   onClick={() => handleDelete(p.id)}
@@ -260,7 +263,7 @@ function ProvidersTab() {
           </div>
         ))}
         {(!providers || providers.length === 0) && (
-          <p className="text-sm text-slate dark:text-[#8e8e8e]">No providers configured.</p>
+          <p className="text-sm text-slate dark:text-[#8e8e8e]">No API keys configured.</p>
         )}
       </div>
 
@@ -269,13 +272,13 @@ function ProvidersTab() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
           <div className="relative w-full max-w-md rounded-2xl bg-paper dark:bg-[#212121] p-6 shadow-2xl border border-muted">
             <h2 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-4">
-              Add Provider
+              Add API Key
             </h2>
             <div className="space-y-3">
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
+                placeholder="Name (e.g., My OpenAI Key)"
                 className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
               />
               <select
@@ -303,45 +306,10 @@ function ProvidersTab() {
                   className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
                 />
               )}
-              <input
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder="Model"
-                className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
-              />
-              <div className="flex items-center gap-2 text-sm text-slate dark:text-[#8e8e8e]">
-                <label className="flex-1">Temperature: {temperature}</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className="flex-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-slate dark:text-[#8e8e8e]">Max tokens</label>
-                <input
-                  type="number"
-                  value={maxTokens}
-                  onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                  className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate dark:text-[#8e8e8e]">
-                <input
-                  type="checkbox"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                />
-                Set as default
-              </label>
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={handleSave}
-                  disabled={saving || !name || !model}
+                  disabled={saving || !name}
                   className="flex-1 rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
                 >
                   {saving ? "Saving..." : "Save"}
@@ -357,6 +325,94 @@ function ProvidersTab() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ── Preferences Tab ── */
+function PreferencesTab() {
+  const { data: prefs } = useUserPreferences()
+  const updatePrefs = useUpdatePreferences()
+  const [temperature, setTemperature] = useState(0.7)
+  const [maxTokens, setMaxTokens] = useState(4096)
+  const [topP, setTopP] = useState(1.0)
+
+  useEffect(() => {
+    if (prefs) {
+      setTemperature(prefs.default_temperature)
+      setMaxTokens(prefs.default_max_tokens)
+      setTopP(prefs.default_top_p)
+    }
+  }, [prefs])
+
+  const handleSave = () => {
+    updatePrefs.mutate(
+      { default_temperature: temperature, default_max_tokens: maxTokens, default_top_p: topP },
+      {
+        onSuccess: () => toast.success("Preferences saved"),
+        onError: (err: any) => toast.error(err.message || "Failed to save"),
+      }
+    )
+  }
+
+  return (
+    <div>
+      <h3 className="text-xl font-semibold text-ink dark:text-[#ececec] mb-4">
+        Default Parameters
+      </h3>
+      <p className="text-xs text-slate dark:text-[#8e8e8e] mb-4">
+        These defaults apply to all LLM calls unless overridden.
+      </p>
+      <div className="space-y-4 max-w-sm">
+        <div>
+          <div className="flex items-center justify-between text-sm text-slate dark:text-[#8e8e8e] mb-1">
+            <label>Temperature</label>
+            <span className="font-mono text-xs">{temperature}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value={temperature}
+            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-slate dark:text-[#8e8e8e] mb-1">Max Tokens</label>
+          <input
+            type="number"
+            value={maxTokens}
+            onChange={(e) => setMaxTokens(parseInt(e.target.value) || 4096)}
+            min={1}
+            max={128000}
+            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
+          />
+        </div>
+        <div>
+          <div className="flex items-center justify-between text-sm text-slate dark:text-[#8e8e8e] mb-1">
+            <label>Top P</label>
+            <span className="font-mono text-xs">{topP}</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={topP}
+            onChange={(e) => setTopP(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={updatePrefs.isPending}
+          className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
+        >
+          {updatePrefs.isPending ? "Saving..." : "Save"}
+        </button>
+      </div>
     </div>
   )
 }
@@ -428,6 +484,8 @@ function MasterResumeTab() {
   const [uploading, setUploading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [viewOpen, setViewOpen] = useState(false)
+  const [pickedProviderId, setPickedProviderId] = useState<string | null>(null)
+  const [pickedModel, setPickedModel] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
@@ -438,6 +496,8 @@ function MasterResumeTab() {
     try {
       const formData = new FormData()
       formData.append("file", file)
+      if (pickedProviderId) formData.append("provider_id", pickedProviderId)
+      if (pickedModel) formData.append("model", pickedModel)
       await apiRequest("POST", "/api/master-resume", formData)
       queryClient.invalidateQueries({ queryKey: ["master-resume"] })
       toast.success("Master resume uploaded")
@@ -445,6 +505,7 @@ function MasterResumeTab() {
       toast.error(err.message || "Upload failed")
     } finally {
       setUploading(false)
+      if (fileRef.current) fileRef.current.value = ""
     }
   }
 
@@ -503,6 +564,19 @@ function MasterResumeTab() {
         onChange={handleUpload}
         className="hidden"
       />
+      <div className="mb-3">
+        <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">
+          Model for extraction
+        </div>
+        <ModelPicker
+          selectedProviderId={pickedProviderId}
+          selectedModel={pickedModel}
+          onSelect={(pid, model) => {
+            setPickedProviderId(pid)
+            setPickedModel(model)
+          }}
+        />
+      </div>
       <button
         onClick={() => fileRef.current?.click()}
         disabled={uploading}
@@ -542,38 +616,8 @@ function MasterResumeTab() {
 /* ── Account Tab ── */
 function AccountTab() {
   const { data: user } = useCurrentUser()
-  const [currentPw, setCurrentPw] = useState("")
-  const [newPw, setNewPw] = useState("")
-  const [confirmPw, setConfirmPw] = useState("")
-  const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const queryClient = useQueryClient()
-
-  const handleChangePassword = async () => {
-    if (newPw !== confirmPw) {
-      toast.error("Passwords don't match")
-      return
-    }
-    if (newPw.length < 10) {
-      toast.error("Password must be at least 10 characters")
-      return
-    }
-    setSaving(true)
-    try {
-      await apiRequest("POST", "/api/users/me/change-password", {
-        current_password: currentPw,
-        new_password: newPw,
-      })
-      toast.success("Password changed")
-      setCurrentPw("")
-      setNewPw("")
-      setConfirmPw("")
-    } catch (err: any) {
-      toast.error(err.message || "Failed to change password")
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleDelete = async () => {
     if (!confirm("This will permanently delete your account and all data. Continue?")) return
@@ -601,37 +645,6 @@ function AccountTab() {
             </span>
           </p>
         )}
-        <div className="space-y-3 max-w-sm">
-          <h4 className="text-sm font-semibold text-ink dark:text-[#ececec]">Change password</h4>
-          <input
-            type="password"
-            value={currentPw}
-            onChange={(e) => setCurrentPw(e.target.value)}
-            placeholder="Current password"
-            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
-          />
-          <input
-            type="password"
-            value={newPw}
-            onChange={(e) => setNewPw(e.target.value)}
-            placeholder="New password (min 10)"
-            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
-          />
-          <input
-            type="password"
-            value={confirmPw}
-            onChange={(e) => setConfirmPw(e.target.value)}
-            placeholder="Confirm new password"
-            className="w-full rounded-lg border border-muted bg-paper dark:bg-[#2b2b2b] px-3 py-2 text-sm text-ink dark:text-[#ececec] outline-none focus:border-brass"
-          />
-          <button
-            onClick={handleChangePassword}
-            disabled={saving || !currentPw || !newPw}
-            className="rounded-lg bg-brass px-4 py-2 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
-          >
-            {saving ? "Saving..." : "Change password"}
-          </button>
-        </div>
         <div className="border-t border-muted pt-8">
           <h4 className="text-sm font-semibold text-danger mb-2">Danger zone</h4>
           <button

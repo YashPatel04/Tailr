@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, PanelLeftClose, PanelRightOpen } from "lucide-react"
+import { Search, PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import { clsx } from "clsx"
 import { useSearchStore } from "@/stores/searchStore"
 
@@ -33,7 +33,7 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
             className="p-1 rounded-md hover:bg-[#2b2b2b] text-[#8e8e8e] hover:text-[#ececec] transition-colors"
             aria-label="Expand sidebar"
           >
-            <PanelRightOpen size={16} />
+            <PanelLeftOpen size={16} />
           </button>
         </>
       ) : (

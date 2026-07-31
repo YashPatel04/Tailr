@@ -1,20 +1,20 @@
+import uuid
+
 import pytest
 from httpx import AsyncClient
+
+from app.models.models import MasterResume, User
+from app.tests.factories import create_session, create_user
+from app.utils.tokens import create_access_token
 
 
 @pytest.mark.asyncio
 async def test_create_session(client: AsyncClient, db_session):
-    import uuid
-
-    from app.models.models import MasterResume, User
-    from app.utils.password import hash_password
-    from app.utils.tokens import create_access_token
-
     user = User(
         id=uuid.uuid4(),
         email="sess@test.com",
-        password_hash=hash_password("password123456"),
-        is_verified=True,
+        oauth_provider="github",
+        oauth_id="github_test123",
     )
     db_session.add(user)
 
@@ -48,12 +48,7 @@ async def test_create_session(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_list_sessions(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "list@test.com", "password123456", True)
+    user = await create_user(db_session, "list@test.com")
     await create_session(db_session, user, "TestCorp", "Engineer")
 
     access = create_access_token(user.id)
@@ -67,12 +62,7 @@ async def test_list_sessions(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_grouped_sessions(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "grouped@test.com", "password123456", True)
+    user = await create_user(db_session, "grouped@test.com")
     await create_session(db_session, user, "TestCorp", "Engineer")
 
     access = create_access_token(user.id)
@@ -86,12 +76,7 @@ async def test_grouped_sessions(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_update_session(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "update@test.com", "password123456", True)
+    user = await create_user(db_session, "update@test.com")
     session = await create_session(db_session, user, "OldCorp", "Intern")
 
     access = create_access_token(user.id)
@@ -104,12 +89,7 @@ async def test_update_session(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_delete_session(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "delsess@test.com", "password123456", True)
+    user = await create_user(db_session, "delsess@test.com")
     session = await create_session(db_session, user, "DelCorp", "Dev")
 
     access = create_access_token(user.id)
@@ -121,12 +101,7 @@ async def test_delete_session(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_list_companies(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "comp@test.com", "password123456", True)
+    user = await create_user(db_session, "comp@test.com")
     await create_session(db_session, user, "Alpha Inc", "Engineer")
     await create_session(db_session, user, "Alpha Inc", "Manager")
 
@@ -141,12 +116,7 @@ async def test_list_companies(client: AsyncClient, db_session):
 
 @pytest.mark.asyncio
 async def test_list_tags(client: AsyncClient, db_session):
-
-    from app.tests.factories import create_session, create_user
-
-    from app.utils.tokens import create_access_token
-
-    user = await create_user(db_session, "tag@test.com", "password123456", True)
+    user = await create_user(db_session, "tag@test.com")
     session = await create_session(db_session, user, "TagCorp", "Dev")
     session.tags = ["python", "backend"]
     db_session.add(session)

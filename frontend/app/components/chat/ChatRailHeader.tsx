@@ -1,31 +1,49 @@
 "use client"
 
+import { useEffect } from "react"
 import { MoreHorizontal, PanelRightClose } from "lucide-react"
 import { useState } from "react"
-import { useSession, useProviders } from "@/hooks/queries"
+import { useSession } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useLayoutStore } from "@/stores/layout"
 import { apiRequest } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
+import { ModelPicker } from "./ModelPicker"
 
 export function ChatRailHeader() {
-  const { activeSessionId } = useSessionStore()
+  const { activeSessionId, selectedProviderId, selectedModel, setSelectedModel } = useSessionStore()
   const { setChatRailCollapsed } = useLayoutStore()
   const { data: session } = useSession(activeSessionId!)
-  const { data: providers } = useProviders()
   const [menuOpen, setMenuOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  if (!session) return null
+  useEffect(() => {
+    if (session?.current_provider_id && session?.current_model && !selectedProviderId) {
+      setSelectedModel(session.current_provider_id, session.current_model)
+    }
+  }, [session, selectedProviderId, setSelectedModel])
 
-  const provider = providers?.find((p) => p.id === session.llm_provider_id)
+  if (!session) return null
 
   const handleArchive = async () => {
     await apiRequest("PATCH", `/api/sessions/${session.id}`, { is_archived: true })
     queryClient.invalidateQueries({ queryKey: ["sessions"] })
     setMenuOpen(false)
     toast.success("Session archived")
+  }
+
+  const handleModelSelect = async (providerId: string, model: string) => {
+    setSelectedModel(providerId, model)
+    try {
+      await apiRequest("PATCH", `/api/sessions/${session.id}`, {
+        current_provider_id: providerId,
+        current_model: model,
+      })
+      queryClient.invalidateQueries({ queryKey: ["sessions", session.id] })
+    } catch {
+      toast.error("Failed to save model selection")
+    }
   }
 
   return (
@@ -46,11 +64,14 @@ export function ChatRailHeader() {
         <div className="text-xs text-slate dark:text-[#8e8e8e] truncate">
           {session.role_title}
         </div>
-        {provider && (
-          <span className="inline-block mt-1 rounded-full bg-[#f4f4f4] dark:bg-[#2b2b2b] px-2 py-0.5 text-xs text-slate dark:text-[#8e8e8e]">
-            {provider.provider_type} / {provider.model}
-          </span>
-        )}
+        <div className="mt-1">
+          <ModelPicker
+            selectedProviderId={selectedProviderId}
+            selectedModel={selectedModel}
+            onSelect={handleModelSelect}
+            compact
+          />
+        </div>
       </div>
       <div className="relative">
         <button

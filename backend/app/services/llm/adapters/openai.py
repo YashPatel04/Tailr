@@ -3,11 +3,25 @@ from collections.abc import AsyncIterator
 
 import httpx
 
-from app.services.llm.adapters.base import LLMAdapter, LLMChunk, LLMResponse
+from app.services.llm.adapters.base import LLMAdapter, LLMChunk, LLMResponse, ModelInfo
+
+# Prefixes for non-chat models to exclude
+_NON_CHAT_PREFIXES = (
+    "dall-e",
+    "whisper",
+    "tts",
+    "text-embedding",
+    "text-moderation",
+    "text-search",
+    "text-similarity",
+    "babbage",
+    "davinci",
+    "ft:",
+)
 
 
 class OpenAIAdapter(LLMAdapter):
-    def __init__(self, api_key: str, model: str, base_url: str | None = None, **params):
+    def __init__(self, api_key: str, model: str = "", base_url: str | None = None, **params):
         self.api_key = api_key
         self.model = model
         self.base_url = (base_url or "https://api.openai.com").rstrip("/")
@@ -21,6 +35,26 @@ class OpenAIAdapter(LLMAdapter):
             if suffix in m:
                 return "max_completion_tokens"
         return "max_tokens"
+
+    async def list_models(self) -> list[ModelInfo]:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.get(
+                f"{self.base_url}/v1/models",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
+            if response.status_code >= 400:
+                raise RuntimeError(
+                    f"Failed to list models ({response.status_code}): {response.text}"
+                )
+            data = response.json()
+            models = []
+            for m in data.get("data", []):
+                model_id = m.get("id", "")
+                if any(model_id.startswith(prefix) for prefix in _NON_CHAT_PREFIXES):
+                    continue
+                models.append(ModelInfo(id=model_id, display_name=model_id))
+            models.sort(key=lambda x: x.id)
+            return models
 
     async def chat(
         self, messages: list[dict], stream: bool = False, **kwargs

@@ -10,7 +10,7 @@ import { useQueryClient } from "@tanstack/react-query"
 
 export function useSessionSSE(sessionId: string | null) {
   const controllerRef = useRef<AbortController | null>(null)
-  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, activeMode, tailoringMode } = useSessionStore()
+  const { setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, activeMode, tailoringMode, selectedProviderId, selectedModel } = useSessionStore()
   const queryClient = useQueryClient()
 
   const sendMessage = useCallback(
@@ -47,9 +47,12 @@ export function useSessionSSE(sessionId: string | null) {
             mode: activeMode,
             tailoring_mode: tailoringMode,
             proposal_context: proposalContext,
+            llm_provider_id: selectedProviderId,
+            model: selectedModel,
           }),
           credentials: "include",
           signal: controller.signal,
+          openWhenHidden: false,
           onmessage(event) {
             try {
               const data = JSON.parse(event.data)
@@ -101,17 +104,21 @@ export function useSessionSSE(sessionId: string | null) {
                   queryClient.invalidateQueries({ queryKey: ["sessions"] })
                   break
                 case "error":
+                  controller.abort()
                   setStreaming(false)
                   setProgress("", "")
                   toast.error(data.message || "An error occurred")
+                  queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
                   break
               }
             } catch {}
           },
           onerror(err) {
+            controller.abort()
             setStreaming(false)
             setProgress("", "")
-            toast.error("Connection error")
+            toast.error("Connection failed")
+            queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
             throw err
           },
         })
@@ -119,10 +126,11 @@ export function useSessionSSE(sessionId: string | null) {
         if (err.name !== "AbortError") {
           setStreaming(false)
           setProgress("", "")
+          queryClient.invalidateQueries({ queryKey: ["sessions", sessionId, "messages"] })
         }
       }
     },
-    [sessionId, setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, queryClient, activeMode, tailoringMode]
+    [sessionId, setStreaming, setLatestDocument, setLatestDiff, setViewMode, setProgress, setPendingProposal, queryClient, activeMode, tailoringMode, selectedProviderId, selectedModel]
   )
 
   useEffect(() => {

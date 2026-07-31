@@ -1,21 +1,14 @@
 import uuid
-from datetime import UTC, datetime
 
-import bcrypt
-
-
-def utcnow():
-    return datetime.now(UTC)
+from app.models.models import User
 
 
-async def create_user(db, email="test@example.com", password="testpassword12", verified=True):
-    from app.models.models import User
-
+async def create_user(db, email="test@example.com", oauth_provider="github", oauth_id=None):
     user = User(
         id=uuid.uuid4(),
         email=email,
-        password_hash=bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
-        is_verified=verified,
+        oauth_provider=oauth_provider,
+        oauth_id=oauth_id or f"github_{uuid.uuid4().hex[:8]}",
     )
     db.add(user)
     await db.flush()
