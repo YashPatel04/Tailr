@@ -6,6 +6,7 @@ import type { ResumeContent } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { useSessionDocument, useSession } from "@/hooks/queries"
 import { queueEdit, undo, redo, clearHistory } from "@/lib/editQueue"
+import { apiRequest } from "@/lib/api"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DocumentEmptyState } from "./DocumentEmptyState"
@@ -87,36 +88,26 @@ export function DocumentCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [activeSessionId])
 
-  const handleBottomInsert = (action: string) => {
+  const handleBottomInsert = async (action: string) => {
     if (!activeSessionId) return
     const content = doc?.content as ResumeContent | undefined
     const sectionCount = content?.sections?.length || 0
 
-    if (action === "section") {
-      fetch(`/api/sessions/${activeSessionId}/document`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+    try {
+      if (action === "section") {
+        await apiRequest("PATCH", `/api/sessions/${activeSessionId}/document`, {
           operations: [{ op: "add_section", label: "New Section", after_index: sectionCount - 1 }],
-        }),
-      })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
-          toast.success("Section added")
         })
-        .catch(() => toast.error("Failed to add section"))
-    } else if (action === "entry") {
-      const lastSectionIdx = sectionCount - 1
-      if (lastSectionIdx < 0) {
-        toast.error("Add a section first")
-        return
-      }
-      const sectionLabel = content?.sections?.[lastSectionIdx]?.label
-      const entriesCount = content?.sections?.[lastSectionIdx]?.entries?.length || 0
-      fetch(`/api/sessions/${activeSessionId}/document`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        toast.success("Section added")
+      } else if (action === "entry") {
+        const lastSectionIdx = sectionCount - 1
+        if (lastSectionIdx < 0) {
+          toast.error("Add a section first")
+          return
+        }
+        const sectionLabel = content?.sections?.[lastSectionIdx]?.label
+        const entriesCount = content?.sections?.[lastSectionIdx]?.entries?.length || 0
+        await apiRequest("PATCH", `/api/sessions/${activeSessionId}/document`, {
           operations: [
             {
               op: "add_entry",
@@ -125,25 +116,17 @@ export function DocumentCanvas() {
               title: "New Entry",
             },
           ],
-        }),
-      })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
-          toast.success("Entry added")
         })
-        .catch(() => toast.error("Failed to add entry"))
-    } else if (action === "skill") {
-      const lastSectionIdx = sectionCount - 1
-      if (lastSectionIdx < 0) {
-        toast.error("Add a section first")
-        return
-      }
-      const sectionLabel = content?.sections?.[lastSectionIdx]?.label
-      const skillCount = content?.sections?.[lastSectionIdx]?.skill_rows?.length || 0
-      fetch(`/api/sessions/${activeSessionId}/document`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        toast.success("Entry added")
+      } else if (action === "skill") {
+        const lastSectionIdx = sectionCount - 1
+        if (lastSectionIdx < 0) {
+          toast.error("Add a section first")
+          return
+        }
+        const sectionLabel = content?.sections?.[lastSectionIdx]?.label
+        const skillCount = content?.sections?.[lastSectionIdx]?.skill_rows?.length || 0
+        await apiRequest("PATCH", `/api/sessions/${activeSessionId}/document`, {
           operations: [
             {
               op: "add_skill_row",
@@ -153,13 +136,12 @@ export function DocumentCanvas() {
               items: "items",
             },
           ],
-        }),
-      })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["session-document", activeSessionId] })
-          toast.success("Skill row added")
         })
-        .catch(() => toast.error("Failed to add skill row"))
+        toast.success("Skill row added")
+      }
+      queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "document"] })
+    } catch {
+      toast.error(`Failed to add ${action}`)
     }
   }
 
@@ -222,7 +204,7 @@ export function DocumentCanvas() {
         <div className="py-10 px-8 group/page">
           <DocumentTopBar />
           <div className="relative mt-10">{innerContent}</div>
-          {hasContent && viewMode !== "diff" && <BottomInsert onInsert={handleBottomInsert} />}
+          {!isCoverLetterView && hasContent && viewMode !== "diff" && <BottomInsert onInsert={handleBottomInsert} />}
         </div>
       </div>
     </div>

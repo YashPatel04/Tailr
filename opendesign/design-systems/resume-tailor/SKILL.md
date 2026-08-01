@@ -1,6 +1,6 @@
-# Resume Tailor — Design System
+# Tailr — Design System
 
-A design system for the Resume Tailor web application — a three-column desktop app that tailors LaTeX resumes to job descriptions using LLMs.
+A design system for the Tailr web application — a three-column desktop app that tailors LaTeX resumes to job descriptions using LLMs.
 
 ## Tokens
 - `tokens/colors_and_type.css` — all color and typography custom properties

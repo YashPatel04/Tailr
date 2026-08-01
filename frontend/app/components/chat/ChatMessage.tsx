@@ -1,6 +1,7 @@
 "use client"
 
 import { clsx } from "clsx"
+import ReactMarkdown from "react-markdown"
 import type { ChatMessage as ChatMessageType } from "@/types"
 import { ProgressMessage } from "./ProgressMessage"
 
@@ -26,7 +27,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
             : "bg-[#f7f7f8] dark:bg-[#2b2b2b] text-ink dark:text-[#ececec] rounded-bl-md"
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        {isUser ? (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        ) : (
+          <div className="prose-chat">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   )

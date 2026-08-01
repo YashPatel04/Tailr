@@ -1,13 +1,31 @@
 "use client"
 
-import { useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useCurrentUser } from "@/hooks/queries"
+import { Spinner } from "@/components/ui/Spinner"
 
 export default function LoginPage() {
-  const queryClient = useQueryClient()
+  const { data: user, isLoading } = useCurrentUser()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace("/")
+    }
+  }, [isLoading, user, router])
+
+  if (isLoading || user) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="md" />
+      </div>
+    )
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-ink text-center mb-1">Welcome to Resume Tailor</h1>
+      <h1 className="text-2xl font-semibold text-ink text-center mb-1">Welcome to Tailr</h1>
       <p className="text-sm text-slate text-center mb-6">Sign in to get started</p>
       <div className="space-y-3">
         <a

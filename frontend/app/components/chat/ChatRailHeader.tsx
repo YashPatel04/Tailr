@@ -29,8 +29,19 @@ export function ChatRailHeader() {
   const handleArchive = async () => {
     await apiRequest("PATCH", `/api/sessions/${session.id}`, { is_archived: true })
     queryClient.invalidateQueries({ queryKey: ["sessions"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "grouped"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "archived"] })
     setMenuOpen(false)
     toast.success("Session archived")
+  }
+
+  const handleUnarchive = async () => {
+    await apiRequest("PATCH", `/api/sessions/${session.id}`, { is_archived: false })
+    queryClient.invalidateQueries({ queryKey: ["sessions"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "grouped"] })
+    queryClient.invalidateQueries({ queryKey: ["sessions", "archived"] })
+    setMenuOpen(false)
+    toast.success("Session restored")
   }
 
   const handleModelSelect = async (providerId: string, model: string) => {
@@ -85,12 +96,21 @@ export function ChatRailHeader() {
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
             <div className="absolute right-0 top-8 rounded-lg border border-muted bg-paper dark:bg-[#212121] shadow-lg py-1 min-w-[140px] z-20">
-              <button
-                onClick={handleArchive}
-                className="flex w-full items-center px-3 py-2 text-sm text-ink dark:text-[#ececec] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f]"
-              >
-                Archive
-              </button>
+              {session.is_archived ? (
+                <button
+                  onClick={handleUnarchive}
+                  className="flex w-full items-center px-3 py-2 text-sm text-ink dark:text-[#ececec] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f]"
+                >
+                  Unarchive
+                </button>
+              ) : (
+                <button
+                  onClick={handleArchive}
+                  className="flex w-full items-center px-3 py-2 text-sm text-ink dark:text-[#ececec] hover:bg-[#f7f7f8] dark:hover:bg-[#40414f]"
+                >
+                  Archive
+                </button>
+              )}
             </div>
           </>
         )}

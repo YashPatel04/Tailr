@@ -11,8 +11,11 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "Resume Tailor",
+  title: "Tailr",
   description: "AI-powered resume tailoring for every job application",
+  icons: {
+    icon: "/icon.svg",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

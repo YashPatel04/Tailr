@@ -97,6 +97,14 @@ export function useGroupedSessions() {
   })
 }
 
+export function useArchivedSessions(enabled: boolean) {
+  return useQuery({
+    queryKey: ["sessions", "archived"],
+    queryFn: () => apiRequest<any[]>("GET", "/api/sessions/archived"),
+    enabled,
+  })
+}
+
 export function useSession(id: string) {
   return useQuery({
     queryKey: ["sessions", id],

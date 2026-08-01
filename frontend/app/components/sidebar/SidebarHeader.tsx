@@ -39,11 +39,8 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
       ) : (
         <>
           <div className="flex items-center gap-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#10a37f"/>
-              <path d="M12 6v12M6 12h12" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className="text-sm font-semibold text-[#ececec]">Resume Tailor</span>
+            <span className="text-lg flex-shrink-0">📄</span>
+            <span className="text-sm font-semibold text-[#ececec]">Tailr</span>
           </div>
           <div className="flex items-center gap-1">
             <button

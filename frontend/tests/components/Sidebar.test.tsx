@@ -28,12 +28,12 @@ describe("Sidebar", () => {
 
   it("renders expanded sidebar with header text", () => {
     renderWithProviders(<Sidebar collapsed={false} onToggle={vi.fn()} />)
-    expect(screen.getByText("Resume Tailor")).toBeDefined()
+    expect(screen.getByText("Tailr")).toBeDefined()
   })
 
   it("renders collapsed sidebar without header text", () => {
     renderWithProviders(<Sidebar collapsed={true} onToggle={vi.fn()} />)
-    expect(screen.queryByText("Resume Tailor")).toBeNull()
+    expect(screen.queryByText("Tailr")).toBeNull()
   })
 
   it("renders new chat button in expanded state", () => {

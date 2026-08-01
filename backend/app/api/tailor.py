@@ -256,9 +256,20 @@ async def chat_stream(
                         {
                             "role": "system",
                             "content": (
-                                "You are a cover letter advisor. Help the user improve their cover letter. "
-                                "Give conversational advice — do NOT return structured JSON operations. "
-                                f"Company: {session.company_name}. Role: {session.role_title}."
+                                "You are a cover letter advisor. "
+                                "Help the user improve their cover letter. "
+                                "Give conversational advice — do NOT return "
+                                "structured JSON operations. "
+                                "Always format your replies in markdown "
+                                "for readability. Use: "
+                                "**bold** for emphasis, "
+                                "## headers for structure, "
+                                "- bullet lists for suggestions, "
+                                "and `inline code` for field names. "
+                                "Do NOT wrap your entire response "
+                                "in code blocks. "
+                                f"Company: {session.company_name}. "
+                                f"Role: {session.role_title}."
                             ),
                         }
                     ]
@@ -335,8 +346,12 @@ async def chat_stream(
                         cl_ops = ops_from_list(ops_list)
                         new_cl_content = applier.apply_cover_letter(cl_content, cl_ops)
                     except Exception as e2:
-                        logger.error("[chat] session=%s cover letter retry failed: %s", session_id, e2)
-                        yield await _emit("error", {"message": f"Operations retry failed: {str(e2)}"})
+                        logger.error(
+                            "[chat] session=%s cover letter retry failed: %s", session_id, e2
+                        )
+                        yield await _emit(
+                            "error", {"message": f"Operations retry failed: {str(e2)}"}
+                        )
                         return
 
                 new_doc = SessionDocument(
@@ -350,7 +365,9 @@ async def chat_stream(
                 db.add(new_doc)
                 await db.flush()
 
-                explanation_text = explanation or f"Updated {len(ops_list)} section(s) of your cover letter."
+                explanation_text = (
+                    explanation or f"Updated {len(ops_list)} section(s) of your cover letter."
+                )
                 assistant_msg = ChatMessage(
                     id=uuid4(),
                     session_id=session.id,

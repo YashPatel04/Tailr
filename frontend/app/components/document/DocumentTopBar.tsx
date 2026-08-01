@@ -11,20 +11,24 @@ export function DocumentTopBar() {
   const { activeSessionId, activeDocType, viewMode, setViewMode } = useSessionStore()
   const [exportOpen, setExportOpen] = useState(false)
 
+  const isCoverLetter = activeDocType === "cover_letter"
+  const exportFormats = isCoverLetter ? ["pdf", "docx"] : ["pdf", "docx", "txt", "tex"]
+  const fileName = isCoverLetter ? "cover_letter" : "resume"
+
   const handleExport = async (format: string) => {
     if (!activeSessionId) return
     setExportOpen(false)
     try {
       const blob = await apiRequest<Blob>(
         "GET",
-        `/api/sessions/${activeSessionId}/export?format=${format}`,
+        `/api/sessions/${activeSessionId}/export?format=${format}&doc_type=${activeDocType}`,
         undefined,
         { rawResponse: true }
       )
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `resume.${format}`
+      a.download = `${fileName}.${format}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -81,7 +85,7 @@ export function DocumentTopBar() {
             <>
               <div className="fixed inset-0 z-10" onClick={() => setExportOpen(false)} />
               <div className="absolute right-0 top-full mt-1 rounded-lg border border-muted bg-white dark:bg-[#202124] shadow-lg py-1 min-w-[100px] z-20">
-                {["pdf", "docx", "txt", "tex"].map((f) => (
+                {exportFormats.map((f) => (
                   <button
                     key={f}
                     onClick={() => handleExport(f)}

@@ -25,7 +25,12 @@ YOU MUST NOT:
 - Format your response as code or JSON
 
 Your responses should be conversational, helpful, and in natural language. \
-Use markdown formatting for readability (headers, lists, bold).
+Always format your replies in markdown for readability. Use: \
+- **bold** for emphasis on key points \
+- ## headers to structure longer responses \
+- bullet lists (- item) for multiple suggestions or comparisons \
+- `inline code` for specific resume field names or technical terms \
+Do NOT use code blocks for your entire response — only for inline references.
 
 {career_context_section}
 
@@ -313,9 +318,7 @@ def build_cover_letter_edit_prompt(
     session,
     research_summary: dict | None = None,
 ) -> list[dict]:
-    paragraphs_formatted = "\n".join(
-        f"[{p.id}]: {p.text}" for p in content.paragraphs
-    )
+    paragraphs_formatted = "\n".join(f"[{p.id}]: {p.text}" for p in content.paragraphs)
     if not paragraphs_formatted:
         paragraphs_formatted = "(no paragraphs)"
 

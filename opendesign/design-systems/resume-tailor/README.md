@@ -1,4 +1,4 @@
-# Resume Tailor — UI System & Features
+# Tailr — UI System & Features
 
 A greenfield web application that tailors LaTeX resumes to job descriptions using LLMs. Three-column desktop layout with a document-centric workflow and real-time SSE-driven chat.
 
@@ -48,7 +48,7 @@ No gradients. No shadows on cards. No colored left-border accent strips. Flat, e
 | Captions / meta | Public Sans | 400 | 12px | Secondary info, timestamps, version numbers |
 | Code | JetBrains Mono | 400 | 12px | LaTeX source preview, code blocks |
 
-**Casing**: Sentence case for headings and labels. Title case only for brand name ("Resume Tailor"). No all-caps except sidebar group headers (12px, semibold, tracking-wider).
+**Casing**: Sentence case for headings and labels. Title case only for brand name ("Tailr"). No all-caps except sidebar group headers (12px, semibold, tracking-wider).
 
 ---
 

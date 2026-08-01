@@ -164,7 +164,7 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
             <span key={p.url || i}>
               <span>|</span>
               <LinkableField
-                value={p.username || p.network || p.url || ""}
+                value={p.username || p.network || ""}
                 onSave={(v) => {
                   queueEdit({
                     op: "update_basics_field",
@@ -174,8 +174,24 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
                     ),
                   })
                 }}
-                isUrl
               />
+              {p.url && (
+                <span className="text-slate/50 dark:text-[#666] ml-1">
+                  (<LinkableField
+                    value={p.url}
+                    onSave={(v) => {
+                      queueEdit({
+                        op: "update_basics_field",
+                        field: "profiles",
+                        value: JSON.stringify(
+                          basics.profiles.map((pr, j) => (j === i ? { ...pr, url: v } : pr))
+                        ),
+                      })
+                    }}
+                    isUrl
+                  />)
+                </span>
+              )}
             </span>
           ))}
         </p>

@@ -133,6 +133,7 @@ When a request depends on recency (e.g., "latest", "current", "today", "as of no
 `backend/` — Python 3.11 + FastAPI + SQLAlchemy (async/asyncpg) + Alembic. Entrypoint: `backend/app/main.py`.
 `frontend/` — Next.js 15 (App Router) + React 19 + TypeScript + Tailwind + Vitest. Entrypoint: `frontend/app/layout.tsx`.
 PostgreSQL 16 for data, Redis 7 for rate limiting, Dockerized texlive-full for LaTeX compilation.
+`docker` - The whole arechitecture runs inside docker containers refer to `docker-compose.yml`. DO NOT ATTEMPT TO INSTALL DEPENDENCIES OUTSIDE THE DOCKER CONTIANER
 
 ## Commands
 

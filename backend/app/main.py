@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Resume Tailor", lifespan=lifespan)
+app = FastAPI(title="Tailr", lifespan=lifespan)
 app.state.limiter = limiter
 
 app.add_middleware(

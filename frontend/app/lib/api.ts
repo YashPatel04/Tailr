@@ -2,6 +2,7 @@ import { getApiBaseUrl } from "./env"
 
 let csrfToken: string | null = null
 let csrfTokenPromise: Promise<void> | null = null
+let refreshPromise: Promise<void> | null = null
 
 async function fetchCsrfToken(): Promise<string> {
   const res = await fetch(`${getApiBaseUrl()}/api/health`, { credentials: "include" })
@@ -10,15 +11,26 @@ async function fetchCsrfToken(): Promise<string> {
 }
 
 async function refreshAccessToken(): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "X-CSRF-Token": csrfToken || "" },
-  })
-  if (!res.ok) {
-    window.location.href = "/login"
-    throw new Error("Session expired")
-  }
+  if (refreshPromise) return refreshPromise
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-CSRF-Token": csrfToken || "" },
+      })
+      if (!res.ok) {
+        window.location.href = "/login"
+        throw new Error("Session expired")
+      }
+      if (res.headers.get("X-CSRF-Token")) {
+        csrfToken = res.headers.get("X-CSRF-Token")
+      }
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
 }
 
 export async function getCsrfToken(): Promise<string> {

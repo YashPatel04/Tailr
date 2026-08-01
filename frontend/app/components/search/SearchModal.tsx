@@ -123,6 +123,9 @@ export function SearchModal() {
                     >
                       <MessageSquare size={16} className="text-slate dark:text-[#8e8e8e] flex-shrink-0" />
                       <span className="text-sm text-ink dark:text-[#ececec] truncate">{s.company_name} - {s.role_title}</span>
+                      {s.is_archived && (
+                        <span className="ml-auto text-xs text-[#6e6e6e] flex-shrink-0">(archived)</span>
+                      )}
                     </button>
                   ))}
                 </>

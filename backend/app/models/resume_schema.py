@@ -97,7 +97,7 @@ class CoverLetterContent(BaseModel):
     closing: str = ""
 
     @classmethod
-    def from_legacy_text(cls, text: str) -> "CoverLetterContent":
+    def from_legacy_text(cls, text: str) -> CoverLetterContent:
         """Migrate legacy {text, type} format to structured JSON."""
         if not text:
             return cls()

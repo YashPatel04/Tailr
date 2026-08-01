@@ -252,12 +252,25 @@ async def list_sessions_grouped(current_user: CurrentUser, db: AsyncSession = De
     )
     sessions = result.scalars().all()
 
+    count_result = await db.execute(
+        select(func.count())
+        .select_from(Session)
+        .where(Session.user_id == current_user.id, Session.is_archived)
+    )
+    archived_count = count_result.scalar_one()
+
     now = datetime.now(UTC)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday_start = today_start - timedelta(days=1)
     week_ago = today_start - timedelta(days=7)
 
-    grouped = {"today": [], "yesterday": [], "previous_7_days": [], "older": []}
+    grouped: dict = {
+        "today": [],
+        "yesterday": [],
+        "previous_7_days": [],
+        "older": [],
+        "archived_count": archived_count,
+    }
 
     for s in sessions:
         updated = s.updated_at or s.created_at
@@ -271,6 +284,17 @@ async def list_sessions_grouped(current_user: CurrentUser, db: AsyncSession = De
             grouped["older"].append(_session_to_dict(s))
 
     return grouped
+
+
+@router.get("/archived")
+async def list_sessions_archived(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(Session)
+        .where(Session.user_id == current_user.id, Session.is_archived)
+        .order_by(Session.updated_at.desc())
+    )
+    sessions = result.scalars().all()
+    return [_session_to_dict(s) for s in sessions]
 
 
 @router.get("/{session_id}")
@@ -665,7 +689,9 @@ async def generate_cover_letter(
         )
         provider = p_result.scalar_one_or_none()
     if not provider:
-        p_result = await db.execute(select(LLMProvider).where(LLMProvider.user_id == current_user.id))
+        p_result = await db.execute(
+            select(LLMProvider).where(LLMProvider.user_id == current_user.id)
+        )
         provider = p_result.scalars().first()
     if not provider:
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")

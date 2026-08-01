@@ -96,8 +96,7 @@ def span_format_filter(text: str, spans: Sequence[Any]) -> str:
         wrapped = escaped
 
         if link:
-            escaped_link = tex_escape(link)
-            wrapped = f"\\href{{{escaped_link}}}{{{wrapped}}}"
+            wrapped = f"\\href{{{link}}}{{{wrapped}}}"
 
         for fmt in FMT_ORDER:
             if fmt in fmts:

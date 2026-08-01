@@ -1,4 +1,4 @@
-# Resume Tailor
+# Tailr
 
 A precision editing tool that tailors your LaTeX resume to specific job descriptions using LLMs. Think of it as a copyeditor's desk — it preserves your exact formatting while letting AI make targeted edits you can review and approve.
 

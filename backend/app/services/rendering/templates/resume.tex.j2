@@ -20,12 +20,11 @@
 {%- endif -%}
 {%- if content.basics.email -%}
     {%- set email_escaped = content.basics.email | tex_escape -%}
-    {{- contact_parts.append('\href{mailto:' + email_escaped + '}{' + email_escaped + '}') or "" -}}
+    {{- contact_parts.append('\href{mailto:' + content.basics.email + '}{' + email_escaped + '}') or "" -}}
 {%- endif -%}
 {%- for profile in content.basics.profiles -%}
     {%- set profile_name_escaped = (profile.username or profile.network) | tex_escape -%}
-    {%- set profile_url_escaped = profile.url | tex_escape -%}
-    {{- contact_parts.append('\href{' + profile_url_escaped + '}{' + profile_name_escaped + '}') or "" -}}
+    {{- contact_parts.append('\href{' + profile.url + '}{' + profile_name_escaped + '}') or "" -}}
 {%- endfor -%}
 {%- if contact_parts %}
     {{ contact_parts | join(' $|$ ') }} \\[4pt]
@@ -33,24 +32,13 @@
 \end{center}
 {% for section in content.sections %}
 \section*{ {{- section.label | tex_escape -}} }
-{%- if section.skill_rows %}
-{%- for sk in section.skill_rows %}
-\textbf{ {{- sk.category | tex_escape -}} :} {{ sk.items | tex_escape }} \\
-{%- endfor %}
-{%- endif %}
-{%- if section.entries %}
 {%- for entry in section.entries %}
-\textbf{ {{- entry.title | tex_escape -}} } \hfill \textbf{ {{- entry.dates | tex_escape or '' -}} }
-{%- if entry.role %}
-\textit{ {{- entry.role | tex_escape -}} }{%- if entry.location %} \hfill \textit{ {{- entry.location | tex_escape -}} }{%- endif %}
+\textbf{ {{- entry.title | tex_escape -}} } \hfill \textbf{ {{- entry.dates | tex_escape or '' -}} } \\
+{%- if entry.role or entry.location or entry.urls %}
+{%- if entry.role %}\textit{ {{- entry.role | tex_escape -}} }{%- endif %}{%- if entry.role and (entry.location or entry.urls) %} \hfill {%- endif %}{%- if entry.location %}\textit{ {{- entry.location | tex_escape -}} }{%- endif %}{%- if entry.urls %}{%- if entry.location %} $|$ {%- endif %}{%- for url, mask in entry.urls.items() if url %}\href{ {{- url -}} }{ {{- (mask or url) | tex_escape -}} }{%- if not loop.last %} {%- endif %}{%- endfor %}{%- endif %}{%- if section.label | upper == 'EDUCATION' %} \\{%- endif %}
 {%- endif %}
 {%- if entry.organization %}
-{{ entry.organization | tex_escape }}
-{%- endif %}
-{%- if entry.urls %}
-{%- for url, mask in entry.urls.items() if url %}
-\href{ {{- url | tex_escape -}} }{ {{- (mask if mask else url) | tex_escape -}} }
-{%- endfor %}
+{{ entry.organization | tex_escape }} \\
 {%- endif %}
 {%- if entry.bullets %}
 \begin{itemize}[itemsep=-2pt]
@@ -60,6 +48,8 @@
 \end{itemize}
 {%- endif %}
 {%- endfor %}
-{%- endif %}
-{% endfor %}
+    {%- for sk in section.skill_rows %}
+    \textbf{ {{- sk.category | tex_escape -}} :} {{ sk.items | tex_escape }}{%- if not loop.last %} \\{%- endif %}
+    {%- endfor %}
+    {%- endfor %}
 \end{document}
