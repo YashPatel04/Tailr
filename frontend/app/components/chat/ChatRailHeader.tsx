@@ -5,7 +5,7 @@ import { MoreHorizontal, PanelRightClose } from "lucide-react"
 import { useState } from "react"
 import { useSession } from "@/hooks/queries"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useLayoutStore } from "@/stores/layout"
+import { useLayoutStore } from "@/stores/layoutStore"
 import { apiRequest } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "@/components/ui/Toaster"
@@ -72,9 +72,7 @@ export function ChatRailHeader() {
             {session.company_name}
           </span>
         </div>
-        <div className="text-xs text-slate dark:text-[#8e8e8e] truncate">
-          {session.role_title}
-        </div>
+        <div className="text-xs text-slate dark:text-[#8e8e8e] truncate">{session.role_title}</div>
         <div className="mt-1">
           <ModelPicker
             selectedProviderId={selectedProviderId}

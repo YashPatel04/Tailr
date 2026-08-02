@@ -6,25 +6,20 @@ import type { Section } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
 import { EditableField } from "./EditableField"
-import { EntryRenderer } from "./EntryRenderer"
 import { SortableEntry } from "./SortableEntry"
 import { SortableSkillRow } from "./SortableSkillRow"
-import { BulletRenderer } from "./BulletRenderer"
 import { DeleteButton } from "./DeleteButton"
-import { FormattedText } from "./FormattedText"
-import { OpaqueNodeRenderer } from "./OpaqueNodeRenderer"
 import { useFieldChanges } from "@/components/diff/DiffContext"
 import { clsx } from "clsx"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 interface SectionRendererProps {
-  node?: any
   section?: Section
   sectionIndex?: number
 }
 
-export function SectionRenderer({ node, section, sectionIndex }: SectionRendererProps) {
+export function SectionRenderer({ section, sectionIndex }: SectionRendererProps) {
   const sectionDiff = useFieldChanges(section?.id ?? "")
   const queryClient = useQueryClient()
   const viewMode = useSessionStore((s) => s.viewMode)
@@ -246,60 +241,5 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
     )
   }
 
-  if (!node) return null
-
-  if (node.type === "opaque") {
-    return <OpaqueNodeRenderer node={node} />
-  }
-
-  return (
-    <section className={clsx("mb-4 relative", diffBorder(sectionDiff?.kind))}>
-      {sectionDiff?.kind && (
-        <span
-          className={clsx(
-            "absolute left-0 top-0 text-xs font-bold font-mono",
-            diffGutterColor(sectionDiff.kind)
-          )}
-        >
-          {diffGutterChar(sectionDiff.kind)}
-        </span>
-      )}
-      {node.type === "section" && node.label && (
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex-1">
-            {node.label}
-          </h2>
-        </div>
-      )}
-
-      {node.children?.map((child: any) => {
-          switch (child.type) {
-            case "entry":
-              return <EntryRenderer key={child.id} node={child} />
-            case "bullet":
-              return <BulletRenderer key={child.id} node={child} />
-            case "skill_row":
-              return (
-                <div key={child.id} className="mb-1 text-sm text-ink dark:text-[#ececec]">
-                  <span className="font-semibold">{child.category} </span>
-                  <FormattedText text={child.items || ""} spans={[]} />
-                </div>
-              )
-            case "text":
-              return (
-                <FormattedText key={child.id} text={child.text || ""} spans={child.spans || []} />
-              )
-            case "section":
-              return (
-                <SectionRenderer key={child.id} node={child} />
-              )
-            case "opaque":
-              return <OpaqueNodeRenderer key={child.id} node={child} />
-            default:
-              return null
-          }
-        })
-      }
-    </section>
-  )
+  return null
 }

@@ -1,3 +1,4 @@
+import httpx
 import pytest
 
 from app.services.research.extractor import extract_company_name
@@ -29,7 +30,7 @@ class TestCompanyExtraction:
 class TestResearchTimeboxing:
     @pytest.mark.asyncio
     async def test_fetch_text_timeout(self):
-        with pytest.raises(Exception):
+        with pytest.raises(httpx.HTTPError):
             await fetch_text("http://192.0.2.1/nonexistent", timeout=1.0)
 
     @pytest.mark.asyncio

@@ -8,7 +8,15 @@ import { ProgressMessage } from "./ProgressMessage"
 import { EnhancedProposal } from "./EnhancedProposal"
 
 export function ChatMessageList() {
-  const { activeSessionId, activeDocType, isStreaming, streamingDocType, progressPhase, progressMessage, pendingProposal } = useSessionStore()
+  const {
+    activeSessionId,
+    activeDocType,
+    isStreaming,
+    streamingDocType,
+    progressPhase,
+    progressMessage,
+    pendingProposal,
+  } = useSessionStore()
   const { data: messages } = useSessionMessages(activeSessionId!, activeDocType)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -27,9 +35,7 @@ export function ChatMessageList() {
       {showStreaming && progressPhase && (
         <ProgressMessage phase={progressPhase} text={progressMessage} />
       )}
-      {showProposal && (
-        <EnhancedProposal />
-      )}
+      {showProposal && <EnhancedProposal />}
       <div ref={bottomRef} />
     </div>
   )

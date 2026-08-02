@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { useGroupedSessions, useArchivedSessions } from "@/hooks/queries"
 import { SidebarHistoryItem } from "./SidebarHistoryItem"
 import { SidebarArchivedItem } from "./SidebarArchivedItem"
+import type { GroupedSessions } from "@/types"
 
 const GROUP_LABELS: Record<string, string> = {
   today: "Today",
@@ -12,6 +13,13 @@ const GROUP_LABELS: Record<string, string> = {
   previous_7_days: "Previous 7 Days",
   older: "Older",
 }
+
+const GROUP_KEYS: Array<keyof Omit<GroupedSessions, "archived_count">> = [
+  "today",
+  "yesterday",
+  "previous_7_days",
+  "older",
+]
 
 export function SidebarHistory({ collapsed }: { collapsed: boolean }) {
   const { data: grouped } = useGroupedSessions()
@@ -29,8 +37,8 @@ export function SidebarHistory({ collapsed }: { collapsed: boolean }) {
 
   return (
     <div className="flex-1 overflow-y-auto scrollbar-thin">
-      {Object.entries(GROUP_LABELS).map(([key, label]) => {
-        const sessions = grouped[key as keyof typeof grouped]
+      {GROUP_KEYS.map((key) => {
+        const sessions = grouped[key]
         if (!sessions || sessions.length === 0) return null
         const isCollapsed = collapsedGroups[key] ?? false
 
@@ -40,7 +48,7 @@ export function SidebarHistory({ collapsed }: { collapsed: boolean }) {
               onClick={() => toggleGroup(key)}
               className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-[#8e8e8e] hover:bg-[#212121] cursor-pointer"
             >
-              <span>{label}</span>
+              <span>{GROUP_LABELS[key]}</span>
               {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
             </button>
             {!isCollapsed && (

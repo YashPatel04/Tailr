@@ -7,7 +7,5 @@ export function renderWithProviders(ui: React.ReactElement) {
     defaultOptions: { queries: { retry: false } },
   })
 
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
-  )
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }

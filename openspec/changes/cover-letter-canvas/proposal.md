@@ -15,11 +15,13 @@ The cover letter feature exists as a dead-end: a one-shot "Generate Cover Letter
 ## Capabilities
 
 ### New Capabilities
+
 - `cover-letter-canvas`: Editable cover letter document canvas with salutation, paragraphs, and closing blocks. Supports direct inline editing and LLM-driven edits.
 - `cover-letter-chat`: Chat integration for cover letters — separate message thread per session, auto-apply LLM operations (no proposals), generation via chat command.
 - `cover-letter-operations`: Content operations for cover letter documents — update/add/delete/reorder paragraphs, update salutation/closing.
 
 ### Modified Capabilities
+
 - `chat-messaging`: Chat messages gain a `doc_type` field. Messages are partitioned by document type. `sendMessage()` passes `activeDocType`. Streaming state tracks which doc type is streaming.
 - `document-generation`: Cover letter generation endpoint enhanced with session model selection and research context injection.
 

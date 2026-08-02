@@ -1,6 +1,6 @@
 ## Why
 
-The LLM cowork feature currently operates as a single-mode edit proposer — the user sends a prompt, the LLM generates structured operations, and the user accepts or declines. This linear flow doesn't match how users actually think about resume tailoring: they want to research first, ask questions, understand the company/role, and *then* make edits. The current setup form also has 6 fields before any interaction starts, creating unnecessary friction. Major AI products (Notion, Claude Code, Cursor, ChatGPT Canvas) have converged on multi-mode delegation — separating thinking from doing — and users increasingly expect this pattern.
+The LLM cowork feature currently operates as a single-mode edit proposer — the user sends a prompt, the LLM generates structured operations, and the user accepts or declines. This linear flow doesn't match how users actually think about resume tailoring: they want to research first, ask questions, understand the company/role, and _then_ make edits. The current setup form also has 6 fields before any interaction starts, creating unnecessary friction. Major AI products (Notion, Claude Code, Cursor, ChatGPT Canvas) have converged on multi-mode delegation — separating thinking from doing — and users increasingly expect this pattern.
 
 ## What Changes
 
@@ -16,6 +16,7 @@ The LLM cowork feature currently operates as a single-mode edit proposer — the
 ## Capabilities
 
 ### New Capabilities
+
 - `plan-mode`: Conversational LLM mode for research, advice, and Q&A without edit proposals. Shares session with Edit Mode. LLM has full resume JSON access. Includes mode switch suggestions.
 - `jd-first-setup`: Redesigned session setup flow. Single JD input (text or URL), LLM-powered auto-extraction of company/role, confirmation step before session creation.
 - `collapsible-chat-rail`: Chat rail collapse/expand with 52px collapsed state, matching sidebar pattern. Canvas resizes to fill available space.
@@ -23,6 +24,7 @@ The LLM cowork feature currently operates as a single-mode edit proposer — the
 - `enhanced-proposals`: Inline proposal cards with what/why sections, operations summary, accept/decline/reply actions. Rejected proposals persist in chat history. Reply triggers revised proposal from LLM.
 
 ### Modified Capabilities
+
 - `session-management`: Session creation flow changes — auto-extracted fields, mode selection at creation, research always fires on session start regardless of mode.
 - `tailoring-modes`: Polish/refine/rewrite levels now baked into system prompt, switchable mid-chat via UI toggle with LLM system notification.
 

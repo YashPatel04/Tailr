@@ -7,12 +7,14 @@ Current mitigation (`_clamp_spans`) drops invalid spans silently, losing formatt
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Preserve bold formatting across LLM bullet edits when the bolded word still exists in the new text
 - Gracefully remove formatting when bolded words are deleted
 - Handle new bold words the LLM adds
 - Maintain backward compatibility with existing span-based operations
 
 **Non-Goals:**
+
 - Preserving formatting when the LLM rewords a bold word itself (e.g., "Engineered" → "Designed" — different word, can't preserve)
 - Supporting complex multi-format overlapping spans (bold + italic on same text)
 - Changing the Span data model or Bullet validation
@@ -33,7 +35,7 @@ Add `bold_added: list[str]` and `bold_removed: list[str]` to `update_bullet` and
 Phase 1: Remove spans matching bold_removed words
   - Find each word in OLD text, identify its span, remove it
 
-Phase 2: Add spans for bold_added words  
+Phase 2: Add spans for bold_added words
   - Find each word in NEW text, create new span
 
 Phase 3: Remap remaining spans (unchanged bold that shifted)

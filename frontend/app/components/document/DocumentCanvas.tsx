@@ -10,10 +10,8 @@ import { apiRequest } from "@/lib/api"
 import { computeFieldDiffs } from "@/lib/fieldDiff"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
-import { DocumentEmptyState } from "./DocumentEmptyState"
 import { DocumentTopBar } from "./DocumentTopBar"
 
-import { SectionRenderer } from "./SectionRenderer"
 import { SortableSection } from "./SortableSection"
 import { ResumeHeader } from "./ResumeHeader"
 import { DiffProvider } from "@/components/diff/DiffContext"
@@ -23,7 +21,7 @@ import { InlineFormatToolbar } from "./InlineFormatToolbar"
 import { CoverLetterCanvas } from "./CoverLetterCanvas"
 
 export function DocumentCanvas() {
-  const { activeSessionId, activeDocType, viewMode, snapshot, setSnapshot } = useSessionStore()
+  const { activeSessionId, activeDocType, viewMode } = useSessionStore()
   const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
   const { data: session } = useSession(activeSessionId!)
   const { data: master } = useMasterResume()
@@ -144,7 +142,6 @@ export function DocumentCanvas() {
     }
   }
 
-  const documentModel = doc?.documentModel
   const coverLetterContent = session?.cover_letter_document?.content
   const isCoverLetterView = activeDocType === "cover_letter"
 
@@ -165,10 +162,7 @@ export function DocumentCanvas() {
       </>
     )
 
-  const renderLegacyChildren = () =>
-    documentModel?.children?.map((child: any) => <SectionRenderer key={child.id} node={child} />)
-
-  const hasContent = isCoverLetterView ? true : content ? (content.sections?.length ?? 0) > 0 : documentModel && documentModel.children
+  const hasContent = isCoverLetterView ? true : (content?.sections?.length ?? 0) > 0
 
   let innerContent: React.ReactNode
 
@@ -179,12 +173,10 @@ export function DocumentCanvas() {
       viewMode === "changes" ? (
         <DiffProvider changes={changes}>
           <DiffOverlay changeCount={changes.size} />
-          {content ? renderNewChildren() : renderLegacyChildren()}
+          {renderNewChildren()}
         </DiffProvider>
-      ) : content ? (
-        renderNewChildren()
       ) : (
-        renderLegacyChildren()
+        renderNewChildren()
       )
     ) : (
       <p className="text-[#5f6368] dark:text-[#9aa0a6] text-center mt-16 text-sm">
@@ -200,7 +192,9 @@ export function DocumentCanvas() {
         <div className="py-10 px-8 group/page">
           <DocumentTopBar changeCount={changes.size} />
           <div className="relative mt-10 overflow-hidden">{innerContent}</div>
-          {!isCoverLetterView && hasContent && viewMode !== "changes" && <BottomInsert onInsert={handleBottomInsert} />}
+          {!isCoverLetterView && hasContent && viewMode !== "changes" && (
+            <BottomInsert onInsert={handleBottomInsert} />
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,15 @@
 # Tailr
 
-A precision editing tool that tailors your LaTeX resume to specific job descriptions using LLMs. Think of it as a copyeditor's desk — it preserves your exact formatting while letting AI make targeted edits you can review and approve.
+A precision editing tool that tailors your resume to specific job descriptions using LLMs. Think of it as a copyeditor's desk — it preserves your exact formatting while making targeted, reviewable edits.
+
+## How it works
+
+1. **Upload a master resume** — a `.tex` file is parsed (LLM-assisted) into a typed JSON content model: sections, entries, bullets, skill rows, and inline formatting spans (bold, italic, underline, code).
+2. **Add an LLM provider** — OpenAI, Anthropic, Ollama, or any OpenAI-compatible custom endpoint.
+3. **Start a session** — give the company and role, paste a job description. The LLM researches the company (keyword-based web search) and proposes targeted edits.
+4. **Review changes** — proposals arrive as structured content operations. Changes are shown as proofreading marks (green additions, red removals) on the rendered document.
+5. **Chat to refine** — iterate on the proposal with follow-up messages, or accept/decline.
+6. **Export** — download the resume as `.tex`, `.pdf`, `.docx`, or `.txt`, plus a cover letter (`.pdf`/`.docx`).
 
 ## Prerequisites
 
@@ -16,15 +25,11 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
 ```
 
-Then generate a secure secret key for `backend/.env`:
+Set a secure `SECRET_KEY` in `backend/.env` (at least 32 characters — the backend refuses to start otherwise):
 
 ```bash
-# Linux/macOS
-openssl rand -hex 32 | sed 's/.*/SECRET_KEY=&/' | sed -i '' 's/SECRET_KEY=.*/SECRET_KEY=&/' backend/.env 2>/dev/null || \
-  echo "SECRET_KEY=$(openssl rand -hex 32)" | tee -a backend/.env
+openssl rand -hex 32
 ```
-
-Or manually set `SECRET_KEY` to a random string at least 32 characters long.
 
 ### 2. Start all services
 
@@ -32,16 +37,15 @@ Or manually set `SECRET_KEY` to a random string at least 32 characters long.
 docker compose up --build
 ```
 
-This launches 6 services:
+This launches 5 services:
 
-| Service    | URL                     | Purpose                          |
-| ---------- | ----------------------- | -------------------------------- |
-| Frontend   | http://localhost:3000   | Next.js app                      |
-| Backend    | http://localhost:8000   | FastAPI REST API                 |
-| PostgreSQL | localhost:5432          | Persistent storage               |
-| Redis      | localhost:6379          | Rate limiting cache              |
-| LaTeX      | (internal)              | texlive-full compilation         |
-| MailHog    | http://localhost:8025   | Dev email capture (SMTP: 1025)   |
+| Service    | URL                   | Purpose                      |
+| ---------- | --------------------- | ---------------------------- |
+| Frontend   | http://localhost:3000 | Next.js app                  |
+| Backend    | http://localhost:8000 | FastAPI REST API + SSE chat  |
+| PostgreSQL | localhost:5432        | Persistent storage           |
+| Redis      | localhost:6379        | LLM model-list cache         |
+| LaTeX      | (internal)            | texlive-full PDF compilation |
 
 ### 3. Run database migrations
 
@@ -49,18 +53,16 @@ This launches 6 services:
 docker compose exec backend alembic upgrade head
 ```
 
-### 4. Open the app
+### 4. Sign in
 
-Visit **http://localhost:3000**, register an account, and check http://localhost:8025 to verify your email (MailHog captures all dev emails).
+Visit **http://localhost:3000** and sign in with GitHub or Google (the only supported auth — there is no email/password registration).
 
 ## Usage
 
-1. **Upload your master resume** — Settings > Master Resume. Supports `.tex`, `.docx`, and `.txt`.
-2. **Add an LLM provider** — Settings > Providers. Supports OpenAI, Anthropic, Ollama, and OpenAI-compatible custom endpoints.
-3. **Start a session** — Click "New Chat" in the sidebar, enter company name, role, and paste a job description.
-4. **Review changes** — The LLM returns a structured diff shown with proofreading marks (green for additions, red for deletions) on the rendered document.
-5. **Chat to refine** — Send follow-up messages in the chat rail to iterate on the changes.
-6. **Export** — Download as `.tex`, `.pdf`, `.docx`, or `.txt`.
+1. **Set up your master resume** — click the Settings icon, then **Master Resume** to upload a `.tex` file, or **Providers** to add an LLM provider (OpenAI, Anthropic, Ollama, or custom).
+2. **Start a session** — click **New Chat**, enter the company name, role, and paste a job description.
+3. **Review changes** — the LLM returns a proposal shown as proofreading marks on the rendered document. Accept, decline, or send feedback to refine.
+4. **Export** — download as `.tex`, `.pdf`, `.docx`, or `.txt`, and optionally a cover letter.
 
 ## Development
 
@@ -73,7 +75,7 @@ poetry run uvicorn app.main:app --reload --port 8000
 ```
 
 - **Lint:** `poetry run ruff check . && poetry run ruff format --check .`
-- **Test:** `poetry run pytest`
+- **Test:** `poetry run pytest` (requires a local `resume_builder_test` PostgreSQL database)
 
 ### Frontend (Next.js/TypeScript)
 
@@ -84,7 +86,7 @@ npm run dev             # Start dev server on port 3000
 ```
 
 - **Lint:** `npm run lint && npx prettier --check .`
-- **Test:** `npm test`
+- **Test:** `npm test` (Vitest + MSW, no external services)
 
 ### Pre-commit hooks
 
@@ -106,13 +108,13 @@ Runs ruff (Python), ESLint, and Prettier on every commit.
               │                 │                 │
          ┌────▼────┐     ┌─────▼──────┐    ┌─────▼─────┐
          │ Sidebar │     │  Document  │    │ Chat Rail │
-         │ (260px) │     │   Canvas   │    │  (320px)  │
-         └─────────┘     └─────┬──────┘    └─────┬─────┘
+         └─────────┘     │   Canvas   │    └─────┬─────┘
+                         └─────┬──────┘          │  SSE
                                │                 │
                         ┌──────▼─────────────────▼──────┐
                         │         FastAPI Backend        │
-                        │   Auth │ Sessions │ Parsing    │
-                        │   LLM  │ Research │ Compile   │
+                        │  Auth │ Sessions │ Content ops │
+                        │  LLM  │ Research │ Import/Export│
                         └──────┬───────────┬────────────┘
                                │           │
                     ┌──────────▼──┐  ┌─────▼──────┐
@@ -127,32 +129,31 @@ Runs ruff (Python), ESLint, and Prettier on every commit.
 
 ### Document Pipeline
 
-1. **Parse** — `.tex`, `.docx`, or `.txt` → tree-sitter token tree
-2. **Extract** — Token tree → structured document model (sections, entries, bullets)
-3. **Edit** — LLM returns JSON patch → validated → applied to document model
-4. **Serialize** — Edited model → idiomatic `.tex` (using learned vocabulary map)
-5. **Export** — `.tex` → compiled PDF, or serialized to `.docx`/`.txt`
+1. **Import** — a `.tex` master resume is converted to a typed JSON content model (LLM-assisted extraction with self-correction retries).
+2. **Edit** — the LLM returns structured content operations (add/update/delete bullets, entries, sections, skill rows); validated and applied server-side as a new document version.
+3. **Review** — the frontend computes field-level diffs against the master resume and shows them as proofreading marks.
+4. **Render** — the JSON model renders to the canvas and exports to `.tex`, `.pdf`, `.docx`, or `.txt`.
 
 ### Key Design Decisions
 
-- **Syntactic token tree**, not semantic AST — handles exotic user templates
-- **JSON patch protocol** — LLMs edit structured document model, not raw `.tex`
-- **Interactive section diff** — proofreading marks in rendered view, not PDF comparison
-- **SSE progress pipeline** — Researching → Thinking → Writing → Done
-- **Master resume push-back is opt-in** — apply individual changes back, not the whole session
+- **Typed JSON content model** — LLMs edit structured data with inline formatting spans, not raw LaTeX.
+- **Content operations protocol** — 24 typed ops; the user's own edits are batched, debounced, and undoable.
+- **Client-side field diff** — changes are computed against the master resume in the browser, not sent from the server.
+- **SSE chat pipeline** — Researching → Thinking → Writing → Proposal events streamed over a single `fetch` stream.
+- **Keyword-based company research** — lightweight web search with value/signal keyword matching, no LLM call.
+- **OAuth-only auth** — GitHub/Google sign-in with rotating JWT cookies and double-submit CSRF.
 
 ## Tech Stack
 
-| Layer      | Technology                                         |
-| ---------- | -------------------------------------------------- |
-| Backend    | Python 3.11, FastAPI, SQLAlchemy (async), Alembic  |
-| Frontend   | Next.js 15, React 19, TypeScript, Tailwind CSS      |
-| Database   | PostgreSQL 16                                       |
-| Cache      | Redis 7                                            |
-| Parsing    | tree-sitter-latex                                   |
-| Auth       | JWT (httpOnly cookies), bcrypt, CSRF                |
-| LLM        | OpenAI, Anthropic, Ollama + custom adapters         |
-| Compile    | Dockerized texlive-full + latexmk                   |
-| Email dev  | MailHog                                            |
-| Linting    | ruff (Python), ESLint + Prettier (TypeScript)       |
-| Testing    | pytest + pytest-asyncio (backend), Vitest + MSW (frontend) |
+| Layer    | Technology                                                              |
+| -------- | ----------------------------------------------------------------------- |
+| Backend  | Python 3.11, FastAPI, SQLAlchemy (async/asyncpg), Alembic               |
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS, TanStack Query, Zustand |
+| Database | PostgreSQL 16                                                           |
+| Cache    | Redis 7                                                                 |
+| Auth     | OAuth (GitHub/Google), JWT httpOnly cookies, CSRF                       |
+| LLM      | OpenAI, Anthropic, Ollama + OpenAI-compatible custom adapters           |
+| Compile  | Dockerized texlive-full + latexmk                                       |
+| Export   | python-docx, jinja2 (tex/txt), pypdf                                    |
+| Linting  | ruff (Python), ESLint + Prettier (TypeScript)                           |
+| Testing  | pytest + pytest-asyncio (backend), Vitest + MSW (frontend)              |

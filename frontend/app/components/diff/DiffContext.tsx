@@ -41,9 +41,5 @@ export function DiffProvider({
 }) {
   const getFieldChange = (key: string) => changes.get(key)
 
-  return (
-    <DiffContext.Provider value={{ changes, getFieldChange }}>
-      {children}
-    </DiffContext.Provider>
-  )
+  return <DiffContext.Provider value={{ changes, getFieldChange }}>{children}</DiffContext.Provider>
 }

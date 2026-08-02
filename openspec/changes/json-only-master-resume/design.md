@@ -3,6 +3,7 @@
 The resume builder stores resumes in two formats: raw LaTeX (`tex_source`) and structured JSON (`content_json`). The JSON is the canonical format used by the LLM tailoring engine, content operations, and all export paths. However, the system also stores LaTeX alongside it and re-parses it from LaTeX on every session creation — even though the JSON already exists on the master resume.
 
 The system has three ORM models that store resume data:
+
 - `MasterResume` — user's uploaded resume (has both `tex_source` and `content_json`)
 - `SessionDocument` — versioned snapshots per tailoring session (has both `tex_source` and `content_json`)
 - Legacy `document_model_json` on `SessionDocument` — a DocNode tree that is written but never read
@@ -12,6 +13,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 ## Goals / Non-Goals
 
 **Goals:**
+
 - JSON is the only stored resume format
 - LaTeX generated on-demand at export time, never stored
 - Session creation copies master JSON directly — no LLM call
@@ -19,6 +21,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 - Frontend renders `content_json` natively for preview
 
 **Non-Goals:**
+
 - Changing the LLM tailoring prompt or operation system
 - Modifying the content operations engine (`content_ops.py`)
 - Adding new export formats
@@ -32,6 +35,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** Drop both columns.
 
 **Alternatives considered:**
+
 - Keep `SessionDocument.tex_source` as a render cache — rejected because the render is fast (no LLM) and removing it simplifies the schema.
 - Keep `MasterResume.tex_source` for re-import — rejected because the user wants one-way conversion: LaTeX → JSON at upload, never back.
 
@@ -42,6 +46,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** Drop the column.
 
 **Alternatives considered:**
+
 - Keep for backward compatibility — rejected because no code reads it. It's dead weight from the legacy DocNode system.
 
 **Rationale:** The `document_model_json` is a remnant of the old region-based document model. The current system uses `content_json` exclusively. Removing it eliminates confusion.
@@ -51,6 +56,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** `renderer.render_tex(content)` produces LaTeX, which is passed to `build_cover_letter_prompt()`.
 
 **Alternatives considered:**
+
 - Send structured JSON directly to the LLM — would require rewriting `COVER_LETTER_SYSTEM_PROMPT` and the prompt template. Higher risk for no clear benefit.
 
 **Rationale:** The cover letter prompt is tuned for LaTeX input. Rendering from JSON is a single function call (fast, no LLM cost). Preserves existing behavior.
@@ -60,6 +66,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** Build a structured display component that reads `content_json` and renders name, sections, entries, bullets, skill rows.
 
 **Alternatives considered:**
+
 - Backend renders HTML via `render_html()` and sends to frontend — adds a network round-trip and backend dependency for a UI feature.
 - Show raw JSON dump — poor UX.
 
@@ -70,6 +77,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** Drop all tables except `users`, `llm_providers`, `refresh_tokens`, `email_verifications`, `password_resets`. Re-run migrations from scratch.
 
 **Alternatives considered:**
+
 - Lazy backfill (convert on first access) — rejected because user confirmed no existing users to preserve.
 - Eager migration (batch convert all masters) — unnecessary with no existing data.
 
@@ -80,6 +88,7 @@ This change eliminates all stored LaTeX, making JSON the single source of truth.
 **Choice:** `MasterResume.content_json` and `SessionDocument.content_json` are `JSONB NOT NULL`.
 
 **Alternatives considered:**
+
 - Keep nullable with fallbacks — adds conditional logic everywhere. Unnecessary since every document must have content.
 
 **Rationale:** Every session document must have structured content. NULL would mean broken state.

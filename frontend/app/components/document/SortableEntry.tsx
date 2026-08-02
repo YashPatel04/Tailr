@@ -42,7 +42,12 @@ export function SortableEntry({
           </button>
         )}
         <div className="flex-1">
-          <EntryRenderer entry={entry} sectionId={sectionId} sectionLabel={sectionLabel} entryIndex={entryIndex} />
+          <EntryRenderer
+            entry={entry}
+            sectionId={sectionId}
+            sectionLabel={sectionLabel}
+            entryIndex={entryIndex}
+          />
         </div>
       </div>
     </div>

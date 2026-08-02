@@ -11,7 +11,9 @@ export function ChatRailEmptyState() {
       <FileText size={40} className="text-[#e5e5e5] dark:text-[#4d4d4d]" />
       <div>
         <p className="text-lg font-semibold text-ink dark:text-[#ececec]">No changes yet</p>
-        <p className="mt-1 text-sm text-slate dark:text-[#8e8e8e]">Paste a job description to begin tailoring.</p>
+        <p className="mt-1 text-sm text-slate dark:text-[#8e8e8e]">
+          Paste a job description to begin tailoring.
+        </p>
       </div>
       <button
         onClick={() => setSetupOpen(true)}

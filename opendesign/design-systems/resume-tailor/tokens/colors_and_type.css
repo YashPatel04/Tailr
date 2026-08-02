@@ -3,33 +3,37 @@
 
 :root {
   /* — Raw palette — */
-  --raw-paper:      #ffffff;
-  --raw-ink:        #0d0d0d;
-  --raw-slate:      #6b6e7b;
-  --raw-accent:     #10a37f;
+  --raw-paper: #ffffff;
+  --raw-ink: #0d0d0d;
+  --raw-slate: #6b6e7b;
+  --raw-accent: #10a37f;
   --raw-accent-hover: #0d8c6d;
-  --raw-sidebar:    #171717;
+  --raw-sidebar: #171717;
   --raw-sidebar-hover: #212121;
   --raw-sidebar-active: #2b2b2b;
   --raw-sidebar-text: #ececec;
   --raw-sidebar-muted: #8e8e8e;
   --raw-message-assistant: #f7f7f8;
   --raw-message-user: #f4f4f4;
-  --raw-border:     #e5e5e5;
-  --raw-danger:     #ef4444;
+  --raw-border: #e5e5e5;
+  --raw-danger: #ef4444;
 
   /* — Typography families (system font stack) — */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Liberation Mono", monospace;
+  --font-mono:
+    ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "Liberation Mono",
+    monospace;
 
   /* — Type scale — */
   --text-2xl: 1.5rem;
-  --text-xl:  1.25rem;
-  --text-lg:  1.125rem;
+  --text-xl: 1.25rem;
+  --text-lg: 1.125rem;
   --text-base: 1rem;
-  --text-sm:  0.875rem;
-  --text-xs:  0.75rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
 
   --font-normal: 400;
   --font-medium: 500;
@@ -37,24 +41,24 @@
   --font-bold: 700;
 
   /* — Semantic fg — */
-  --fg-primary:   var(--raw-ink);
+  --fg-primary: var(--raw-ink);
   --fg-secondary: var(--raw-slate);
-  --fg-accent:    var(--raw-accent);
-  --fg-inverse:   var(--raw-paper);
-  --fg-sidebar:   var(--raw-sidebar-text);
+  --fg-accent: var(--raw-accent);
+  --fg-inverse: var(--raw-paper);
+  --fg-sidebar: var(--raw-sidebar-text);
   --fg-sidebar-muted: var(--raw-sidebar-muted);
-  --fg-danger:    var(--raw-danger);
+  --fg-danger: var(--raw-danger);
 
   /* — Semantic bg — */
-  --bg-primary:   var(--raw-paper);
+  --bg-primary: var(--raw-paper);
   --bg-secondary: var(--raw-message-assistant);
-  --bg-tertiary:  var(--raw-message-user);
-  --bg-accent:    var(--raw-accent);
+  --bg-tertiary: var(--raw-message-user);
+  --bg-accent: var(--raw-accent);
   --bg-accent-hover: var(--raw-accent-hover);
-  --bg-sidebar:   var(--raw-sidebar);
+  --bg-sidebar: var(--raw-sidebar);
   --bg-sidebar-hover: var(--raw-sidebar-hover);
   --bg-sidebar-active: var(--raw-sidebar-active);
-  --bg-overlay:   rgba(0, 0, 0, 0.5);
+  --bg-overlay: rgba(0, 0, 0, 0.5);
 
   /* — Borders — */
   --border-subtle: var(--raw-border);
@@ -68,9 +72,9 @@
   --radius-2xl: 1.5rem;
 
   /* — Shadows — */
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
 
   /* — Spacing — */
   --space-px: 1px;
@@ -91,16 +95,16 @@
 
 /* Dark-mode tokens */
 .dark {
-  --fg-primary:   #ececec;
+  --fg-primary: #ececec;
   --fg-secondary: #8e8e8e;
-  --fg-inverse:   #0d0d0d;
+  --fg-inverse: #0d0d0d;
 
-  --bg-primary:   #343541;
+  --bg-primary: #343541;
   --bg-secondary: #40414f;
-  --bg-tertiary:  #2b2c36;
+  --bg-tertiary: #2b2c36;
 
-  --raw-border:   rgba(142, 142, 142, 0.2);
+  --raw-border: rgba(142, 142, 142, 0.2);
   --border-subtle: rgba(142, 142, 142, 0.2);
 
-  --bg-overlay:   rgba(0, 0, 0, 0.6);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
 }

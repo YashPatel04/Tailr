@@ -5,6 +5,7 @@ This is a greenfield application. No existing codebase to integrate with. The sy
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Parse `.tex` files into a lossless syntactic token tree that survives round-trip serialization
 - Extract a structured document model from the token tree that LLMs can safely edit
 - Define a JSON patch protocol for LLM-driven document mutations with server-side validation
@@ -15,6 +16,7 @@ This is a greenfield application. No existing codebase to integrate with. The sy
 - Provide email + OAuth authentication with JWT in httpOnly cookies and standard security middleware
 
 **Non-Goals:**
+
 - Real-time collaboration between multiple users
 - WYSIWYG document editing (the LLM is the editor; the user gives instructions)
 - TOTP two-factor authentication (deferred)
@@ -32,6 +34,7 @@ A **document model extractor** layer sits on top, mapping known resume commands 
 A **template vocabulary map** records which commands the user's template uses for each semantic type (`\cvsection`, not `\section`). When the LLM adds new content, the serializer uses this map to produce idiomatic `.tex` matching the user's template.
 
 **Alternatives considered:**
+
 - **Raw .tex throughout**: LLMs break LaTeX syntax; text-based diffs are noisy.
 - **Intermediate format (markdown/JSON)**: Round-tripping back to the user's original `.tex` template is lossy.
 
@@ -42,6 +45,7 @@ The LLM receives the structured document model (not raw .tex) and returns a JSON
 Server-side validation before applying: ID existence, no cycle creation on moves, no deletion of required metadata, format types must exist in vocabulary map, text length limits.
 
 **Alternatives considered:**
+
 - **Full text regeneration**: Cannot compute precise diffs; loses edit history.
 - **Structured XML patches**: More verbose than JSON; LLMs handle JSON well.
 
@@ -52,6 +56,7 @@ The backend streams progress events via Server-Sent Events: `researching` → `r
 The frontend chat rail subscribes to the SSE stream for the active session. The document canvas also listens and updates incrementally as `writing` events stream partial patches.
 
 **Alternatives considered:**
+
 - **Polling**: Unnecessary latency; worse UX.
 - **WebSocket**: Overkill for unidirectional server→client streaming; SSE is simpler.
 
@@ -62,6 +67,7 @@ A separate Docker container running `texlive-full` + `latexmk`, kept alive with 
 This avoids installing texlive on the host and guarantees reproducible compilations. The container is built once as part of `docker compose build`.
 
 **Alternatives considered:**
+
 - **tectonic**: Limited engine support (no XeLaTeX, limited fontspec). Cannot handle exotic preambles. Dropped.
 - **Hosted compilation API**: Adds cost and network dependency. Rejected per zero-paid-services constraint.
 
@@ -72,6 +78,7 @@ Instead of rendering diffed PDFs (computationally expensive, poor UX), the front
 This saves compute (no per-change compilation), gives users an interactive editing surface, and keeps the raw `.tex` accessible via a toggle.
 
 **Alternatives considered:**
+
 - **PDF diff with pixel-level comparison**: Expensive, ugly output, not interactive.
 - **Plain text diff**: Loses formatting context entirely.
 
@@ -80,6 +87,7 @@ This saves compute (no per-change compilation), gives users an interactive editi
 All UI icons use a free icon pack (Lucide / Tabler Icons / Phosphor Icons) rendered as inline SVGs. No emojis in the product chrome. Icons serve functional roles: sidebar toggle, search, new chat, export, settings, profile.
 
 **Alternatives considered:**
+
 - **Emojis**: Look unprofessional in a precision tool; inconsistent cross-platform rendering.
 - **Custom icon design**: Unnecessary upfront cost; free packs are mature and extensive.
 
@@ -90,6 +98,7 @@ Three zones: **Sidebar** (logo, search toggle, collapse icon, New Chat, Projects
 The document canvas is the star. The chat rail is the assistant beside it, not the other way around.
 
 **Alternatives considered:**
+
 - **Chat-dominant layout**: Subordinates the document, which is the product's primary artifact.
 - **Chat rail on the left**: Feels like a chatbot with a document preview; the design brief explicitly wants document-first.
 

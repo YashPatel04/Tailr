@@ -61,9 +61,9 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=401, detail="No refresh token")
 
     try:
-        payload = decode_refresh_token(cookie_token)
+        decode_refresh_token(cookie_token)
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        raise HTTPException(status_code=401, detail="Invalid refresh token") from None
 
     token_hash = hash_token(cookie_token)
     result = await db.execute(
@@ -81,7 +81,8 @@ async def refresh(request: Request, db: AsyncSession = Depends(get_db)):
             (
                 await db.execute(
                     select(RefreshToken).where(
-                        RefreshToken.user_id == token_row.user_id, RefreshToken.revoked == False
+                        RefreshToken.user_id == token_row.user_id,
+                        RefreshToken.revoked.is_(False),
                     )
                 )
             )

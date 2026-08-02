@@ -13,6 +13,7 @@ When the LLM edits a bullet via `update_bullet`, it sends span metadata (bold/it
 ## Capabilities
 
 ### New Capabilities
+
 - `bold-span-remap`: Logic to declaratively remap bold formatting across bullet text edits using `bold_added`/`bold_removed` declarations plus positional fallback for shifted spans
 
 ### Modified Capabilities

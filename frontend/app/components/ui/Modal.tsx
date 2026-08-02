@@ -1,6 +1,5 @@
 "use client"
 
-import { clsx } from "clsx"
 import { X } from "lucide-react"
 
 interface ModalProps {
@@ -19,7 +18,10 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       <div className="relative w-full max-w-md rounded-2xl bg-paper p-6 shadow-2xl border border-muted">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-ink">{title}</h2>
-          <button onClick={onClose} className="p-1 rounded-md hover:bg-[#f4f4f4] dark:hover:bg-[#40414f] text-slate dark:text-[#8e8e8e]">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md hover:bg-[#f4f4f4] dark:hover:bg-[#40414f] text-slate dark:text-[#8e8e8e]"
+          >
             <X size={18} />
           </button>
         </div>

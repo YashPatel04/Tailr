@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Folder, ChevronDown, ChevronRight } from "lucide-react"
 import Link from "next/link"
 import { useCompanies } from "@/hooks/queries"
-import { clsx } from "clsx"
 
 export function SidebarProjects({ collapsed }: { collapsed: boolean }) {
   const { data: companies } = useCompanies()

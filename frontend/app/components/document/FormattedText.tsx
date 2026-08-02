@@ -33,10 +33,15 @@ export function FormattedText({ text, spans }: FormattedTextProps) {
         if (part.formats.includes("bold")) classes.push("font-bold")
         if (part.formats.includes("italic")) classes.push("italic")
         if (part.formats.includes("underline")) classes.push("underline")
-        if (part.formats.includes("code")) classes.push("font-mono text-sm bg-slate/10 px-1 rounded")
+        if (part.formats.includes("code"))
+          classes.push("font-mono text-sm bg-slate/10 px-1 rounded")
 
         if (classes.length === 0) return <span key={i}>{part.text}</span>
-        return <span key={i} className={classes.join(" ")}>{part.text}</span>
+        return (
+          <span key={i} className={classes.join(" ")}>
+            {part.text}
+          </span>
+        )
       })}
     </>
   )

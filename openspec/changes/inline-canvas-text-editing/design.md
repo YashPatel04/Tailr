@@ -12,6 +12,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Clicking any editable text on the canvas immediately places a caret in the same element.
 - Editing happens directly on the canvas without a popup, modal, or separate text box.
 - Text remains visually identical (WYSIWYG) and in the same position while editing.
@@ -22,6 +23,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 - Align selection/hover accents with the existing `brass` color token.
 
 **Non-Goals:**
+
 - No backend API or data model changes.
 - No new document formats (e.g., Markdown, HTML export).
 - No cover-letter editing changes.
@@ -38,6 +40,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 **Rationale:** This is the only way to keep the text at exactly the same screen position and typography. It also gives us native caret behavior, selection, and clipboard handling for free.
 
 **Alternatives considered:**
+
 - Absolutely position a floating input over the text — rejected because it would still feel like a separate box and requires perfect font/line-height matching.
 - Use a headless editor like Tiptap/ProseMirror — kept in mind for a future iteration, but overkill for this change and adds a dependency.
 
@@ -52,6 +55,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 **Rationale:** Separating selection from editing prevents accidental typing when the user only wants to select an element, and gives the toolbar a clear lifecycle.
 
 **Alternatives considered:**
+
 - Single-click directly into editing — rejected because it would make selecting a field for drag/reorder harder.
 
 ### Central editing state in `sessionStore`
@@ -61,6 +65,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 **Rationale:** Drag wrappers (`SortableSection`, `SortableEntry`, `SortableBullet`, `SortableSkillRow`) and the toolbar need to know whether any field is currently editing. A global store avoids prop drilling through many layers.
 
 **Shape:**
+
 ```ts
 {
   editingFieldId: string | null
@@ -77,6 +82,7 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 **Implementation note:** A helper will walk the text nodes of the editable element and map the DOM `Range` to character offsets, then push the updated `Span[]` to the parent `onSave` callback.
 
 **Alternatives considered:**
+
 - `document.execCommand` for formatting — rejected because it produces unreliable HTML and makes it hard to keep the `Span` model in sync.
 
 ### Floating toolbar anchored to the active field
@@ -103,14 +109,14 @@ The new design (in `opendesign/mockups/inline-editing/`) replaces the swap patte
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| `contentEditable` behaves differently across browsers (especially selection and paste). | Test in the project's Vitest + jsdom suite; add one manual cross-browser check before release. |
-| Converting DOM selection to span offsets is error-prone with nested formatting tags. | Use a small, well-tested helper that flattens text nodes; normalize the DOM after each edit. |
-| Pasting HTML can introduce unexpected tags. | Strip pasted content to plain text, then re-apply spans from the current model. |
-| Global editing state makes it harder to compose fields. | Keep the store value minimal (`string | null`) and clear it on any `blur`/Escape/document click. |
-| Existing `formatTarget.ts` assumes a `textarea` selection. | Replace with a new API that accepts `Range` or offset pairs. |
-| Users may confuse field selection with text selection. | Visual states (brass outline, dark toolbar) and the second-click-to-edit rule make the distinction clear. |
+| Risk                                                                                    | Mitigation                                                                                                |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `contentEditable` behaves differently across browsers (especially selection and paste). | Test in the project's Vitest + jsdom suite; add one manual cross-browser check before release.            |
+| Converting DOM selection to span offsets is error-prone with nested formatting tags.    | Use a small, well-tested helper that flattens text nodes; normalize the DOM after each edit.              |
+| Pasting HTML can introduce unexpected tags.                                             | Strip pasted content to plain text, then re-apply spans from the current model.                           |
+| Global editing state makes it harder to compose fields.                                 | Keep the store value minimal (`string                                                                     | null`) and clear it on any `blur`/Escape/document click. |
+| Existing `formatTarget.ts` assumes a `textarea` selection.                              | Replace with a new API that accepts `Range` or offset pairs.                                              |
+| Users may confuse field selection with text selection.                                  | Visual states (brass outline, dark toolbar) and the second-click-to-edit rule make the distinction clear. |
 
 ## Migration Plan
 

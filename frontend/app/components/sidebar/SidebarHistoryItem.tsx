@@ -40,7 +40,7 @@ export function SidebarHistoryItem({ session }: SidebarHistoryItemProps) {
     queryClient.invalidateQueries({ queryKey: ["sessions", "archived"] })
     queryClient.invalidateQueries({ queryKey: ["companies"] })
     if (isActive) {
-      router.push("/")
+      router.push("/dashboard")
     }
   }
 

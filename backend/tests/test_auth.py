@@ -58,6 +58,7 @@ async def test_refresh_token_reuse_revokes_all(client: AsyncClient, db_session):
     resp1 = await client.post("/api/auth/refresh")
     assert resp1.status_code == 200
 
+    client.cookies.clear()
     client.cookies.set("refresh_token", refresh_str)
     resp2 = await client.post("/api/auth/refresh")
     assert resp2.status_code == 401

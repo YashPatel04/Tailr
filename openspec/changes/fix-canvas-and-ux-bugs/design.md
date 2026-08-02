@@ -7,6 +7,7 @@ Additionally, the DOCX/TXT exporters never implemented proper tree-walking — t
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Fix the tailor-to-storage pipeline so all stored document models are valid v2 Region trees with populated entry fields
 - Fix the DOCX and TXT exporters to emit formatted content from the document model tree
 - Fix the duplicate auto-tailor submission
@@ -15,6 +16,7 @@ Additionally, the DOCX/TXT exporters never implemented proper tree-walking — t
 - Fix the empty state message when a master resume exists
 
 **Non-Goals:**
+
 - Rewriting the tailor's LLM prompt to use typed ops (that's the full `llm-integration` spec, out of scope here)
 - Full manual editing UI (that's the `manual-editing` spec)
 - Migrating existing sessions to v2 (they get re-parsed lazily on next access)
@@ -27,8 +29,9 @@ Additionally, the DOCX/TXT exporters never implemented proper tree-walking — t
 **Chosen:** After the old applier produces `new_tex`, call `parse_resume(new_tex)` to produce a fresh v2 Region tree, then serialize that tree's `.model_dump()` as `document_model_json`.
 
 **Alternatives considered:**
-- *Port the tailor to use applier_v2.* Would require updating the LLM prompt to emit typed ops, updating `extract_patch`, and porting the old `PatchApplier`/`PatchValidator` paths. High risk, large scope — belongs in the full `llm-integration` spec.
-- *Fix `doc_node_from_dict` to preserve fields.* The old DocNode model fundamentally has no `fields` attribute — it stores `title`/`dates`/`text` on the node itself. Adding a parallel field store would be fragile and would still lose data when the old serializer runs.
+
+- _Port the tailor to use applier_v2._ Would require updating the LLM prompt to emit typed ops, updating `extract_patch`, and porting the old `PatchApplier`/`PatchValidator` paths. High risk, large scope — belongs in the full `llm-integration` spec.
+- _Fix `doc_node_from_dict` to preserve fields._ The old DocNode model fundamentally has no `fields` attribute — it stores `title`/`dates`/`text` on the node itself. Adding a parallel field store would be fragile and would still lose data when the old serializer runs.
 
 Re-parsing costs ~10ms per tailor call. The trade-off is negligible.
 
@@ -37,24 +40,27 @@ Re-parsing costs ~10ms per tailor call. The trade-off is negligible.
 **Chosen:** Read `doc.document_model_json`, traverse the tree, and emit formatted content per node type.
 
 **Alternatives considered:**
-- *Stripping LaTeX commands with regex.* Fragile, template-dependent, misses nested braces.
-- *Using a third-party LaTeX-to-text converter.* Adds a dependency for a solved problem — the document model already has extracted text.
+
+- _Stripping LaTeX commands with regex._ Fragile, template-dependent, misses nested braces.
+- _Using a third-party LaTeX-to-text converter._ Adds a dependency for a solved problem — the document model already has extracted text.
 
 ### D3: Diff view: store diff in sessionStore, conditionally render
 
 **Chosen:** The SSE `done` event already carries a `diff` payload. Store it in `useSessionStore` as `latestDiff`. In `DocumentCanvas`, when `viewMode === "diff"` and `latestDiff` exists, wrap the tree in `<DiffView>` with the diff context. Each renderer calls `useDiff(nodeId)` to determine styling.
 
 **Alternatives considered:**
-- *Compute diff on the frontend from two versions.* Requires fetching both versions, adds latency, duplicates backend logic.
-- *Remove the diff view entirely.* The toggle exists in the toolbar so it's intended to work.
+
+- _Compute diff on the frontend from two versions._ Requires fetching both versions, adds latency, duplicates backend logic.
+- _Remove the diff view entirely._ The toggle exists in the toolbar so it's intended to work.
 
 ### D4: Auto-tailor: fire directly, not via effect
 
 **Chosen:** Remove the `useEffect` in `ChatRail.tsx`. `SessionSetupForm.handleSubmit` calls `sendMessage(prompt)` directly after session creation.
 
 **Alternatives considered:**
-- *Add more guards to the effect.* The root problem is reactive state churn — adding guards is whack-a-mole.
-- *Use a one-shot promise.* Same as direct call, but more ceremony.
+
+- _Add more guards to the effect._ The root problem is reactive state churn — adding guards is whack-a-mole.
+- _Use a one-shot promise._ Same as direct call, but more ceremony.
 
 ## Risks / Trade-offs
 

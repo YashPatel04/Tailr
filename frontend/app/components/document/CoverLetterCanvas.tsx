@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useSession } from "@/hooks/queries"
 import { EditableField } from "@/components/document/EditableField"
 import { queueEdit } from "@/lib/editQueue"
 import { getApiBaseUrl } from "@/lib/env"
@@ -28,7 +27,6 @@ interface CoverLetterCanvasProps {
 
 export function CoverLetterCanvas({ content }: CoverLetterCanvasProps) {
   const { activeSessionId } = useSessionStore()
-  const { data: session } = useSession(activeSessionId!)
   const queryClient = useQueryClient()
   const [generating, setGenerating] = useState(false)
 
@@ -38,7 +36,12 @@ export function CoverLetterCanvas({ content }: CoverLetterCanvasProps) {
     const raw = content as any
     const paras = Array.isArray(raw.paragraphs) ? raw.paragraphs : []
     if (paras.length === 0 && raw.text) {
-      return { type: "cover_letter", salutation: "", paragraphs: [{ id: "legacy", text: raw.text }], closing: "" }
+      return {
+        type: "cover_letter",
+        salutation: "",
+        paragraphs: [{ id: "legacy", text: raw.text }],
+        closing: "",
+      }
     }
     return {
       type: raw.type || "cover_letter",
@@ -55,14 +58,19 @@ export function CoverLetterCanvas({ content }: CoverLetterCanvasProps) {
     setGenerating(true)
     try {
       const csrfToken = await getCsrfToken()
-      const response = await fetch(`${getApiBaseUrl()}/api/sessions/${activeSessionId}/generate-cover-letter`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-        credentials: "include",
-      })
+      const response = await fetch(
+        `${getApiBaseUrl()}/api/sessions/${activeSessionId}/generate-cover-letter`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+          credentials: "include",
+        }
+      )
       if (response.ok) {
         queryClient.invalidateQueries({ queryKey: ["sessions"] })
-        queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "messages", "cover_letter"] })
+        queryClient.invalidateQueries({
+          queryKey: ["sessions", activeSessionId, "messages", "cover_letter"],
+        })
       }
     } catch {}
     setGenerating(false)

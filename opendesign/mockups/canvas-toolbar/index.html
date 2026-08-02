@@ -1,1172 +1,1607 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume Canvas — Floating Toolbar + Git-Diff Changes</title>
-<style>
-  :root {
-    --ink: #202124;
-    --muted: #5f6368;
-    --subtle: #9aa0a6;
-    --page: #ffffff;
-    --canvas-bg: #f0f2f5;
-    --toolbar-bg: #f8f9fa;
-    --toolbar-border: #dadce0;
-    --hover-bg: #e8eaed;
-    --active-bg: #d3e3fd;
-    --active-fg: #1a73e8;
-    --danger: #d93025;
-    --radius: 4px;
-    --font-sans: "Google Sans", "Roboto", "Helvetica Neue", Arial, sans-serif;
-    --font-body: "Roboto", "Helvetica Neue", Arial, sans-serif;
-    --shadow-sm: 0 1px 2px 0 rgba(60,64,67,.15);
-    --shadow-md: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
-    --shadow-lg: 0 1px 3px 0 rgba(60,64,67,.15), 0 4px 16px 3px rgba(60,64,67,.2);
-    --ease: cubic-bezier(0.2, 0, 0, 1);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Canvas — Floating Toolbar + Git-Diff Changes</title>
+    <style>
+      :root {
+        --ink: #202124;
+        --muted: #5f6368;
+        --subtle: #9aa0a6;
+        --page: #ffffff;
+        --canvas-bg: #f0f2f5;
+        --toolbar-bg: #f8f9fa;
+        --toolbar-border: #dadce0;
+        --hover-bg: #e8eaed;
+        --active-bg: #d3e3fd;
+        --active-fg: #1a73e8;
+        --danger: #d93025;
+        --radius: 4px;
+        --font-sans:
+          "Google Sans", "Roboto", "Helvetica Neue", Arial, sans-serif;
+        --font-body: "Roboto", "Helvetica Neue", Arial, sans-serif;
+        --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.15);
+        --shadow-md:
+          0 1px 3px 0 rgba(60, 64, 67, 0.3),
+          0 4px 8px 3px rgba(60, 64, 67, 0.15);
+        --shadow-lg:
+          0 1px 3px 0 rgba(60, 64, 67, 0.15),
+          0 4px 16px 3px rgba(60, 64, 67, 0.2);
+        --ease: cubic-bezier(0.2, 0, 0, 1);
 
-    /* diff colors */
-    --diff-add-bg: #e6f4ea;
-    --diff-add-fg: #137333;
-    --diff-add-border: #137333;
-    --diff-del-bg: #fce8e6;
-    --diff-del-fg: #c5221f;
-    --diff-del-border: #c5221f;
-    --diff-mod-bg: #fef7e0;
-    --diff-mod-fg: #b06000;
-    --diff-mod-border: #e37400;
-  }
-  .dark {
-    --ink: #e8eaed;
-    --muted: #9aa0a6;
-    --subtle: #80868b;
-    --page: #202124;
-    --canvas-bg: #121212;
-    --toolbar-bg: #292a2d;
-    --toolbar-border: #5f6368;
-    --hover-bg: #3c4043;
-    --active-bg: #394457;
-    --active-fg: #8ab4f8;
-    --danger: #f28b82;
-    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,.3);
-    --shadow-md: 0 1px 3px 0 rgba(0,0,0,.4), 0 4px 8px 3px rgba(0,0,0,.3);
-    --shadow-lg: 0 1px 3px 0 rgba(0,0,0,.3), 0 4px 16px 3px rgba(0,0,0,.4);
-    --diff-add-bg: #137333;
-    --diff-add-fg: #81c995;
-    --diff-add-border: #81c995;
-    --diff-del-bg: #a50e0e;
-    --diff-del-fg: #f28b82;
-    --diff-del-border: #f28b82;
-    --diff-mod-bg: #e37400;
-    --diff-mod-fg: #fdd663;
-    --diff-mod-border: #fdd663;
-  }
+        /* diff colors */
+        --diff-add-bg: #e6f4ea;
+        --diff-add-fg: #137333;
+        --diff-add-border: #137333;
+        --diff-del-bg: #fce8e6;
+        --diff-del-fg: #c5221f;
+        --diff-del-border: #c5221f;
+        --diff-mod-bg: #fef7e0;
+        --diff-mod-fg: #b06000;
+        --diff-mod-border: #e37400;
+      }
+      .dark {
+        --ink: #e8eaed;
+        --muted: #9aa0a6;
+        --subtle: #80868b;
+        --page: #202124;
+        --canvas-bg: #121212;
+        --toolbar-bg: #292a2d;
+        --toolbar-border: #5f6368;
+        --hover-bg: #3c4043;
+        --active-bg: #394457;
+        --active-fg: #8ab4f8;
+        --danger: #f28b82;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+        --shadow-md:
+          0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
+        --shadow-lg:
+          0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 4px 16px 3px rgba(0, 0, 0, 0.4);
+        --diff-add-bg: #137333;
+        --diff-add-fg: #81c995;
+        --diff-add-border: #81c995;
+        --diff-del-bg: #a50e0e;
+        --diff-del-fg: #f28b82;
+        --diff-del-border: #f28b82;
+        --diff-mod-bg: #e37400;
+        --diff-mod-fg: #fdd663;
+        --diff-mod-border: #fdd663;
+      }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: var(--font-body);
-    background: var(--canvas-bg);
-    color: var(--ink);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    padding: 24px 0;
-  }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: var(--font-body);
+        background: var(--canvas-bg);
+        color: var(--ink);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding: 24px 0;
+      }
 
-  /* ─── Page Wrap ─── */
-  .page-wrap {
-    width: 816px;
-    min-height: 1056px;
-    background: var(--page);
-    box-shadow: var(--shadow-sm);
-    padding: 72px 96px 96px;
-    position: relative;
-    flex-shrink: 0;
-  }
+      /* ─── Page Wrap ─── */
+      .page-wrap {
+        width: 816px;
+        min-height: 1056px;
+        background: var(--page);
+        box-shadow: var(--shadow-sm);
+        padding: 72px 96px 96px;
+        position: relative;
+        flex-shrink: 0;
+      }
 
-  /* ─── Floating Toolbar ─── */
-  .float-toolbar {
-    position: sticky;
-    top: 24px;
-    margin-left: 16px;
-    background: var(--toolbar-bg);
-    border: 1px solid var(--toolbar-border);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    z-index: 100;
-    flex-shrink: 0;
-    width: 44px;
-    align-items: center;
-    transition: width var(--ease) 200ms;
-  }
-  .float-toolbar.expanded { width: 180px; }
+      /* ─── Floating Toolbar ─── */
+      .float-toolbar {
+        position: sticky;
+        top: 24px;
+        margin-left: 16px;
+        background: var(--toolbar-bg);
+        border: 1px solid var(--toolbar-border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        z-index: 100;
+        flex-shrink: 0;
+        width: 44px;
+        align-items: center;
+        transition: width var(--ease) 200ms;
+      }
+      .float-toolbar.expanded {
+        width: 180px;
+      }
 
-  .ft-btn {
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    flex-shrink: 0;
-    transition: background var(--ease) 150ms, color var(--ease) 150ms;
-    position: relative;
-  }
-  .ft-btn:hover { background: var(--hover-bg); }
-  .ft-btn:active { background: #c4c7c5; }
-  .ft-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
-  .ft-btn[data-active="true"] { color: var(--active-fg); background: var(--active-bg); }
+      .ft-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        flex-shrink: 0;
+        transition:
+          background var(--ease) 150ms,
+          color var(--ease) 150ms;
+        position: relative;
+      }
+      .ft-btn:hover {
+        background: var(--hover-bg);
+      }
+      .ft-btn:active {
+        background: #c4c7c5;
+      }
+      .ft-btn svg {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+      }
+      .ft-btn[data-active="true"] {
+        color: var(--active-fg);
+        background: var(--active-bg);
+      }
 
-  .ft-sep {
-    width: 20px;
-    height: 1px;
-    background: var(--toolbar-border);
-    margin: 4px auto;
-    flex-shrink: 0;
-  }
+      .ft-sep {
+        width: 20px;
+        height: 1px;
+        background: var(--toolbar-border);
+        margin: 4px auto;
+        flex-shrink: 0;
+      }
 
-  /* Insert submenu */
-  .ft-insert-wrap { position: relative; }
-  .ft-insert-menu {
-    position: absolute;
-    top: 0;
-    right: calc(100% + 8px);
-    min-width: 210px;
-    background: var(--page);
-    border: 1px solid var(--toolbar-border);
-    border-radius: 10px;
-    box-shadow: var(--shadow-lg);
-    padding: 6px 0;
-    z-index: 200;
-    white-space: nowrap;
-  }
-  .ft-insert-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 7px 14px;
-    font-size: 13px;
-    color: var(--ink);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    text-align: left;
-    transition: background var(--ease) 150ms;
-  }
-  .ft-insert-item:hover { background: var(--hover-bg); }
-  .ft-ins-icon {
-    width: 22px;
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius);
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .ft-ins-icon.section { color: #1a73e8; background: #e8f0fe; }
-  .ft-ins-icon.entry { color: #188038; background: #e6f4ea; }
-  .ft-ins-icon.bullet { color: #e37400; background: #fef7e0; }
-  .ft-ins-icon.profile { color: #9334e6; background: #f3e8fd; }
-  .ft-ins-icon.skill { color: #c5221f; background: #fce8e6; }
-  .ft-ins-icon.righttext { color: #1967d2; background: #e8f0fe; }
-  .ft-ins-kbd {
-    margin-left: auto;
-    font-size: 10px;
-    color: var(--subtle);
-    font-weight: 500;
-  }
+      /* Insert submenu */
+      .ft-insert-wrap {
+        position: relative;
+      }
+      .ft-insert-menu {
+        position: absolute;
+        top: 0;
+        right: calc(100% + 8px);
+        min-width: 210px;
+        background: var(--page);
+        border: 1px solid var(--toolbar-border);
+        border-radius: 10px;
+        box-shadow: var(--shadow-lg);
+        padding: 6px 0;
+        z-index: 200;
+        white-space: nowrap;
+      }
+      .ft-insert-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 7px 14px;
+        font-size: 13px;
+        color: var(--ink);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-family: var(--font-body);
+        text-align: left;
+        transition: background var(--ease) 150ms;
+      }
+      .ft-insert-item:hover {
+        background: var(--hover-bg);
+      }
+      .ft-ins-icon {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius);
+        font-size: 11px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .ft-ins-icon.section {
+        color: #1a73e8;
+        background: #e8f0fe;
+      }
+      .ft-ins-icon.entry {
+        color: #188038;
+        background: #e6f4ea;
+      }
+      .ft-ins-icon.bullet {
+        color: #e37400;
+        background: #fef7e0;
+      }
+      .ft-ins-icon.profile {
+        color: #9334e6;
+        background: #f3e8fd;
+      }
+      .ft-ins-icon.skill {
+        color: #c5221f;
+        background: #fce8e6;
+      }
+      .ft-ins-icon.righttext {
+        color: #1967d2;
+        background: #e8f0fe;
+      }
+      .ft-ins-kbd {
+        margin-left: auto;
+        font-size: 10px;
+        color: var(--subtle);
+        font-weight: 500;
+      }
 
-  /* Tooltip on hover */
-  .ft-tooltip {
-    position: absolute;
-    top: 50%;
-    right: calc(100% + 12px);
-    transform: translateY(-50%);
-    background: #2d2d2d;
-    color: #e8eaed;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: var(--radius);
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--ease) 150ms;
-    font-family: var(--font-body);
-  }
-  .ft-btn:hover .ft-tooltip { opacity: 1; }
+      /* Tooltip on hover */
+      .ft-tooltip {
+        position: absolute;
+        top: 50%;
+        right: calc(100% + 12px);
+        transform: translateY(-50%);
+        background: #2d2d2d;
+        color: #e8eaed;
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: var(--radius);
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity var(--ease) 150ms;
+        font-family: var(--font-body);
+      }
+      .ft-btn:hover .ft-tooltip {
+        opacity: 1;
+      }
 
-  /* ─── Header ─── */
-  .doc-header {
-    text-align: center;
-    margin-bottom: 24px;
-    position: relative;
-  }
-  .doc-name {
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 4px;
-  }
-  .doc-contact {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
-  .contact-link { color: #1a73e8; text-decoration: none; }
-  .contact-link:hover { text-decoration: underline; }
-  .dark .contact-link { color: #8ab4f8; }
+      /* ─── Header ─── */
+      .doc-header {
+        text-align: center;
+        margin-bottom: 24px;
+        position: relative;
+      }
+      .doc-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .doc-contact {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+      .contact-link {
+        color: #1a73e8;
+        text-decoration: none;
+      }
+      .contact-link:hover {
+        text-decoration: underline;
+      }
+      .dark .contact-link {
+        color: #8ab4f8;
+      }
 
-  .inline-add {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--hover-bg);
-    color: var(--muted);
-    font-size: 13px;
-    border: none;
-    cursor: pointer;
-    opacity: 0;
-    vertical-align: middle;
-    margin-left: 2px;
-    transition: opacity var(--ease) 150ms, background var(--ease) 150ms;
-  }
-  .doc-contact:hover .inline-add { opacity: 1; }
-  .inline-add:hover { background: #c4c7c5; }
+      .inline-add {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--hover-bg);
+        color: var(--muted);
+        font-size: 13px;
+        border: none;
+        cursor: pointer;
+        opacity: 0;
+        vertical-align: middle;
+        margin-left: 2px;
+        transition:
+          opacity var(--ease) 150ms,
+          background var(--ease) 150ms;
+      }
+      .doc-contact:hover .inline-add {
+        opacity: 1;
+      }
+      .inline-add:hover {
+        background: #c4c7c5;
+      }
 
-  /* ─── Section ─── */
-  .section {
-    margin-bottom: 16px;
-    position: relative;
-  }
-  .section-header {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--ink);
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--toolbar-border);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .section-label {
-    cursor: text;
-    padding: 2px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    transition: border-color var(--ease) 150ms;
-  }
-  .section-label:hover { border-color: var(--toolbar-border); }
-  .section-actions {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity var(--ease) 150ms;
-  }
-  .section:hover .section-actions { opacity: 1; }
-  .sa-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    background: transparent;
-    color: var(--muted);
-    font-size: 16px;
-    transition: background var(--ease) 150ms;
-  }
-  .sa-btn:hover { background: var(--hover-bg); }
-  .sa-add-entry { font-size: 14px; font-weight: 600; }
+      /* ─── Section ─── */
+      .section {
+        margin-bottom: 16px;
+        position: relative;
+      }
+      .section-header {
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ink);
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--toolbar-border);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .section-label {
+        cursor: text;
+        padding: 2px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        transition: border-color var(--ease) 150ms;
+      }
+      .section-label:hover {
+        border-color: var(--toolbar-border);
+      }
+      .section-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        opacity: 0;
+        transition: opacity var(--ease) 150ms;
+      }
+      .section:hover .section-actions {
+        opacity: 1;
+      }
+      .sa-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        font-size: 16px;
+        transition: background var(--ease) 150ms;
+      }
+      .sa-btn:hover {
+        background: var(--hover-bg);
+      }
+      .sa-add-entry {
+        font-size: 14px;
+        font-weight: 600;
+      }
 
-  /* ─── Entry ─── */
-  .entry {
-    margin-bottom: 6px;
-    padding-bottom: 6px;
-    position: relative;
-  }
-  .entry-line {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1px;
-    min-height: 20px;
-    position: relative;
-  }
-  .entry-left {
-    font-size: 13px;
-    cursor: text;
-    padding: 1px 3px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    transition: border-color var(--ease) 150ms;
-  }
-  .entry-left:hover { border-color: var(--toolbar-border); }
-  .entry-right {
-    font-size: 12px;
-    color: var(--muted);
-    font-style: italic;
-    cursor: text;
-    padding: 1px 3px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    flex-shrink: 0;
-    transition: border-color var(--ease) 150ms;
-  }
-  .entry-right:hover { border-color: var(--toolbar-border); }
-  .entry-title { font-weight: 700; }
-  .entry-org { font-weight: 500; }
+      /* ─── Entry ─── */
+      .entry {
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+        position: relative;
+      }
+      .entry-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1px;
+        min-height: 20px;
+        position: relative;
+      }
+      .entry-left {
+        font-size: 13px;
+        cursor: text;
+        padding: 1px 3px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        transition: border-color var(--ease) 150ms;
+      }
+      .entry-left:hover {
+        border-color: var(--toolbar-border);
+      }
+      .entry-right {
+        font-size: 12px;
+        color: var(--muted);
+        font-style: italic;
+        cursor: text;
+        padding: 1px 3px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        flex-shrink: 0;
+        transition: border-color var(--ease) 150ms;
+      }
+      .entry-right:hover {
+        border-color: var(--toolbar-border);
+      }
+      .entry-title {
+        font-weight: 700;
+      }
+      .entry-org {
+        font-weight: 500;
+      }
 
-  .entry-actions {
-    position: absolute;
-    right: -30px;
-    top: -2px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    opacity: 0;
-    transition: opacity var(--ease) 150ms;
-  }
-  .entry:hover .entry-actions { opacity: 1; }
-  .ea-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    background: transparent;
-    color: var(--muted);
-    font-size: 13px;
-    transition: background var(--ease) 150ms;
-  }
-  .ea-btn:hover { background: var(--hover-bg); }
+      .entry-actions {
+        position: absolute;
+        right: -30px;
+        top: -2px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        opacity: 0;
+        transition: opacity var(--ease) 150ms;
+      }
+      .entry:hover .entry-actions {
+        opacity: 1;
+      }
+      .ea-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        font-size: 13px;
+        transition: background var(--ease) 150ms;
+      }
+      .ea-btn:hover {
+        background: var(--hover-bg);
+      }
 
-  /* ─── Bullets ─── */
-  .bullets { padding-left: 16px; margin-top: 3px; }
-  .bullet {
-    font-size: 12px;
-    line-height: 1.6;
-    color: var(--ink);
-    position: relative;
-    padding: 1px 3px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    cursor: text;
-    display: flex;
-    align-items: flex-start;
-    transition: border-color var(--ease) 150ms;
-  }
-  .bullet:hover { border-color: var(--toolbar-border); }
-  .bullet::before {
-    content: "·";
-    color: var(--muted);
-    margin-right: 6px;
-    flex-shrink: 0;
-    font-weight: 600;
-  }
-  .bullet-delete {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    font-size: 10px;
-    color: var(--muted);
-    background: transparent;
-    margin-left: 4px;
-    flex-shrink: 0;
-    opacity: 0;
-    transition: opacity var(--ease) 150ms, background var(--ease) 150ms;
-  }
-  .bullet:hover .bullet-delete { opacity: 1; }
-  .bullet-delete:hover { background: #fce8e6; color: var(--danger); }
+      /* ─── Bullets ─── */
+      .bullets {
+        padding-left: 16px;
+        margin-top: 3px;
+      }
+      .bullet {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--ink);
+        position: relative;
+        padding: 1px 3px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        cursor: text;
+        display: flex;
+        align-items: flex-start;
+        transition: border-color var(--ease) 150ms;
+      }
+      .bullet:hover {
+        border-color: var(--toolbar-border);
+      }
+      .bullet::before {
+        content: "·";
+        color: var(--muted);
+        margin-right: 6px;
+        flex-shrink: 0;
+        font-weight: 600;
+      }
+      .bullet-delete {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        font-size: 10px;
+        color: var(--muted);
+        background: transparent;
+        margin-left: 4px;
+        flex-shrink: 0;
+        opacity: 0;
+        transition:
+          opacity var(--ease) 150ms,
+          background var(--ease) 150ms;
+      }
+      .bullet:hover .bullet-delete {
+        opacity: 1;
+      }
+      .bullet-delete:hover {
+        background: #fce8e6;
+        color: var(--danger);
+      }
 
-  /* ─── Right-placeholder ─── */
-  .right-placeholder {
-    font-size: 11px;
-    color: var(--subtle);
-    font-style: italic;
-    cursor: text;
-    padding: 1px 3px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    transition: all var(--ease) 150ms;
-    user-select: none;
-  }
-  .right-placeholder:hover { border-color: var(--toolbar-border); color: var(--muted); }
+      /* ─── Right-placeholder ─── */
+      .right-placeholder {
+        font-size: 11px;
+        color: var(--subtle);
+        font-style: italic;
+        cursor: text;
+        padding: 1px 3px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        transition: all var(--ease) 150ms;
+        user-select: none;
+      }
+      .right-placeholder:hover {
+        border-color: var(--toolbar-border);
+        color: var(--muted);
+      }
 
-  /* ─── Skill Row ─── */
-  .skill-row {
-    font-size: 12px;
-    margin-bottom: 2px;
-    padding: 2px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    cursor: text;
-    transition: border-color var(--ease) 150ms;
-  }
-  .skill-row:hover { border-color: var(--toolbar-border); }
-  .skill-category { font-weight: 600; }
-  .skill-items { color: var(--ink); }
+      /* ─── Skill Row ─── */
+      .skill-row {
+        font-size: 12px;
+        margin-bottom: 2px;
+        padding: 2px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        cursor: text;
+        transition: border-color var(--ease) 150ms;
+      }
+      .skill-row:hover {
+        border-color: var(--toolbar-border);
+      }
+      .skill-category {
+        font-weight: 600;
+      }
+      .skill-items {
+        color: var(--ink);
+      }
 
-  /* ─── Bottom inline insert ─── */
-  .inline-insert-bot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 28px 0 8px;
-    opacity: 0;
-    transition: opacity var(--ease) 200ms;
-    position: relative;
-  }
-  .page-wrap:hover .inline-insert-bot { opacity: 1; }
-  .bot-insert-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 16px;
-    border: 1px dashed var(--toolbar-border);
-    background: transparent;
-    color: var(--muted);
-    font-size: 12px;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: all var(--ease) 150ms;
-  }
-  .bot-insert-btn:hover {
-    border-color: var(--active-fg);
-    color: var(--active-fg);
-    background: var(--active-bg);
-  }
-  .bot-insert-btn .plus { font-size: 16px; font-weight: 500; line-height: 1; }
-  .bot-menu {
-    position: absolute;
-    bottom: calc(100% + 4px);
-    left: 50%;
-    transform: translateX(-50%);
-    min-width: 210px;
-    background: var(--page);
-    border: 1px solid var(--toolbar-border);
-    border-radius: 10px;
-    box-shadow: var(--shadow-lg);
-    padding: 6px 0;
-    z-index: 200;
-  }
+      /* ─── Bottom inline insert ─── */
+      .inline-insert-bot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 28px 0 8px;
+        opacity: 0;
+        transition: opacity var(--ease) 200ms;
+        position: relative;
+      }
+      .page-wrap:hover .inline-insert-bot {
+        opacity: 1;
+      }
+      .bot-insert-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 16px;
+        border: 1px dashed var(--toolbar-border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-family: var(--font-body);
+        cursor: pointer;
+        transition: all var(--ease) 150ms;
+      }
+      .bot-insert-btn:hover {
+        border-color: var(--active-fg);
+        color: var(--active-fg);
+        background: var(--active-bg);
+      }
+      .bot-insert-btn .plus {
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .bot-menu {
+        position: absolute;
+        bottom: calc(100% + 4px);
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 210px;
+        background: var(--page);
+        border: 1px solid var(--toolbar-border);
+        border-radius: 10px;
+        box-shadow: var(--shadow-lg);
+        padding: 6px 0;
+        z-index: 200;
+      }
 
-  /* ═══════════════════════════════════════════
+      /* ═══════════════════════════════════════════
      DIFF VIEW — git-diff style
      ═══════════════════════════════════════════ */
 
-  .diff-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background: var(--toolbar-bg);
-    border: 1px solid var(--toolbar-border);
-    border-radius: 10px;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 16px;
-    font-family: var(--font-mono, monospace);
-  }
-  .diff-stat { display: flex; align-items: center; gap: 4px; }
-  .diff-stat-added { color: var(--diff-add-fg); font-weight: 600; }
-  .diff-stat-removed { color: var(--diff-del-fg); font-weight: 600; }
-  .diff-stat-modified { color: var(--diff-mod-fg); font-weight: 600; }
+      .diff-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        background: var(--toolbar-bg);
+        border: 1px solid var(--toolbar-border);
+        border-radius: 10px;
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 16px;
+        font-family: var(--font-mono, monospace);
+      }
+      .diff-stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .diff-stat-added {
+        color: var(--diff-add-fg);
+        font-weight: 600;
+      }
+      .diff-stat-removed {
+        color: var(--diff-del-fg);
+        font-weight: 600;
+      }
+      .diff-stat-modified {
+        color: var(--diff-mod-fg);
+        font-weight: 600;
+      }
 
-  /* Inline change types */
-  .diff-added {
-    background: var(--diff-add-bg);
-    color: var(--diff-add-fg);
-    border-radius: 2px;
-    padding: 1px 2px;
-  }
-  .diff-removed {
-    background: var(--diff-del-bg);
-    color: var(--diff-del-fg);
-    text-decoration: line-through;
-    border-radius: 2px;
-    padding: 1px 2px;
-  }
-  .diff-modified {
-    background: var(--diff-mod-bg);
-    border-radius: 2px;
-    padding: 1px 2px;
-  }
-  .diff-modified .old { text-decoration: line-through; color: var(--diff-del-fg); margin-right: 4px; }
-  .diff-modified .new { color: var(--diff-add-fg); font-weight: 500; }
+      /* Inline change types */
+      .diff-added {
+        background: var(--diff-add-bg);
+        color: var(--diff-add-fg);
+        border-radius: 2px;
+        padding: 1px 2px;
+      }
+      .diff-removed {
+        background: var(--diff-del-bg);
+        color: var(--diff-del-fg);
+        text-decoration: line-through;
+        border-radius: 2px;
+        padding: 1px 2px;
+      }
+      .diff-modified {
+        background: var(--diff-mod-bg);
+        border-radius: 2px;
+        padding: 1px 2px;
+      }
+      .diff-modified .old {
+        text-decoration: line-through;
+        color: var(--diff-del-fg);
+        margin-right: 4px;
+      }
+      .diff-modified .new {
+        color: var(--diff-add-fg);
+        font-weight: 500;
+      }
 
-  /* Block-level diff markers */
-  .diff-block-add {
-    border-left: 3px solid var(--diff-add-border);
-    padding-left: 10px;
-    margin: 2px 0;
-  }
-  .diff-block-del {
-    border-left: 3px solid var(--diff-del-border);
-    padding-left: 10px;
-    margin: 2px 0;
-    opacity: 0.65;
-  }
-  .diff-block-mod {
-    border-left: 3px solid var(--diff-mod-border);
-    padding-left: 10px;
-    margin: 2px 0;
-  }
+      /* Block-level diff markers */
+      .diff-block-add {
+        border-left: 3px solid var(--diff-add-border);
+        padding-left: 10px;
+        margin: 2px 0;
+      }
+      .diff-block-del {
+        border-left: 3px solid var(--diff-del-border);
+        padding-left: 10px;
+        margin: 2px 0;
+        opacity: 0.65;
+      }
+      .diff-block-mod {
+        border-left: 3px solid var(--diff-mod-border);
+        padding-left: 10px;
+        margin: 2px 0;
+      }
 
-  .diff-gutter {
-    position: absolute;
-    left: -20px;
-    width: 16px;
-    text-align: right;
-    font-family: var(--font-mono, monospace);
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 1.6;
-  }
-  .diff-gutter.add { color: var(--diff-add-fg); }
-  .diff-gutter.del { color: var(--diff-del-fg); }
-  .diff-gutter.mod { color: var(--diff-mod-fg); }
+      .diff-gutter {
+        position: absolute;
+        left: -20px;
+        width: 16px;
+        text-align: right;
+        font-family: var(--font-mono, monospace);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1.6;
+      }
+      .diff-gutter.add {
+        color: var(--diff-add-fg);
+      }
+      .diff-gutter.del {
+        color: var(--diff-del-fg);
+      }
+      .diff-gutter.mod {
+        color: var(--diff-mod-fg);
+      }
 
-  .diff-bullet { position: relative; padding-left: 24px; }
-  .diff-bullet .diff-gutter { left: 4px; }
+      .diff-bullet {
+        position: relative;
+        padding-left: 24px;
+      }
+      .diff-bullet .diff-gutter {
+        left: 4px;
+      }
 
-  /* ─── Document-level diff annotation ─── */
-  .diff-file-header {
-    font-family: var(--font-mono, monospace);
-    font-size: 11px;
-    color: var(--muted);
-    padding: 4px 0;
-    margin-bottom: 8px;
-    border-bottom: 1px dashed var(--toolbar-border);
-  }
-  .diff-file-header span { font-weight: 600; }
-  .diff-hunk-header {
-    font-family: var(--font-mono, monospace);
-    font-size: 10px;
-    color: var(--subtle);
-    background: var(--hover-bg);
-    padding: 2px 8px;
-    border-radius: var(--radius);
-    margin: 8px 0 4px;
-    display: inline-block;
-  }
+      /* ─── Document-level diff annotation ─── */
+      .diff-file-header {
+        font-family: var(--font-mono, monospace);
+        font-size: 11px;
+        color: var(--muted);
+        padding: 4px 0;
+        margin-bottom: 8px;
+        border-bottom: 1px dashed var(--toolbar-border);
+      }
+      .diff-file-header span {
+        font-weight: 600;
+      }
+      .diff-hunk-header {
+        font-family: var(--font-mono, monospace);
+        font-size: 10px;
+        color: var(--subtle);
+        background: var(--hover-bg);
+        padding: 2px 8px;
+        border-radius: var(--radius);
+        margin: 8px 0 4px;
+        display: inline-block;
+      }
 
-  /* ─── Empty State ─── */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 500px;
-    text-align: center;
-  }
-  .empty-icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--hover-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-  }
-  .empty-icon svg { width: 32px; height: 32px; stroke: var(--muted); }
-  .empty-title {
-    font-family: var(--font-sans);
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--ink);
-    margin-bottom: 4px;
-  }
-  .empty-sub {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    max-width: 280px;
-  }
-  .empty-actions { display: flex; gap: 10px; }
+      /* ─── Empty State ─── */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 500px;
+        text-align: center;
+      }
+      .empty-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--hover-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+      }
+      .empty-icon svg {
+        width: 32px;
+        height: 32px;
+        stroke: var(--muted);
+      }
+      .empty-title {
+        font-family: var(--font-sans);
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .empty-sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 20px;
+        max-width: 280px;
+      }
+      .empty-actions {
+        display: flex;
+        gap: 10px;
+      }
 
-  .font-mono { font-family: "SF Mono", "Fira Code", "JetBrains Mono", "Consolas", monospace; }
+      .font-mono {
+        font-family:
+          "SF Mono", "Fira Code", "JetBrains Mono", "Consolas", monospace;
+      }
 
-  /* ─── Tweak Panel ─── */
-  .tweak-panel {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--page);
-    border: 1px solid var(--toolbar-border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    box-shadow: var(--shadow-lg);
-    z-index: 300;
-    min-width: 210px;
-    font-size: 12px;
-    font-family: var(--font-body);
-  }
-  .tweak-panel label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    cursor: pointer;
-    color: var(--ink);
-    font-size: 12px;
-  }
-  .tweak-panel label:last-child { margin-bottom: 0; }
-  .tweak-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 8px;
-  }
-  .tweak-select {
-    font-size: 12px;
-    padding: 6px 8px;
-    border: 1px solid var(--toolbar-border);
-    border-radius: var(--radius);
-    background: var(--page);
-    color: var(--ink);
-    font-family: var(--font-body);
-    width: 100%;
-    margin-bottom: 8px;
-    outline: none;
-  }
-  .tweak-select:hover { border-color: var(--active-fg); }
-</style>
-</head>
-<body class="dark">
-
-<!-- ─── PAGE ─── -->
-<div class="page-wrap" id="content">
-
-  <div class="doc-header">
-    <div class="doc-name">Yashvardhan Singh</div>
-    <div class="doc-contact">
-      <span>+1 (234) 567-8901</span>
-      <span> | </span>
-      <a class="contact-link" href="mailto:yash@example.com">yash@example.com</a>
-      <span> | </span>
-      <a class="contact-link" href="https://github.com/yash" target="_blank">github.com/yash</a>
-      <button class="inline-add" title="Add profile link">+</button>
-    </div>
-  </div>
-
-  <!-- Section: Experience -->
-  <div class="section" id="sec1">
-    <div class="section-header">
-      <span class="section-label">Experience</span>
-      <div class="section-actions">
-        <button class="sa-btn sa-add-entry" title="Add entry">+</button>
-        <button class="sa-btn" title="Delete section" style="font-size:13px">×</button>
-      </div>
-    </div>
-
-    <div class="entry" id="entry1">
-      <div class="entry-line">
-        <span class="entry-left entry-title">Senior Software Engineer</span>
-        <span class="entry-right">2024 — Present</span>
-        <div class="entry-actions">
-          <button class="ea-btn" title="Add bullet">+</button>
-          <button class="ea-btn" title="Delete entry">×</button>
+      /* ─── Tweak Panel ─── */
+      .tweak-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--page);
+        border: 1px solid var(--toolbar-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        box-shadow: var(--shadow-lg);
+        z-index: 300;
+        min-width: 210px;
+        font-size: 12px;
+        font-family: var(--font-body);
+      }
+      .tweak-panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        color: var(--ink);
+        font-size: 12px;
+      }
+      .tweak-panel label:last-child {
+        margin-bottom: 0;
+      }
+      .tweak-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+      }
+      .tweak-select {
+        font-size: 12px;
+        padding: 6px 8px;
+        border: 1px solid var(--toolbar-border);
+        border-radius: var(--radius);
+        background: var(--page);
+        color: var(--ink);
+        font-family: var(--font-body);
+        width: 100%;
+        margin-bottom: 8px;
+        outline: none;
+      }
+      .tweak-select:hover {
+        border-color: var(--active-fg);
+      }
+    </style>
+  </head>
+  <body class="dark">
+    <!-- ─── PAGE ─── -->
+    <div class="page-wrap" id="content">
+      <div class="doc-header">
+        <div class="doc-name">Yashvardhan Singh</div>
+        <div class="doc-contact">
+          <span>+1 (234) 567-8901</span>
+          <span> | </span>
+          <a class="contact-link" href="mailto:yash@example.com"
+            >yash@example.com</a
+          >
+          <span> | </span>
+          <a class="contact-link" href="https://github.com/yash" target="_blank"
+            >github.com/yash</a
+          >
+          <button class="inline-add" title="Add profile link">+</button>
         </div>
       </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org">Meta</span>
-        <span class="entry-right">meta.com/careers</span>
-      </div>
-      <div class="bullets">
-        <div class="bullet">Led migration of 12 microservices to Kubernetes, reducing infra cost by 34%<button class="bullet-delete">×</button></div>
-        <div class="bullet">Designed real-time event pipeline processing 2M+ events/sec<button class="bullet-delete">×</button></div>
-      </div>
-    </div>
 
-    <div class="entry" id="entry2">
-      <div class="entry-line">
-        <span class="entry-left entry-title">Software Engineer</span>
-        <span class="entry-right">2022 — 2024</span>
-        <div class="entry-actions">
-          <button class="ea-btn" title="Add bullet">+</button>
-          <button class="ea-btn" title="Delete entry">×</button>
+      <!-- Section: Experience -->
+      <div class="section" id="sec1">
+        <div class="section-header">
+          <span class="section-label">Experience</span>
+          <div class="section-actions">
+            <button class="sa-btn sa-add-entry" title="Add entry">+</button>
+            <button
+              class="sa-btn"
+              title="Delete section"
+              style="font-size: 13px"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div class="entry" id="entry1">
+          <div class="entry-line">
+            <span class="entry-left entry-title">Senior Software Engineer</span>
+            <span class="entry-right">2024 — Present</span>
+            <div class="entry-actions">
+              <button class="ea-btn" title="Add bullet">+</button>
+              <button class="ea-btn" title="Delete entry">×</button>
+            </div>
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org">Meta</span>
+            <span class="entry-right">meta.com/careers</span>
+          </div>
+          <div class="bullets">
+            <div class="bullet">
+              Led migration of 12 microservices to Kubernetes, reducing infra
+              cost by 34%<button class="bullet-delete">×</button>
+            </div>
+            <div class="bullet">
+              Designed real-time event pipeline processing 2M+ events/sec<button
+                class="bullet-delete"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="entry" id="entry2">
+          <div class="entry-line">
+            <span class="entry-left entry-title">Software Engineer</span>
+            <span class="entry-right">2022 — 2024</span>
+            <div class="entry-actions">
+              <button class="ea-btn" title="Add bullet">+</button>
+              <button class="ea-btn" title="Delete entry">×</button>
+            </div>
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org">Stripe</span>
+            <span class="right-placeholder">+ right-side text</span>
+          </div>
+          <div class="bullets">
+            <div class="bullet">
+              Built API gateway handling $1B+ in monthly payments<button
+                class="bullet-delete"
+              >
+                ×
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org">Stripe</span>
-        <span class="right-placeholder">+ right-side text</span>
-      </div>
-      <div class="bullets">
-        <div class="bullet">Built API gateway handling $1B+ in monthly payments<button class="bullet-delete">×</button></div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Section: Skills -->
-  <div class="section" id="sec2">
-    <div class="section-header">
-      <span class="section-label">Skills</span>
-      <div class="section-actions">
-        <button class="sa-btn sa-add-entry" title="Add entry">+</button>
-        <button class="sa-btn" title="Delete section" style="font-size:13px">×</button>
-      </div>
-    </div>
-    <div class="skill-row">
-      <span class="skill-category">Languages:</span>
-      <span class="skill-items">Python, TypeScript, Go, Rust, Java</span>
-    </div>
-    <div class="skill-row">
-      <span class="skill-category">Infrastructure:</span>
-      <span class="skill-items">Kubernetes, Docker, Terraform, AWS, GCP</span>
-    </div>
-  </div>
-
-  <!-- Section: Education -->
-  <div class="section" id="sec3">
-    <div class="section-header">
-      <span class="section-label">Education</span>
-      <div class="section-actions">
-        <button class="sa-btn sa-add-entry" title="Add entry">+</button>
-        <button class="sa-btn" title="Delete section" style="font-size:13px">×</button>
-      </div>
-    </div>
-    <div class="entry">
-      <div class="entry-line">
-        <span class="entry-left entry-title">B.S. Computer Science</span>
-        <span class="entry-right">2020 — 2024</span>
-        <div class="entry-actions">
-          <button class="ea-btn" title="Add bullet">+</button>
-          <button class="ea-btn" title="Delete entry">×</button>
+      <!-- Section: Skills -->
+      <div class="section" id="sec2">
+        <div class="section-header">
+          <span class="section-label">Skills</span>
+          <div class="section-actions">
+            <button class="sa-btn sa-add-entry" title="Add entry">+</button>
+            <button
+              class="sa-btn"
+              title="Delete section"
+              style="font-size: 13px"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <div class="skill-row">
+          <span class="skill-category">Languages:</span>
+          <span class="skill-items">Python, TypeScript, Go, Rust, Java</span>
+        </div>
+        <div class="skill-row">
+          <span class="skill-category">Infrastructure:</span>
+          <span class="skill-items"
+            >Kubernetes, Docker, Terraform, AWS, GCP</span
+          >
         </div>
       </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org">MIT</span>
-        <span class="right-placeholder">+ right-side text</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- Bottom inline insert -->
-  <div class="inline-insert-bot" style="position:relative">
-    <button class="bot-insert-btn" id="botInsertBtn" onclick="toggleBotInsert()">
-      <span class="plus">+</span> Insert
-    </button>
-    <div class="bot-menu" id="botInsertMenu" style="display:none;">
-      <button class="ft-insert-item" onclick="handleBotInsert('section')">
-        <span class="ft-ins-icon section">§</span> Add Section
-      </button>
-      <button class="ft-insert-item" onclick="handleBotInsert('entry')">
-        <span class="ft-ins-icon entry">E</span> Add Entry
-      </button>
-      <button class="ft-insert-item" onclick="handleBotInsert('skill')">
-        <span class="ft-ins-icon skill">#</span> Add Skill Row
-      </button>
-    </div>
-  </div>
-
-</div>
-
-<!-- ─── FLOATING TOOLBAR ─── -->
-<div class="float-toolbar" id="floatToolbar">
-  <!-- Insert -->
-  <div class="ft-insert-wrap">
-    <button class="ft-btn" id="ftInsertBtn" onclick="toggleFtInsert()" title="Insert">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span class="ft-tooltip">Insert</span>
-    </button>
-    <div class="ft-insert-menu" id="ftInsertMenu" style="display:none">
-      <button class="ft-insert-item" id="ft-mi-section">
-        <span class="ft-ins-icon section">§</span> Add Section
-        <span class="ft-ins-kbd">^⇧S</span>
-      </button>
-      <button class="ft-insert-item" id="ft-mi-entry">
-        <span class="ft-ins-icon entry">E</span> Add Entry
-        <span class="ft-ins-kbd">^⇧E</span>
-      </button>
-      <button class="ft-insert-item" id="ft-mi-bullet">
-        <span class="ft-ins-icon bullet">·</span> Add Bullet
-        <span class="ft-ins-kbd">^⇧B</span>
-      </button>
-      <hr style="border:none;border-top:1px solid var(--toolbar-border);margin:4px 0;">
-      <button class="ft-insert-item" id="ft-mi-profile">
-        <span class="ft-ins-icon profile">@</span> Add Profile Link
-      </button>
-      <button class="ft-insert-item" id="ft-mi-skill">
-        <span class="ft-ins-icon skill">#</span> Add Skill Row
-      </button>
-      <button class="ft-insert-item" id="ft-mi-righttext">
-        <span class="ft-ins-icon righttext">→</span> Add Right-Side Text
-      </button>
-    </div>
-  </div>
-
-  <div class="ft-sep"></div>
-
-  <!-- Bold -->
-  <button class="ft-btn" title="Bold">
-    <span class="ft-tooltip">Bold</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M 7 19 V 5 h 4 a 4 4 0 0 1 0 8 a 4 4 0 0 1 0 6 Z M 11 8.5 h2.5 a2 2 0 0 1 0 3 H 11 Z M 11 13 h2.5 a2 2 0 0 1 0 3 H 11 Z"/></svg>
-  </button>
-  <!-- Italic -->
-  <button class="ft-btn" title="Italic">
-    <span class="ft-tooltip">Italic</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M 10 5 L 14 5 L 9 19 L 5 19 Z"/></svg>
-  </button>
-  <!-- Underline -->
-  <button class="ft-btn" title="Underline">
-    <span class="ft-tooltip">Underline</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M 6 3 v 7 a 6 6 0 0 0 12 0 V 3 h 2 v 7 a 8 8 0 0 1 -16 0 V 3 Z M 4 21 h 16 v 2 H 4 Z"/></svg>
-  </button>
-  <!-- Link -->
-  <button class="ft-btn" title="Link">
-    <span class="ft-tooltip">Link</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-  </button>
-
-  <div class="ft-sep"></div>
-
-  <!-- Undo -->
-  <button class="ft-btn" title="Undo">
-    <span class="ft-tooltip">Undo</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-  </button>
-  <!-- Redo -->
-  <button class="ft-btn" title="Redo">
-    <span class="ft-tooltip">Redo</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
-  </button>
-
-  <div class="ft-sep"></div>
-
-  <!-- View: Final -->
-  <button class="ft-btn" data-active="true" id="ftViewFinal" title="Final view">
-    <span class="ft-tooltip">Final view</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-  </button>
-  <!-- View: Diff -->
-  <button class="ft-btn" id="ftViewDiff" title="Changes (diff view)" onclick="renderDiff()">
-    <span class="ft-tooltip">Changes</span>
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="3" x2="6" y2="15"/><polyline points="2 11 6 15 10 11"/><line x1="18" y1="21" x2="18" y2="9"/><polyline points="14 13 18 9 22 13"/></svg>
-  </button>
-</div>
-
-<!-- ─── TWEAK PANEL ─── -->
-<div class="tweak-panel">
-  <div class="tweak-title">Preview</div>
-  <select class="tweak-select" id="modeSelect" onchange="switchMode(this.value)">
-    <option value="full">Resume (final)</option>
-    <option value="diff">Resume (diff view)</option>
-    <option value="empty">Empty document</option>
-    <option value="nodata">No content yet</option>
-  </select>
-  <label><input type="checkbox" id="darkToggle" checked onchange="toggleDark()"> Dark mode</label>
-  <label><input type="checkbox" id="showHovers" checked onchange="toggleHovers()"> Show hover controls</label>
-</div>
-
-<script>
-  //── Floating toolbar insert ──//
-  function toggleFtInsert() {
-    const m = document.getElementById("ftInsertMenu")
-    closeAllMenusExcept(m)
-    m.style.display = m.style.display === "none" ? "block" : "none"
-  }
-  function toggleBotInsert() {
-    const m = document.getElementById("botInsertMenu")
-    closeAllMenusExcept(m)
-    m.style.display = m.style.display === "none" ? "block" : "none"
-  }
-  function handleBotInsert(what) {
-    const labels = { section: "Add Section", entry: "Add Entry", skill: "Add Skill Row" }
-    alert(labels[what] + " — appends at the end of the document")
-    document.getElementById("botInsertMenu").style.display = "none"
-  }
-  function closeAllMenusExcept(keep) {
-    ["ftInsertMenu","botInsertMenu"].forEach(id => {
-      const el = document.getElementById(id)
-      if (el && el !== keep) el.style.display = "none"
-    })
-  }
-  document.addEventListener("click", function(e) {
-    const fi = document.getElementById("ftInsertBtn")
-    const fm = document.getElementById("ftInsertMenu")
-    const bi = document.getElementById("botInsertBtn")
-    const bm = document.getElementById("botInsertMenu")
-    if (fi && fm && !fi.contains(e.target) && !fm.contains(e.target)) fm.style.display = "none"
-    if (bi && bm && !bi.contains(e.target) && !bm.contains(e.target)) bm.style.display = "none"
-  })
-
-  //── View toggle ──//
-  document.getElementById("ftViewFinal").addEventListener("click", renderFinal)
-  document.getElementById("ftViewDiff").addEventListener("click", renderDiff)
-
-  function renderFinal() {
-    document.getElementById("ftViewFinal").setAttribute("data-active","true")
-    document.getElementById("ftViewDiff").setAttribute("data-active","false")
-    const t = document.querySelector("template#t-full-content")
-    if (t) {
-      document.getElementById("content").innerHTML = t.innerHTML
-      toggleHovers()
-    }
-  }
-  function renderDiff() {
-    document.getElementById("ftViewFinal").setAttribute("data-active","false")
-    document.getElementById("ftViewDiff").setAttribute("data-active","true")
-    const t = document.querySelector("template#t-diff-content")
-    if (t) {
-      document.getElementById("content").innerHTML = t.innerHTML
-      toggleHovers()
-    }
-  }
-
-  //── Dark mode ──//
-  function toggleDark() {
-    document.body.classList.toggle("dark", document.getElementById("darkToggle").checked)
-  }
-
-  //── Hover toggle ──//
-  function toggleHovers() {
-    const show = document.getElementById("showHovers").checked
-    document.querySelectorAll(".section-actions, .entry-actions, .inline-add, .bullet-delete, .inline-insert-bot").forEach(el => {
-      if (show) { el.style.opacity = ""; el.style.pointerEvents = ""; }
-      else { el.style.opacity = "0"; el.style.pointerEvents = "none"; }
-    })
-  }
-
-  //── Mode switcher ──//
-  function switchMode(mode) {
-    if (mode === "full") { renderFinal() }
-    if (mode === "diff") { renderDiff() }
-    if (mode === "empty") {
-      document.getElementById("content").innerHTML = document.querySelector("template#t-empty").innerHTML
-    }
-    if (mode === "nodata") {
-      document.getElementById("content").innerHTML = document.querySelector("template#t-nodata").innerHTML
-    }
-    toggleHovers()
-  }
-
-  //── Insert menu alerts ──//
-  const ftAlerts = {
-    section: "Add Section — appends a new section",
-    entry: "Add Entry — adds to the last-clicked section",
-    bullet: "Add Bullet — adds to the last-clicked entry",
-    profile: "Add Profile Link — appends to header",
-    skill: "Add Skill Row — adds to Skills section",
-    righttext: "Add Right-Side Text — appends to current entry line"
-  }
-  Object.entries(ftAlerts).forEach(([id, msg]) => {
-    const el = document.getElementById("ft-mi-" + id)
-    if (el) el.addEventListener("click", function() {
-      alert(msg); document.getElementById("ftInsertMenu").style.display="none"
-    })
-  })
-
-  //── Store full content for restore ──//
-  window.addEventListener("DOMContentLoaded", function() {
-    const orig = document.getElementById("content").innerHTML
-    if (!document.querySelector("template#t-full-content")) {
-      const t = document.createElement("template")
-      t.id = "t-full-content"
-      t.innerHTML = orig
-      document.body.appendChild(t)
-    }
-  })
-</script>
-
-<!-- ─── TEMPLATES ─── -->
-
-<template id="t-diff-content">
-  <!-- Diff stat bar -->
-  <div class="diff-bar">
-    <span class="diff-stat"><span class="diff-stat-added">+3</span> added</span>
-    <span>·</span>
-    <span class="diff-stat"><span class="diff-stat-removed">–1</span> removed</span>
-    <span>·</span>
-    <span class="diff-stat"><span class="diff-stat-modified">~4</span> modified</span>
-    <span style="margin-left:auto;font-size:10px">31 changes across 3 sections</span>
-  </div>
-
-  <!-- Diff file header -->
-  <div class="diff-file-header">
-    <span>Resume</span> — <span style="color:var(--diff-add-fg)">3 additions</span>, <span style="color:var(--diff-del-fg)">1 deletion</span>, <span style="color:var(--diff-mod-fg)">4 modifications</span>
-  </div>
-
-  <!-- HEADER — unchanged -->
-  <div class="doc-header" style="margin-bottom:24px;">
-    <div class="doc-name">Yashvardhan Singh</div>
-    <div class="doc-contact">
-      <span>+1 (234) 567-8901</span>
-      <span> | </span>
-      <a class="contact-link" href="mailto:yash@example.com">yash@example.com</a>
-      <span> | </span>
-      <a class="contact-link" href="https://github.com/yash" target="_blank">github.com/yash</a>
-    </div>
-  </div>
-
-  <!-- HUNK: Experience section -->
-  <div class="diff-hunk-header font-mono">@@ section: Experience @@</div>
-
-  <div class="section" style="margin-bottom:16px;">
-    <div class="section-header">
-      <span class="section-label">Experience</span>
-    </div>
-
-    <!-- Entry 1: Meta — MODIFIED bullets -->
-    <div class="entry" style="margin-bottom:6px;padding-bottom:6px;">
-      <div class="entry-line" style="margin-bottom:1px;">
-        <span class="entry-left entry-title">Senior Software Engineer</span>
-        <span class="entry-right">2024 — Present</span>
-      </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org">Meta</span>
-        <span class="entry-right">meta.com/careers</span>
-      </div>
-      <div class="bullets">
-        <div class="bullet diff-bullet diff-block-mod">
-          <span class="diff-gutter mod">~</span>
-          Led migration of <span class="diff-removed">8</span><span class="diff-added">12</span> microservices to Kubernetes, reducing infra cost by <span class="diff-removed">25</span><span class="diff-added">34</span>%
+      <!-- Section: Education -->
+      <div class="section" id="sec3">
+        <div class="section-header">
+          <span class="section-label">Education</span>
+          <div class="section-actions">
+            <button class="sa-btn sa-add-entry" title="Add entry">+</button>
+            <button
+              class="sa-btn"
+              title="Delete section"
+              style="font-size: 13px"
+            >
+              ×
+            </button>
+          </div>
         </div>
-        <div class="bullet diff-bullet diff-block-mod">
-          <span class="diff-gutter mod">~</span>
-          Designed <span class="diff-added">real-time</span> event pipeline processing <span class="diff-removed">500K+</span><span class="diff-added">2M+</span> events/sec
+        <div class="entry">
+          <div class="entry-line">
+            <span class="entry-left entry-title">B.S. Computer Science</span>
+            <span class="entry-right">2020 — 2024</span>
+            <div class="entry-actions">
+              <button class="ea-btn" title="Add bullet">+</button>
+              <button class="ea-btn" title="Delete entry">×</button>
+            </div>
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org">MIT</span>
+            <span class="right-placeholder">+ right-side text</span>
+          </div>
         </div>
-        <!-- NEW bullet -->
-        <div class="bullet diff-bullet diff-block-add">
-          <span class="diff-gutter add">+</span>
-          <span class="diff-added">Mentored 4 junior engineers and led weekly architecture reviews</span>
+      </div>
+
+      <!-- Bottom inline insert -->
+      <div class="inline-insert-bot" style="position: relative">
+        <button
+          class="bot-insert-btn"
+          id="botInsertBtn"
+          onclick="toggleBotInsert()"
+        >
+          <span class="plus">+</span> Insert
+        </button>
+        <div class="bot-menu" id="botInsertMenu" style="display: none">
+          <button class="ft-insert-item" onclick="handleBotInsert('section')">
+            <span class="ft-ins-icon section">§</span> Add Section
+          </button>
+          <button class="ft-insert-item" onclick="handleBotInsert('entry')">
+            <span class="ft-ins-icon entry">E</span> Add Entry
+          </button>
+          <button class="ft-insert-item" onclick="handleBotInsert('skill')">
+            <span class="ft-ins-icon skill">#</span> Add Skill Row
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Entry 2: Stripe — MODIFIED title, DELETED bullet, ADDED bullet -->
-    <div class="entry" style="margin-bottom:6px;padding-bottom:6px;">
-      <div class="entry-line" style="margin-bottom:1px;">
-        <span class="entry-left entry-title">
-          <span class="diff-modified"><span class="old">Junior</span><span class="new">Software</span></span> Engineer
-        </span>
-        <span class="entry-right">2022 — 2024</span>
-      </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org">Stripe</span>
-        <span class="entry-right" style="font-size:11px;color:var(--muted);font-style:italic;">+ right-side text</span>
-      </div>
-      <div class="bullets">
-        <div class="bullet diff-bullet diff-block-mod">
-          <span class="diff-gutter mod">~</span>
-          Built API gateway <span class="diff-added">handling $1B+ in monthly payments</span>
+    <!-- ─── FLOATING TOOLBAR ─── -->
+    <div class="float-toolbar" id="floatToolbar">
+      <!-- Insert -->
+      <div class="ft-insert-wrap">
+        <button
+          class="ft-btn"
+          id="ftInsertBtn"
+          onclick="toggleFtInsert()"
+          title="Insert"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span class="ft-tooltip">Insert</span>
+        </button>
+        <div class="ft-insert-menu" id="ftInsertMenu" style="display: none">
+          <button class="ft-insert-item" id="ft-mi-section">
+            <span class="ft-ins-icon section">§</span> Add Section
+            <span class="ft-ins-kbd">^⇧S</span>
+          </button>
+          <button class="ft-insert-item" id="ft-mi-entry">
+            <span class="ft-ins-icon entry">E</span> Add Entry
+            <span class="ft-ins-kbd">^⇧E</span>
+          </button>
+          <button class="ft-insert-item" id="ft-mi-bullet">
+            <span class="ft-ins-icon bullet">·</span> Add Bullet
+            <span class="ft-ins-kbd">^⇧B</span>
+          </button>
+          <hr
+            style="
+              border: none;
+              border-top: 1px solid var(--toolbar-border);
+              margin: 4px 0;
+            "
+          />
+          <button class="ft-insert-item" id="ft-mi-profile">
+            <span class="ft-ins-icon profile">@</span> Add Profile Link
+          </button>
+          <button class="ft-insert-item" id="ft-mi-skill">
+            <span class="ft-ins-icon skill">#</span> Add Skill Row
+          </button>
+          <button class="ft-insert-item" id="ft-mi-righttext">
+            <span class="ft-ins-icon righttext">→</span> Add Right-Side Text
+          </button>
         </div>
-        <!-- DELETED bullet -->
-        <div class="bullet diff-bullet diff-block-del">
-          <span class="diff-gutter del">–</span>
-          <span class="diff-removed">Maintained legacy PHP monolith with 100K+ lines of code</span>
+      </div>
+
+      <div class="ft-sep"></div>
+
+      <!-- Bold -->
+      <button class="ft-btn" title="Bold">
+        <span class="ft-tooltip">Bold</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M 7 19 V 5 h 4 a 4 4 0 0 1 0 8 a 4 4 0 0 1 0 6 Z M 11 8.5 h2.5 a2 2 0 0 1 0 3 H 11 Z M 11 13 h2.5 a2 2 0 0 1 0 3 H 11 Z"
+          />
+        </svg>
+      </button>
+      <!-- Italic -->
+      <button class="ft-btn" title="Italic">
+        <span class="ft-tooltip">Italic</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M 10 5 L 14 5 L 9 19 L 5 19 Z" />
+        </svg>
+      </button>
+      <!-- Underline -->
+      <button class="ft-btn" title="Underline">
+        <span class="ft-tooltip">Underline</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M 6 3 v 7 a 6 6 0 0 0 12 0 V 3 h 2 v 7 a 8 8 0 0 1 -16 0 V 3 Z M 4 21 h 16 v 2 H 4 Z"
+          />
+        </svg>
+      </button>
+      <!-- Link -->
+      <button class="ft-btn" title="Link">
+        <span class="ft-tooltip">Link</span>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+        </svg>
+      </button>
+
+      <div class="ft-sep"></div>
+
+      <!-- Undo -->
+      <button class="ft-btn" title="Undo">
+        <span class="ft-tooltip">Undo</span>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M3 7v6h6" />
+          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+        </svg>
+      </button>
+      <!-- Redo -->
+      <button class="ft-btn" title="Redo">
+        <span class="ft-tooltip">Redo</span>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M21 7v6h-6" />
+          <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+        </svg>
+      </button>
+
+      <div class="ft-sep"></div>
+
+      <!-- View: Final -->
+      <button
+        class="ft-btn"
+        data-active="true"
+        id="ftViewFinal"
+        title="Final view"
+      >
+        <span class="ft-tooltip">Final view</span>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </button>
+      <!-- View: Diff -->
+      <button
+        class="ft-btn"
+        id="ftViewDiff"
+        title="Changes (diff view)"
+        onclick="renderDiff()"
+      >
+        <span class="ft-tooltip">Changes</span>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <line x1="6" y1="3" x2="6" y2="15" />
+          <polyline points="2 11 6 15 10 11" />
+          <line x1="18" y1="21" x2="18" y2="9" />
+          <polyline points="14 13 18 9 22 13" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- ─── TWEAK PANEL ─── -->
+    <div class="tweak-panel">
+      <div class="tweak-title">Preview</div>
+      <select
+        class="tweak-select"
+        id="modeSelect"
+        onchange="switchMode(this.value)"
+      >
+        <option value="full">Resume (final)</option>
+        <option value="diff">Resume (diff view)</option>
+        <option value="empty">Empty document</option>
+        <option value="nodata">No content yet</option>
+      </select>
+      <label
+        ><input
+          type="checkbox"
+          id="darkToggle"
+          checked
+          onchange="toggleDark()"
+        />
+        Dark mode</label
+      >
+      <label
+        ><input
+          type="checkbox"
+          id="showHovers"
+          checked
+          onchange="toggleHovers()"
+        />
+        Show hover controls</label
+      >
+    </div>
+
+    <script>
+      //── Floating toolbar insert ──//
+      function toggleFtInsert() {
+        const m = document.getElementById("ftInsertMenu");
+        closeAllMenusExcept(m);
+        m.style.display = m.style.display === "none" ? "block" : "none";
+      }
+      function toggleBotInsert() {
+        const m = document.getElementById("botInsertMenu");
+        closeAllMenusExcept(m);
+        m.style.display = m.style.display === "none" ? "block" : "none";
+      }
+      function handleBotInsert(what) {
+        const labels = {
+          section: "Add Section",
+          entry: "Add Entry",
+          skill: "Add Skill Row",
+        };
+        alert(labels[what] + " — appends at the end of the document");
+        document.getElementById("botInsertMenu").style.display = "none";
+      }
+      function closeAllMenusExcept(keep) {
+        ["ftInsertMenu", "botInsertMenu"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && el !== keep) el.style.display = "none";
+        });
+      }
+      document.addEventListener("click", function (e) {
+        const fi = document.getElementById("ftInsertBtn");
+        const fm = document.getElementById("ftInsertMenu");
+        const bi = document.getElementById("botInsertBtn");
+        const bm = document.getElementById("botInsertMenu");
+        if (fi && fm && !fi.contains(e.target) && !fm.contains(e.target))
+          fm.style.display = "none";
+        if (bi && bm && !bi.contains(e.target) && !bm.contains(e.target))
+          bm.style.display = "none";
+      });
+
+      //── View toggle ──//
+      document
+        .getElementById("ftViewFinal")
+        .addEventListener("click", renderFinal);
+      document
+        .getElementById("ftViewDiff")
+        .addEventListener("click", renderDiff);
+
+      function renderFinal() {
+        document
+          .getElementById("ftViewFinal")
+          .setAttribute("data-active", "true");
+        document
+          .getElementById("ftViewDiff")
+          .setAttribute("data-active", "false");
+        const t = document.querySelector("template#t-full-content");
+        if (t) {
+          document.getElementById("content").innerHTML = t.innerHTML;
+          toggleHovers();
+        }
+      }
+      function renderDiff() {
+        document
+          .getElementById("ftViewFinal")
+          .setAttribute("data-active", "false");
+        document
+          .getElementById("ftViewDiff")
+          .setAttribute("data-active", "true");
+        const t = document.querySelector("template#t-diff-content");
+        if (t) {
+          document.getElementById("content").innerHTML = t.innerHTML;
+          toggleHovers();
+        }
+      }
+
+      //── Dark mode ──//
+      function toggleDark() {
+        document.body.classList.toggle(
+          "dark",
+          document.getElementById("darkToggle").checked,
+        );
+      }
+
+      //── Hover toggle ──//
+      function toggleHovers() {
+        const show = document.getElementById("showHovers").checked;
+        document
+          .querySelectorAll(
+            ".section-actions, .entry-actions, .inline-add, .bullet-delete, .inline-insert-bot",
+          )
+          .forEach((el) => {
+            if (show) {
+              el.style.opacity = "";
+              el.style.pointerEvents = "";
+            } else {
+              el.style.opacity = "0";
+              el.style.pointerEvents = "none";
+            }
+          });
+      }
+
+      //── Mode switcher ──//
+      function switchMode(mode) {
+        if (mode === "full") {
+          renderFinal();
+        }
+        if (mode === "diff") {
+          renderDiff();
+        }
+        if (mode === "empty") {
+          document.getElementById("content").innerHTML =
+            document.querySelector("template#t-empty").innerHTML;
+        }
+        if (mode === "nodata") {
+          document.getElementById("content").innerHTML =
+            document.querySelector("template#t-nodata").innerHTML;
+        }
+        toggleHovers();
+      }
+
+      //── Insert menu alerts ──//
+      const ftAlerts = {
+        section: "Add Section — appends a new section",
+        entry: "Add Entry — adds to the last-clicked section",
+        bullet: "Add Bullet — adds to the last-clicked entry",
+        profile: "Add Profile Link — appends to header",
+        skill: "Add Skill Row — adds to Skills section",
+        righttext: "Add Right-Side Text — appends to current entry line",
+      };
+      Object.entries(ftAlerts).forEach(([id, msg]) => {
+        const el = document.getElementById("ft-mi-" + id);
+        if (el)
+          el.addEventListener("click", function () {
+            alert(msg);
+            document.getElementById("ftInsertMenu").style.display = "none";
+          });
+      });
+
+      //── Store full content for restore ──//
+      window.addEventListener("DOMContentLoaded", function () {
+        const orig = document.getElementById("content").innerHTML;
+        if (!document.querySelector("template#t-full-content")) {
+          const t = document.createElement("template");
+          t.id = "t-full-content";
+          t.innerHTML = orig;
+          document.body.appendChild(t);
+        }
+      });
+    </script>
+
+    <!-- ─── TEMPLATES ─── -->
+
+    <template id="t-diff-content">
+      <!-- Diff stat bar -->
+      <div class="diff-bar">
+        <span class="diff-stat"
+          ><span class="diff-stat-added">+3</span> added</span
+        >
+        <span>·</span>
+        <span class="diff-stat"
+          ><span class="diff-stat-removed">–1</span> removed</span
+        >
+        <span>·</span>
+        <span class="diff-stat"
+          ><span class="diff-stat-modified">~4</span> modified</span
+        >
+        <span style="margin-left: auto; font-size: 10px"
+          >31 changes across 3 sections</span
+        >
+      </div>
+
+      <!-- Diff file header -->
+      <div class="diff-file-header">
+        <span>Resume</span> —
+        <span style="color: var(--diff-add-fg)">3 additions</span>,
+        <span style="color: var(--diff-del-fg)">1 deletion</span>,
+        <span style="color: var(--diff-mod-fg)">4 modifications</span>
+      </div>
+
+      <!-- HEADER — unchanged -->
+      <div class="doc-header" style="margin-bottom: 24px">
+        <div class="doc-name">Yashvardhan Singh</div>
+        <div class="doc-contact">
+          <span>+1 (234) 567-8901</span>
+          <span> | </span>
+          <a class="contact-link" href="mailto:yash@example.com"
+            >yash@example.com</a
+          >
+          <span> | </span>
+          <a class="contact-link" href="https://github.com/yash" target="_blank"
+            >github.com/yash</a
+          >
         </div>
-        <!-- NEW bullet -->
-        <div class="bullet diff-bullet diff-block-add">
-          <span class="diff-gutter add">+</span>
-          <span class="diff-added">Reduced P99 latency from 450ms to 80ms across 3 services</span>
+      </div>
+
+      <!-- HUNK: Experience section -->
+      <div class="diff-hunk-header font-mono">@@ section: Experience @@</div>
+
+      <div class="section" style="margin-bottom: 16px">
+        <div class="section-header">
+          <span class="section-label">Experience</span>
+        </div>
+
+        <!-- Entry 1: Meta — MODIFIED bullets -->
+        <div class="entry" style="margin-bottom: 6px; padding-bottom: 6px">
+          <div class="entry-line" style="margin-bottom: 1px">
+            <span class="entry-left entry-title">Senior Software Engineer</span>
+            <span class="entry-right">2024 — Present</span>
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org">Meta</span>
+            <span class="entry-right">meta.com/careers</span>
+          </div>
+          <div class="bullets">
+            <div class="bullet diff-bullet diff-block-mod">
+              <span class="diff-gutter mod">~</span>
+              Led migration of <span class="diff-removed">8</span
+              ><span class="diff-added">12</span> microservices to Kubernetes,
+              reducing infra cost by <span class="diff-removed">25</span
+              ><span class="diff-added">34</span>%
+            </div>
+            <div class="bullet diff-bullet diff-block-mod">
+              <span class="diff-gutter mod">~</span>
+              Designed <span class="diff-added">real-time</span> event pipeline
+              processing <span class="diff-removed">500K+</span
+              ><span class="diff-added">2M+</span> events/sec
+            </div>
+            <!-- NEW bullet -->
+            <div class="bullet diff-bullet diff-block-add">
+              <span class="diff-gutter add">+</span>
+              <span class="diff-added"
+                >Mentored 4 junior engineers and led weekly architecture
+                reviews</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Entry 2: Stripe — MODIFIED title, DELETED bullet, ADDED bullet -->
+        <div class="entry" style="margin-bottom: 6px; padding-bottom: 6px">
+          <div class="entry-line" style="margin-bottom: 1px">
+            <span class="entry-left entry-title">
+              <span class="diff-modified"
+                ><span class="old">Junior</span
+                ><span class="new">Software</span></span
+              >
+              Engineer
+            </span>
+            <span class="entry-right">2022 — 2024</span>
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org">Stripe</span>
+            <span
+              class="entry-right"
+              style="font-size: 11px; color: var(--muted); font-style: italic"
+              >+ right-side text</span
+            >
+          </div>
+          <div class="bullets">
+            <div class="bullet diff-bullet diff-block-mod">
+              <span class="diff-gutter mod">~</span>
+              Built API gateway
+              <span class="diff-added">handling $1B+ in monthly payments</span>
+            </div>
+            <!-- DELETED bullet -->
+            <div class="bullet diff-bullet diff-block-del">
+              <span class="diff-gutter del">–</span>
+              <span class="diff-removed"
+                >Maintained legacy PHP monolith with 100K+ lines of code</span
+              >
+            </div>
+            <!-- NEW bullet -->
+            <div class="bullet diff-bullet diff-block-add">
+              <span class="diff-gutter add">+</span>
+              <span class="diff-added"
+                >Reduced P99 latency from 450ms to 80ms across 3 services</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW entry: Google -->
+        <div
+          class="entry diff-block-add"
+          style="margin-bottom: 6px; padding-bottom: 6px"
+        >
+          <div class="diff-hunk-header font-mono" style="margin: 0 0 4px 0">
+            @@ added entry: Google @@
+          </div>
+          <div class="entry-line" style="margin-bottom: 1px">
+            <span class="entry-left entry-title"
+              ><span class="diff-added">Platform Engineer Intern</span></span
+            >
+            <span class="entry-right"
+              ><span class="diff-added">2021 — 2022</span></span
+            >
+          </div>
+          <div class="entry-line">
+            <span class="entry-left entry-org"
+              ><span class="diff-added">Google</span></span
+            >
+          </div>
+          <div class="bullets">
+            <div class="bullet">
+              <span class="diff-added"
+                >Built internal CI/CD dashboard used by 200+ engineers</span
+              >
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- NEW entry: Google -->
-    <div class="entry diff-block-add" style="margin-bottom:6px;padding-bottom:6px;">
-      <div class="diff-hunk-header font-mono" style="margin:0 0 4px 0;">@@ added entry: Google @@</div>
-      <div class="entry-line" style="margin-bottom:1px;">
-        <span class="entry-left entry-title"><span class="diff-added">Platform Engineer Intern</span></span>
-        <span class="entry-right"><span class="diff-added">2021 — 2022</span></span>
+      <!-- HUNK: Skills section — MODIFIED -->
+      <div class="diff-hunk-header font-mono">@@ section: Skills @@</div>
+
+      <div class="section" style="margin-bottom: 16px">
+        <div class="section-header">
+          <span class="section-label">Skills</span>
+        </div>
+        <div class="skill-row diff-block-mod" style="position: relative">
+          <span class="diff-gutter mod" style="position: absolute; left: -20px"
+            >~</span
+          >
+          <span class="skill-category">Languages:</span>
+          <span class="skill-items"
+            >Python, TypeScript, Go,
+            <span class="diff-added">Rust, Java</span></span
+          >
+        </div>
+        <div class="skill-row" style="position: relative">
+          <span class="skill-category">Infrastructure:</span>
+          <span class="skill-items"
+            >Kubernetes, Docker, Terraform, AWS, GCP</span
+          >
+        </div>
+        <!-- ADDED skill row -->
+        <div class="skill-row diff-block-add" style="position: relative">
+          <span class="diff-gutter add" style="position: absolute; left: -20px"
+            >+</span
+          >
+          <span class="skill-category"
+            ><span class="diff-added">Databases:</span></span
+          >
+          <span class="skill-items"
+            ><span class="diff-added"
+              >PostgreSQL, BigQuery, Redis, Elasticsearch</span
+            ></span
+          >
+        </div>
       </div>
-      <div class="entry-line">
-        <span class="entry-left entry-org"><span class="diff-added">Google</span></span>
+
+      <!-- HUNK: Education — unchanged, no diff -->
+    </template>
+
+    <template id="t-empty">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#5f6368"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          >
+            <path
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"
+            />
+            <path d="M14 2v6h6" />
+            <line x1="12" y1="18" x2="12" y2="12" />
+            <line x1="9" y1="15" x2="15" y2="15" />
+          </svg>
+        </div>
+        <div class="empty-title">New Resume</div>
+        <div class="empty-sub">
+          Start from a blank canvas or let the AI tailor it from a job
+          description.
+        </div>
+        <div class="empty-actions">
+          <button class="bot-insert-btn">
+            <span class="plus">+</span> Add Section
+          </button>
+        </div>
       </div>
-      <div class="bullets">
-        <div class="bullet"><span class="diff-added">Built internal CI/CD dashboard used by 200+ engineers</span></div>
+    </template>
+
+    <template id="t-nodata">
+      <div class="empty-state">
+        <div class="empty-title" style="font-size: 14px">No document yet</div>
+        <div class="empty-sub">
+          Use the floating toolbar or start a chat to build your resume.
+        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- HUNK: Skills section — MODIFIED -->
-  <div class="diff-hunk-header font-mono">@@ section: Skills @@</div>
-
-  <div class="section" style="margin-bottom:16px;">
-    <div class="section-header">
-      <span class="section-label">Skills</span>
-    </div>
-    <div class="skill-row diff-block-mod" style="position:relative">
-      <span class="diff-gutter mod" style="position:absolute;left:-20px">~</span>
-      <span class="skill-category">Languages:</span>
-      <span class="skill-items">Python, TypeScript, Go, <span class="diff-added">Rust, Java</span></span>
-    </div>
-    <div class="skill-row" style="position:relative">
-      <span class="skill-category">Infrastructure:</span>
-      <span class="skill-items">Kubernetes, Docker, Terraform, AWS, GCP</span>
-    </div>
-    <!-- ADDED skill row -->
-    <div class="skill-row diff-block-add" style="position:relative">
-      <span class="diff-gutter add" style="position:absolute;left:-20px">+</span>
-      <span class="skill-category"><span class="diff-added">Databases:</span></span>
-      <span class="skill-items"><span class="diff-added">PostgreSQL, BigQuery, Redis, Elasticsearch</span></span>
-    </div>
-  </div>
-
-  <!-- HUNK: Education — unchanged, no diff -->
-</template>
-
-<template id="t-empty">
-  <div class="empty-state">
-    <div class="empty-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#5f6368" stroke-width="1.5" stroke-linecap="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
-        <path d="M14 2v6h6"/>
-        <line x1="12" y1="18" x2="12" y2="12"/>
-        <line x1="9" y1="15" x2="15" y2="15"/>
-      </svg>
-    </div>
-    <div class="empty-title">New Resume</div>
-    <div class="empty-sub">Start from a blank canvas or let the AI tailor it from a job description.</div>
-    <div class="empty-actions">
-      <button class="bot-insert-btn"><span class="plus">+</span> Add Section</button>
-    </div>
-  </div>
-</template>
-
-<template id="t-nodata">
-  <div class="empty-state">
-    <div class="empty-title" style="font-size:14px;">No document yet</div>
-    <div class="empty-sub">Use the floating toolbar or start a chat to build your resume.</div>
-  </div>
-</template>
-
-</body>
+    </template>
+  </body>
 </html>

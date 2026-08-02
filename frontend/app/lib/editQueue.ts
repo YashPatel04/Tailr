@@ -51,7 +51,10 @@ async function flushEdits() {
   setSaveStatus("saving")
 
   try {
-    await apiRequest("PATCH", `/api/sessions/${sessionId}/document`, { operations: ops, doc_type: docType })
+    await apiRequest("PATCH", `/api/sessions/${sessionId}/document`, {
+      operations: ops,
+      doc_type: docType,
+    })
     setSaveStatus("saved")
     setTimeout(() => {
       if (useSessionStore.getState().saveStatus === "saved") {

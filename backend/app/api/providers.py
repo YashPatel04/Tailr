@@ -1,3 +1,4 @@
+from contextlib import suppress
 from uuid import uuid4
 
 import redis.asyncio as redis
@@ -121,10 +122,8 @@ async def update_provider(
     await db.commit()
     await db.refresh(provider)
 
-    try:
+    with suppress(Exception):
         await _redis.delete(f"models:{provider_id}")
-    except Exception:
-        pass
 
     return _provider_to_response(provider)
 
@@ -145,10 +144,8 @@ async def delete_provider(
     await db.delete(provider)
     await db.commit()
 
-    try:
+    with suppress(Exception):
         await _redis.delete(f"models:{provider_id}")
-    except Exception:
-        pass
 
     return {"status": "ok"}
 
@@ -173,7 +170,7 @@ async def test_provider(
         models = await adapter.list_models()
         return {"status": "ok", "model_count": len(models)}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Provider test failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Provider test failed: {str(e)}") from e
 
 
 @router.get("/{provider_id}/models")
@@ -207,7 +204,7 @@ async def list_provider_models(
         raise HTTPException(
             status_code=503,
             detail={"error": "provider_unavailable", "provider_id": provider_id, "message": str(e)},
-        )
+        ) from e
 
     try:
         import json

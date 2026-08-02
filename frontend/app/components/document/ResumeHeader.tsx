@@ -118,7 +118,9 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
         {basics.location !== undefined && (
           <p className={diffBorder(locationDiff?.kind)}>
             {isDiff && locationDiff?.kind && (
-              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(locationDiff.kind)}`}>
+              <span
+                className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(locationDiff.kind)}`}
+              >
                 {diffGutterChar(locationDiff.kind)}
               </span>
             )}
@@ -131,7 +133,9 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
         <p className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 overflow-hidden">
           <span className={diffBorder(phoneDiff?.kind)}>
             {isDiff && phoneDiff?.kind && (
-              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(phoneDiff.kind)}`}>
+              <span
+                className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(phoneDiff.kind)}`}
+              >
                 {diffGutterChar(phoneDiff.kind)}
               </span>
             )}
@@ -140,7 +144,9 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
           <span>|</span>
           <span className={diffBorder(emailDiff?.kind)}>
             {isDiff && emailDiff?.kind && (
-              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(emailDiff.kind)}`}>
+              <span
+                className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(emailDiff.kind)}`}
+              >
                 {diffGutterChar(emailDiff.kind)}
               </span>
             )}
@@ -166,7 +172,9 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
                       op: "update_basics_field",
                       field: "profiles",
                       value: JSON.stringify(
-                        basics.profiles.map((pr, j) => (j === i ? { ...pr, username: newUsername } : pr))
+                        basics.profiles.map((pr, j) =>
+                          j === i ? { ...pr, username: newUsername } : pr
+                        )
                       ),
                     })
                   }

@@ -24,10 +24,10 @@ async def fetch_jd_text(url: str) -> str:
 
 def extract_company_name(jd_text: str) -> str | None:
     patterns = [
-        r"at ([A-Z][A-Za-z0-9\s&.]+?)(?: is|,|\n|\.)",
+        r"at\s+([A-Z][A-Za-z0-9\s&.]+?)(?: is|,|\n|\.)",
         r"([A-Z][A-Za-z0-9\s&.]+?) is (?:a|an|hiring|looking)",
-        r"Join ([A-Z][A-Za-z0-9\s&.]+?)(?:!|\.|\n)",
-        r"About ([A-Z][A-Za-z0-9\s&.]+?)\n",
+        r"Join\s+([A-Z][A-Za-z0-9\s&.]+?)(?:!|\.|\n)",
+        r"About\s+([A-Z][A-Za-z0-9\s&.]+?)\n",
     ]
     for pattern in patterns:
         match = re.search(pattern, jd_text)

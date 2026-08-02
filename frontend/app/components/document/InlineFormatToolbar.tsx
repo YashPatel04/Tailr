@@ -60,7 +60,9 @@ export function InlineFormatToolbar() {
       setLinkOpen(true)
       setLinkUrl("")
     } else {
-      const el = document.querySelector(`[data-field-id="${activeFieldRef.current}"]`) as HTMLElement
+      const el = document.querySelector(
+        `[data-field-id="${activeFieldRef.current}"]`
+      ) as HTMLElement
       if (el) {
         el.focus()
         document.execCommand(action)
@@ -70,7 +72,9 @@ export function InlineFormatToolbar() {
 
   const handleApplyLink = useCallback(() => {
     if (linkUrl.trim() && savedRangeRef.current) {
-      const el = document.querySelector(`[data-field-id="${activeFieldRef.current}"]`) as HTMLElement
+      const el = document.querySelector(
+        `[data-field-id="${activeFieldRef.current}"]`
+      ) as HTMLElement
       if (el) {
         el.focus()
         const sel = window.getSelection()

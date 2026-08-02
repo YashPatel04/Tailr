@@ -7,12 +7,14 @@ Variant C from the toolbar-bezel mockup proposes a glass inset bar: a horizontal
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Move the toolbar from vertical sidebar to horizontal bar inside the paper
 - Apply glass inset bezel treatment (blur + transparency + shadow)
 - Keep toolbar sticky within the paper scroll context
 - Maintain all existing formatting actions (Insert, Bold, Italic, Underline, Link, Undo, Redo)
 
 **Non-Goals:**
+
 - Changing toolbar button behavior or formatting logic
 - Modifying the DocumentTopBar or DocumentTabs
 - Adding new toolbar actions

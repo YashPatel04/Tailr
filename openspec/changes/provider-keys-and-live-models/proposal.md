@@ -16,6 +16,7 @@ Currently, each LLM provider row bundles the API key, model name, and generation
 ## Capabilities
 
 ### New Capabilities
+
 - `provider-key-management`: CRUD for provider API keys only (no model/params). Includes the simplified provider settings UI.
 - `live-model-discovery`: Fetching available models from provider APIs at runtime. Caching in Redis. Filtering to chat-capable models. Handling unavailable providers.
 - `user-preferences`: Global default generation parameters (temperature, max_tokens, top_p) stored per-user. Settings UI for managing them.

@@ -7,12 +7,14 @@ The `DocumentTabs` component exists but is unused. The Zustand session store alr
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Create a clear visual separation between the toolbar and document content
 - Provide an intuitive way to switch between Resume and Cover Letter views
 - Hide the Changes/Final view-mode toggle when Cover Letter is active (no diff support)
 - Maintain the existing Export functionality in both modes
 
 **Non-Goals:**
+
 - Redesigning the entire top bar layout
 - Adding diff view support for cover letters
 - Changing the underlying document fetching or rendering logic

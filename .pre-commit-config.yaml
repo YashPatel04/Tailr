@@ -3,19 +3,19 @@ repos:
     hooks:
       - id: ruff-check
         name: ruff check
-        entry: ruff check --fix
+        entry: docker compose exec -T backend poetry run ruff check --fix
         language: system
         files: ^backend/.*\.py$
         pass_filenames: false
       - id: ruff-format
         name: ruff format
-        entry: ruff format
+        entry: docker compose exec -T backend poetry run ruff format
         language: system
         files: ^backend/.*\.py$
         pass_filenames: false
       - id: eslint
         name: eslint
-        entry: npm run lint
+        entry: docker compose exec -T frontend npm run lint
         language: system
         files: ^frontend/.*\.[jt]sx?$
         pass_filenames: false

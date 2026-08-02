@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
-from typing import Literal, Union
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -215,41 +215,41 @@ class UpdateClosingOp(BaseModel):
     reasoning: str = ""
 
 
-ContentOp = Union[
-    UpdateBulletOp,
-    AddEntryOp,
-    DeleteEntryOp,
-    MoveEntryOp,
-    UpdateFieldOp,
-    UpdateEntryUrlsOp,
-    AddSectionOp,
-    DeleteSectionOp,
-    MoveSectionOp,
-    AddBulletOp,
-    DeleteBulletOp,
-    ReorderBulletsOp,
-    UpdateSkillRowOp,
-    DeleteSkillRowOp,
-    MoveSkillRowOp,
-    AddSkillRowOp,
-    UpdateBasicsFieldOp,
-    AskOp,
-    UpdateSalutationOp,
-    UpdateParagraphOp,
-    AddParagraphOp,
-    DeleteParagraphOp,
-    ReorderParagraphsOp,
-    UpdateClosingOp,
-]
+ContentOp = (
+    UpdateBulletOp
+    | AddEntryOp
+    | DeleteEntryOp
+    | MoveEntryOp
+    | UpdateFieldOp
+    | UpdateEntryUrlsOp
+    | AddSectionOp
+    | DeleteSectionOp
+    | MoveSectionOp
+    | AddBulletOp
+    | DeleteBulletOp
+    | ReorderBulletsOp
+    | UpdateSkillRowOp
+    | DeleteSkillRowOp
+    | MoveSkillRowOp
+    | AddSkillRowOp
+    | UpdateBasicsFieldOp
+    | AskOp
+    | UpdateSalutationOp
+    | UpdateParagraphOp
+    | AddParagraphOp
+    | DeleteParagraphOp
+    | ReorderParagraphsOp
+    | UpdateClosingOp
+)
 
-CoverLetterOp = Union[
-    UpdateSalutationOp,
-    UpdateParagraphOp,
-    AddParagraphOp,
-    DeleteParagraphOp,
-    ReorderParagraphsOp,
-    UpdateClosingOp,
-]
+CoverLetterOp = (
+    UpdateSalutationOp
+    | UpdateParagraphOp
+    | AddParagraphOp
+    | DeleteParagraphOp
+    | ReorderParagraphsOp
+    | UpdateClosingOp
+)
 
 OP_CLASSES = [
     UpdateBulletOp,
@@ -615,10 +615,3 @@ class ContentApplier:
             if section.label.lower() == label_lower:
                 return section
         raise ValueError(f"Section '{label}' not found")
-
-
-
-
-
-
-

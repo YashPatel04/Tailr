@@ -13,10 +13,12 @@ When a user sends a chat message, it appears in the UI 4–6 times, each with a 
 ## Capabilities
 
 ### New Capabilities
+
 - `sse-client-replacement`: Plain fetch + ReadableStream SSE client that replaces `@microsoft/fetch-event-source`, with manual SSE line parsing, single-request enforcement, and proper abort/cleanup lifecycle.
 - `request-deduplication`: Backend idempotency mechanism using `request_id` to prevent duplicate message processing from retries or parallel requests.
 
 ### Modified Capabilities
+
 - `chat-streaming`: The existing chat SSE endpoint at `POST /api/sessions/{id}/chat` — requirements change to accept and validate `request_id`, reject duplicates, and return consistent error status codes.
 
 ## Impact

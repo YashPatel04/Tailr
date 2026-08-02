@@ -7,12 +7,14 @@ The `SidebarNewChat` component navigates to `/settings/master-resume` when no ma
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Modal is the only settings surface
 - Master resume view in modal matches standalone page quality (ResumePreview)
 - No dead routes or broken redirects after removal
 - All existing functionality preserved
 
 **Non-Goals:**
+
 - Changing modal layout or tab design
 - Modifying any API endpoints
 - Adding new settings features

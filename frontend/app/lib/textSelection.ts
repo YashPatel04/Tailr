@@ -19,36 +19,6 @@ export function getSelectionOffsets(container: HTMLElement): { start: number; en
   return { start, end }
 }
 
-export function setSelectionFromOffsets(container: HTMLElement, start: number, end: number): void {
-  const sel = window.getSelection()
-  if (!sel) return
-  const startNode = findTextNodeAtOffset(container, start)
-  const endNode = findTextNodeAtOffset(container, end)
-  if (!startNode || !endNode) return
-  const range = document.createRange()
-  range.setStart(startNode.node, startNode.offset)
-  range.setEnd(endNode.node, endNode.offset)
-  sel.removeAllRanges()
-  sel.addRange(range)
-}
-
-function findTextNodeAtOffset(
-  container: HTMLElement,
-  offset: number
-): { node: Text; offset: number } | null {
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null)
-  let total = 0
-  while (walker.nextNode()) {
-    const textNode = walker.currentNode as Text
-    const len = textNode.textContent?.length ?? 0
-    if (total + len >= offset) {
-      return { node: textNode, offset: offset - total }
-    }
-    total += len
-  }
-  return null
-}
-
 export function placeCaretAtPoint(container: HTMLElement, x: number, y: number): boolean {
   if (document.caretPositionFromPoint) {
     const pos = document.caretPositionFromPoint(x, y)
@@ -83,21 +53,4 @@ export function placeCaretAtEnd(container: HTMLElement): void {
   range.collapse(false)
   sel.removeAllRanges()
   sel.addRange(range)
-}
-
-export function selectWordAtPoint(container: HTMLElement, x: number, y: number): void {
-  if (!placeCaretAtPoint(container, x, y)) {
-    placeCaretAtEnd(container)
-  }
-  const sel = window.getSelection()
-  if (sel && sel.rangeCount) {
-    const range = sel.getRangeAt(0)
-    try {
-      range.expand("word" as any)
-      sel.removeAllRanges()
-      sel.addRange(range)
-    } catch {
-      // expand not supported in all browsers, ignore
-    }
-  }
 }

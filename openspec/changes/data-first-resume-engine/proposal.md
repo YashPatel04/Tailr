@@ -33,7 +33,7 @@ The recognizer-based LaTeX parser guesses semantics from layout tokens (`\hfill`
 
 ### Modified Capabilities
 
-*(No source-of-truth specs exist in `openspec/specs/`. The following change-level specs are replaced or significantly altered:)*
+_(No source-of-truth specs exist in `openspec/specs/`. The following change-level specs are replaced or significantly altered:)_
 
 - `doc-parsing` (from `resume-tailoring-app` and `document-model-overlay`): Replaced by `resume-schema` + `resume-import`. No more token tree, recognizer catalog, or region extraction.
 - `doc-editing` (from `resume-tailoring-app` and `document-model-overlay`): Replaced by `content-editing`. Edit contract changes from Region tree ops to schema path ops.

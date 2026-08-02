@@ -3,6 +3,7 @@
 The chat feature uses `@microsoft/fetch-event-source` (v2.0.1) for SSE communication. The frontend sends a POST request to `POST /api/sessions/{id}/chat` and processes a stream of typed SSE events (`researching`, `research_done`, `thinking`, `writing`, `proposal`, `done`, `error`). The library has an opaque retry loop that, on connection errors, automatically retries the POST — causing the backend to process each retry as a new message. The current `onerror` handler's `throw err` stops the retry loop, but `controller.abort()` before the throw resolves the outer promise via the abort listener, masking errors. Two independent hook instances (`ChatRail.tsx:22` and `EnhancedProposal.tsx:13`) each create their own `sendMessage` and `controllerRef`, enabling parallel independent requests.
 
 **Current architecture:**
+
 ```
 ChatInput ──sendMessage──▶ useSessionSSE (ChatRail instance)
                               └── fetchEventSource(POST)
@@ -18,6 +19,7 @@ EnhancedProposal ──sendMessage──▶ useSessionSSE (EnhancedProposal inst
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Eliminate all duplicate message processing from SSE requests
 - Single request at a time — no concurrent requests possible
 - Full control over request lifecycle (no opaque retry behavior)
@@ -25,6 +27,7 @@ EnhancedProposal ──sendMessage──▶ useSessionSSE (EnhancedProposal inst
 - Clean error handling — errors propagate correctly, streaming state resets consistently
 
 **Non-Goals:**
+
 - Changing the SSE event protocol or event types
 - Adding streaming LLM responses (current backend calls `adapter.chat(stream=False)`)
 - Implementing automatic retry with exponential backoff (explicit retry UX is a future feature)
@@ -37,16 +40,19 @@ EnhancedProposal ──sendMessage──▶ useSessionSSE (EnhancedProposal inst
 **Choice:** Use `fetch()` with `ReadableStream` reader and manual SSE line parsing.
 
 **Why:**
+
 - `fetchEventSource`'s retry loop is the root cause of duplicate messages. The library's `onerror` → `throw err` path works but the `controller.abort()` → `resolve()` interaction masks errors.
 - The SSE protocol is simple: `event: <type>\ndata: <json>\n\n`. Manual parsing is ~30 lines.
 - POST-based SSE doesn't benefit from the library's auto-reconnect (designed for GET EventSource).
 - Plain `fetch` gives explicit control: one request, one response, one reader, done.
 
 **Alternatives considered:**
+
 - **Keep library, fix handlers:** Remove `controller.abort()` from `onerror`, let `throw err` handle exit. Add custom `onopen` for status checks. Risk: library behavior is still opaque; future library updates could reintroduce issues.
 - **Use `eventsource-parser` npm package:** Parses SSE streams but still requires manual `fetch` setup. Adds a dependency for ~20 lines of parsing logic. Not worth it.
 
 **Implementation:**
+
 ```typescript
 const response = await fetch(url, {
   method: "POST",
@@ -83,15 +89,18 @@ while (true) {
 **Choice:** Move `sendMessage` function and `controllerRef` into the Zustand `sessionStore` so both `ChatRail` and `EnhancedProposal` share one instance.
 
 **Why:**
+
 - Two independent `useSessionSSE` calls create two independent `controllerRef`s. Aborting one doesn't affect the other.
 - Zustand is already used for session state. Adding SSE state there is natural.
 - Eliminates the possibility of parallel requests from different components.
 
 **Alternatives considered:**
+
 - **React Context:** Creates a provider wrapper. More ceremony for the same result. Zustand is already the pattern in this codebase.
 - **Singleton module-level state:** Works but doesn't integrate with React's lifecycle. Harder to clean up on unmount.
 
 **Implementation:**
+
 - Add `sendMessage` and `controllerRef` to `sessionStore`
 - Remove `useSessionSSE` hook (or refactor it to just call the store)
 - `ChatRail` and `EnhancedProposal` both call `useSessionStore(s => s.sendMessage)`
@@ -101,16 +110,19 @@ while (true) {
 **Choice:** Accept optional `request_id` (UUID) in `ChatMessageRequest`. Check a short-lived in-memory set of recent `request_id` values. Reject duplicates with 409.
 
 **Why:**
+
 - Belt-and-suspenders: even if the frontend is fixed, a browser extension, proxy, or user double-click could send duplicates.
 - In-memory set with TTL (60 seconds) is sufficient — no need for Redis or DB persistence.
 - Optional field: existing clients that don't send `request_id` are unaffected.
 
 **Alternatives considered:**
+
 - **Database unique constraint on `request_id`:** Requires schema migration. Overkill for a transient dedup check.
 - **Redis-based dedup:** Adds Redis dependency for this feature alone. The app uses Redis for rate limiting but dedup is better kept in-process.
 - **Idempotency key in HTTP header:** Standard pattern but the frontend already sends custom headers (CSRF). Adding another header is fine but a body field is simpler for this case.
 
 **Implementation:**
+
 ```python
 _recent_request_ids: dict[str, float] = {}  # request_id -> timestamp
 DEDUP_WINDOW_SECONDS = 60
@@ -134,6 +146,7 @@ def _is_duplicate(request_id: str | None) -> bool:
 **Choice:** Extract SSE parsing into a pure function `parseSSELines(buffer: string) => { events: SSEEvent[], remainder: string }`.
 
 **Why:**
+
 - Testable in isolation.
 - Reusable if other parts of the app need SSE parsing.
 - Keeps `sendMessage` focused on request lifecycle, not parsing details.

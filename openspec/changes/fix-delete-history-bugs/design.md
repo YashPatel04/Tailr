@@ -3,6 +3,7 @@
 The frontend uses React Query for server state and Zustand for client state. When destructive actions occur (delete session, delete master resume), the handlers call `apiRequest` then `invalidateQueries` — but only for the primary query key, missing related caches. This leaves stale data in sidebar company counts, grouped history, and master resume views.
 
 Key files:
+
 - `app/components/sidebar/SidebarHistoryItem.tsx` — session delete/archive handlers
 - `app/components/sidebar/SidebarProjects.tsx` — company list with session_count badge
 - `app/components/sidebar/SidebarHistory.tsx` — grouped session history
@@ -14,12 +15,14 @@ Key files:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - After session delete/archive: company badges, grouped history, and company list all reflect the deletion immediately
 - After master resume delete: UI shows empty state without page reload
 - After deleting the currently active session: user is redirected to `/`
 - All fixes use React Query cache patterns already established in the codebase
 
 **Non-Goals:**
+
 - Backend API changes (already correct)
 - Optimistic updates (overkill for these small mutations)
 - Refactoring query hooks into shared utilities
@@ -34,6 +37,7 @@ Key files:
 **Rationale:** Session and company data are fetched by multiple components — invalidation ensures all consumers refetch. Master resume is a singleton; after deletion the GET returns 404, which React Query treats as error (not data=null). Explicitly setting `null` bypasses the 404 problem and immediately renders the empty state.
 
 **Alternatives considered:**
+
 - `removeQueries` for master resume: Works but causes a flash of loading state. `setQueryData(null)` is instant.
 - Optimistic update for sessions: Adds complexity for minimal gain — the mutations are fast.
 

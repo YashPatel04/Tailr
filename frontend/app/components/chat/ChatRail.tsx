@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useLayoutStore } from "@/stores/layout"
+import { useLayoutStore } from "@/stores/layoutStore"
 import { useSessionMessages, useSession } from "@/hooks/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { ChatRailEmptyState } from "./ChatRailEmptyState"
@@ -11,23 +11,22 @@ import { ChatMessageList } from "./ChatMessageList"
 import { ChatInput } from "./ChatInput"
 import { JDSetupForm } from "./JDSetupForm"
 import { ModeBar } from "./ModeBar"
-import { CoverLetterEmptyPrompt } from "./CoverLetterEmptyPrompt"
 import { MessageSquare, Lock } from "lucide-react"
 import { getApiBaseUrl } from "@/lib/env"
 import { getCsrfToken } from "@/lib/api"
 
 const PEEK_DELAY = 300
 const PEEK_MAX_MESSAGES = 4
+const GENERATE_CL_PATTERN = /\b(write|generate|draft|create)\b.*\b(cover\s*letter|cl)\b/i
 
-export function ChatRail({ width }: { width: number }) {
+export function ChatRail() {
   const { activeSessionId, setupOpen, setSetupOpen, activeMode, activeDocType } = useSessionStore()
-  const { chatRailCollapsed, setChatRailCollapsed, chatRailPeeking, setChatRailPeeking } = useLayoutStore()
+  const { chatRailCollapsed, setChatRailCollapsed, chatRailPeeking, setChatRailPeeking } =
+    useLayoutStore()
   const storeSendMessage = useSessionStore((s) => s.sendMessage)
   const queryClient = useQueryClient()
   const { data: session } = useSession(activeSessionId!)
   const hasCoverLetter = session?.has_cover_letter || false
-
-  const GENERATE_CL_PATTERN = /\b(write|generate|draft|create)\b.*\b(cover\s*letter|cl)\b/i
 
   const sendMessage = useCallback(
     async (content: string) => {
@@ -35,14 +34,19 @@ export function ChatRail({ width }: { width: number }) {
         if (GENERATE_CL_PATTERN.test(content)) {
           try {
             const csrfToken = await getCsrfToken()
-            const response = await fetch(`${getApiBaseUrl()}/api/sessions/${activeSessionId}/generate-cover-letter`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-              credentials: "include",
-            })
+            const response = await fetch(
+              `${getApiBaseUrl()}/api/sessions/${activeSessionId}/generate-cover-letter`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+                credentials: "include",
+              }
+            )
             if (response.ok) {
               queryClient.invalidateQueries({ queryKey: ["sessions"] })
-              queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "messages", "cover_letter"] })
+              queryClient.invalidateQueries({
+                queryKey: ["sessions", activeSessionId, "messages", "cover_letter"],
+              })
             }
           } catch {}
           return
@@ -196,7 +200,10 @@ export function ChatRail({ width }: { width: number }) {
   return (
     <section className="flex flex-col h-screen border-l border-muted bg-paper dark:bg-[#212121] relative">
       {setupOpen ? (
-        <div ref={railRef} className="flex flex-col h-full overflow-y-auto">
+        <div
+          ref={railRef as React.RefObject<HTMLDivElement>}
+          className="flex flex-col h-full overflow-y-auto"
+        >
           <div className="px-4 py-3 border-b border-muted flex items-center justify-between flex-shrink-0">
             <h3 className="text-sm font-semibold text-ink dark:text-[#ececec]">New session</h3>
             <button
@@ -205,7 +212,13 @@ export function ChatRail({ width }: { width: number }) {
               title="Collapse chat"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M10 4L6 8l4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>

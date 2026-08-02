@@ -21,7 +21,7 @@ export default function SessionPage() {
 
   useEffect(() => {
     if (isError) {
-      router.replace("/")
+      router.replace("/dashboard")
     }
   }, [isError, router])
 

@@ -67,7 +67,8 @@ async def analyze_jd(
         except Exception:
             return {
                 "extracted": False,
-                "question": "I couldn't access that URL. Could you paste the job description text instead?",
+                "question": "I couldn't access that URL. Could you paste the job description "
+                "text instead?",
             }
 
     if not jd_text.strip():
@@ -109,13 +110,15 @@ async def analyze_jd(
     except Exception:
         return {
             "extracted": False,
-            "question": "I had trouble reading the job description. Could you tell me the company name and role title?",
+            "question": "I had trouble reading the job description. Could you tell me the "
+            "company name and role title?",
         }
 
     if not company and not role:
         return {
             "extracted": False,
-            "question": "I couldn't find the company name or role title in this posting. Could you provide them?",
+            "question": "I couldn't find the company name or role title in this posting. "
+            "Could you provide them?",
         }
 
     return {
@@ -135,36 +138,6 @@ class SessionUpdate(BaseModel):
     current_provider_id: str | None = None
     current_model: str | None = None
     is_archived: bool | None = None
-
-
-def _strip_latex(text: str) -> str:
-    """Remove common LaTeX formatting commands from display text."""
-    import re
-
-    text = re.sub(r"^\\\\", "", text)
-    text = re.sub(r"\\textbf\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\textit\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\underline\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\texttt\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\textsc\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\href\{[^{}]*\}\{([^{}]*)\}?", r"\1", text)
-    text = re.sub(r"\\\$", "$", text)
-    text = re.sub(r"\\&", "&", text)
-    text = re.sub(r"\\%", "%", text)
-    text = re.sub(r"\\#", "#", text)
-    text = re.sub(r"\\_", "_", text)
-    text = re.sub(r"\$\\sim\$", "~", text)
-    text = re.sub(r"\\textellipsis|\\dots", "...", text)
-    text = re.sub(r"\\hfill", "", text)
-    text = re.sub(r"\\vspace\*?\{[^{}]*\}", "", text)
-    text = re.sub(r"\\begin\{[^{}]*\}", "", text)
-    text = re.sub(r"\\end\{[^{}]*\}?", "", text)
-    text = re.sub(r"\\item", "", text)
-    text = re.sub(r"\|\\\\", "", text)
-    text = re.sub(r"\\\\\n?", " — ", text)
-    text = text.strip().rstrip("}")
-    text = text.strip().rstrip("—").strip()
-    return text
 
 
 def _session_to_dict(s: Session) -> dict:
@@ -247,7 +220,7 @@ async def list_sessions(current_user: CurrentUser, db: AsyncSession = Depends(ge
 async def list_sessions_grouped(current_user: CurrentUser, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Session)
-        .where(Session.user_id == current_user.id, Session.is_archived == False)
+        .where(Session.user_id == current_user.id, Session.is_archived.is_(False))
         .order_by(Session.updated_at.desc())
     )
     sessions = result.scalars().all()
@@ -537,7 +510,7 @@ async def upload_master_resume(
         resume_content = await import_from_tex(tex_source, adapter)
         content_json = resume_content.model_dump(mode="json")
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Failed to parse resume: {e}")
+        raise HTTPException(status_code=422, detail=f"Failed to parse resume: {e}") from e
 
     if master:
         master.content_json = content_json

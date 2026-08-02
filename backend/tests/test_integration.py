@@ -14,7 +14,6 @@ from app.models.resume_schema import (
 from app.services.editing.content_ops import (
     AddSectionOp,
     ContentApplier,
-    ContentDiffer,
     UpdateBasicsFieldOp,
     UpdateBulletOp,
     UpdateFieldOp,
@@ -27,17 +26,6 @@ class TestFullPipeline:
 
     def test_import_validate_render(self):
         """9.1: upload .tex -> LLM import -> validate -> generate .tex -> compile to PDF"""
-        tex_source = r"""\documentclass{article}
-\begin{document}
-\section*{EXPERIENCE}
-\textbf{Company} \hfill \textbf{2024} \\
-\textit{Engineer} \hfill \textit{CA}
-\begin{itemize}
-\item Built APIs with \textbf{Python}
-\item Led \textit{team} of 3
-\end{itemize}
-\end{document}"""
-
         content = ResumeContent(
             basics=Basics(name="Test", email="t@t.com"),
             sections=[
@@ -121,18 +109,13 @@ class TestFullPipeline:
         assert new_content.sections[0].entries[0].bullets[0].text == "Tailored for this job bullet"
         assert new_content.sections[1].label == "RELEVANT SKILLS"
 
-        differ = ContentDiffer()
-        diff = differ.diff(content, new_content)
-        changes = diff.get("changes", [])
-        assert len(changes) > 0
-
         renderer = ResumeRenderer()
         tex = renderer.render_tex(new_content)
         assert "RELEVANT SKILLS" in tex
         assert "EXPERIENCE" in tex
 
     def test_user_edit_document(self):
-        """9.3: user edits field on canvas -> PATCH document -> new version stored -> diff computed"""
+        """9.3: user edits field on canvas -> PATCH document -> new version stored"""
         content = ResumeContent(
             basics=Basics(name="Test", email="old@test.com"),
             sections=[
@@ -165,11 +148,6 @@ class TestFullPipeline:
 
         assert new_content.sections[0].entries[0].dates == "2020-2024"
         assert new_content.basics.email == "new@test.com"
-
-        differ = ContentDiffer()
-        diff = differ.diff(content, new_content)
-        changes = diff.get("changes", [])
-        assert len(changes) > 0
 
     def test_conflict_detection_scenario(self):
         """9.4: test conflict detection logic -- user editing when LLM patch arrives"""

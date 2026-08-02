@@ -17,7 +17,11 @@ interface ProgressMessageProps {
   text?: string
 }
 
-export function ProgressMessage({ message, phase: phaseProp, text: textProp }: ProgressMessageProps) {
+export function ProgressMessage({
+  message,
+  phase: phaseProp,
+  text: textProp,
+}: ProgressMessageProps) {
   let phase = ""
   let displayText = ""
 

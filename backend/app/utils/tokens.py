@@ -1,4 +1,5 @@
 import hashlib
+import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -14,7 +15,7 @@ ALGORITHM = "HS256"
 def create_access_token(user_id: UUID) -> str:
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode(
-        {"sub": str(user_id), "exp": expire, "type": "access"},
+        {"sub": str(user_id), "exp": expire, "type": "access", "jti": secrets.token_hex(16)},
         settings.SECRET_KEY,
         algorithm=ALGORITHM,
     )
@@ -23,7 +24,7 @@ def create_access_token(user_id: UUID) -> str:
 def create_refresh_token(user_id: UUID) -> str:
     expire = datetime.now(UTC) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     return jwt.encode(
-        {"sub": str(user_id), "exp": expire, "type": "refresh"},
+        {"sub": str(user_id), "exp": expire, "type": "refresh", "jti": secrets.token_hex(16)},
         settings.SECRET_KEY,
         algorithm=ALGORITHM,
     )

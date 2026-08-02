@@ -13,6 +13,7 @@ The "Add organization", "Add date", "Add location", and "Add URL" buttons on ent
 ## Capabilities
 
 ### New Capabilities
+
 - `entry-field-editing`: Progressive disclosure for entry field buttons (organization, date, location, URL) with proper empty-but-present state handling
 
 ### Modified Capabilities

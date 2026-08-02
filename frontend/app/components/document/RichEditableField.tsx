@@ -39,23 +39,6 @@ export function RichEditableField({
   const viewMode = useSessionStore((s) => s.viewMode)
   const setEditingFieldId = useSessionStore((s) => s.setEditingFieldId)
 
-  useLayoutEffect(() => {
-    if (!editing) return
-    const el = containerRef.current
-    if (!el) return
-    el.focus()
-    registerFormatTarget(rteId.current, { toggleFormat, addLink })
-    const pos = pendingCaretRef.current
-    pendingCaretRef.current = null
-    if (pos) {
-      if (!placeCaretAtPoint(el, pos.x, pos.y)) {
-        placeCaretAtEnd(el)
-      }
-    } else {
-      placeCaretAtEnd(el)
-    }
-  }, [editing])
-
   const enterEditing = useCallback(
     (x?: number, y?: number) => {
       pendingCaretRef.current = x !== undefined && y !== undefined ? { x, y } : null
@@ -100,8 +83,25 @@ export function RichEditableField({
     containerRef.current?.focus()
   }, [])
 
+  useLayoutEffect(() => {
+    if (!editing) return
+    const el = containerRef.current
+    if (!el) return
+    el.focus()
+    registerFormatTarget(rteId.current, { toggleFormat, addLink })
+    const pos = pendingCaretRef.current
+    pendingCaretRef.current = null
+    if (pos) {
+      if (!placeCaretAtPoint(el, pos.x, pos.y)) {
+        placeCaretAtEnd(el)
+      }
+    } else {
+      placeCaretAtEnd(el)
+    }
+  }, [editing, toggleFormat, addLink])
+
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (_e: React.MouseEvent) => {
       if (viewMode === "changes") return
       mousedownInsideRef.current = true
     },

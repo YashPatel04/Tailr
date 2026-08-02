@@ -42,7 +42,9 @@ describe("useKeyboardShortcut", () => {
 
   it("cleans up listener on unmount", () => {
     const callback = vi.fn()
-    const { unmount } = renderHook(() => useKeyboardShortcut({ key: "k", metaKey: true }, callback, true))
+    const { unmount } = renderHook(() =>
+      useKeyboardShortcut({ key: "k", metaKey: true }, callback, true)
+    )
 
     unmount()
 

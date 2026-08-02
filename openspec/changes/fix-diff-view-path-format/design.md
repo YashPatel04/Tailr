@@ -12,11 +12,13 @@ Additionally, `buildPathToIdMap` has no entries for `basics.*` paths, so header-
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Every diff change produced by the backend SHALL be matchable to a frontend node ID
 - Section-level, entry-level, bullet-level, and basics-level changes SHALL all render gutter markers, colored borders, and inline word diffs
 - The fix SHALL NOT change the backend API contract (frontend-only path normalization)
 
 **Non-Goals:**
+
 - Side-by-side old/new document comparison view
 - Diff browsing across arbitrary document versions
 - Semantic (LCS-based) entry/bullet matching instead of positional
@@ -37,6 +39,7 @@ Additionally, `buildPathToIdMap` has no entries for `basics.*` paths, so header-
 **Choice:** For each node, insert multiple path-format keys into the map instead of a single key.
 
 **Rationale:** The backend uses at least two distinct path conventions depending on the change type:
+
 - `sections[{idx}].{label}` — section add/remove
 - `sections.{label}.entries[{idx}].bullets[{idx}]` — entry/bullet changes within matched sections
 

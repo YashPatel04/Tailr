@@ -10,23 +10,24 @@ Open-source tech. Think Vite, Zod, Drizzle — short names, clean marks, minimal
 
 ## Color Palette
 
-| Token | Hex | Usage |
-|---|---|---|
+| Token          | Hex       | Usage                                                 |
+| -------------- | --------- | ----------------------------------------------------- |
 | Primary accent | `#3B82F6` | Cut edges, stitch thread, scissor handles, highlights |
-| Accent light | `#60A5FA` | Bevel highlights, secondary glow |
-| Accent dark | `#2563EB` | Shadows, depth edges |
-| Paper | `#FAF9F7` | Document fill — warm white, not pure white |
-| Paper shadow | `#E8E6E1` | Paper gradient end, dimension |
-| Ink lines | `#D4D0C8` | Resume text lines on the paper |
-| Dark bg | `#0C0C0E` | Primary dark background |
-| Light text | `#E4E4E7` | Text on dark backgrounds |
-| Dark text | `#18181B` | Text on light backgrounds |
-| Proof red | `#EF4444` | Deletion marks, scissor cut lines |
-| Proof green | `#22C55E` | Addition marks |
+| Accent light   | `#60A5FA` | Bevel highlights, secondary glow                      |
+| Accent dark    | `#2563EB` | Shadows, depth edges                                  |
+| Paper          | `#FAF9F7` | Document fill — warm white, not pure white            |
+| Paper shadow   | `#E8E6E1` | Paper gradient end, dimension                         |
+| Ink lines      | `#D4D0C8` | Resume text lines on the paper                        |
+| Dark bg        | `#0C0C0E` | Primary dark background                               |
+| Light text     | `#E4E4E7` | Text on dark backgrounds                              |
+| Dark text      | `#18181B` | Text on light backgrounds                             |
+| Proof red      | `#EF4444` | Deletion marks, scissor cut lines                     |
+| Proof green    | `#22C55E` | Addition marks                                        |
 
 ## Typography
 
 **Wordmark: Space Grotesk, 700 weight, lowercase.**
+
 - `tailr` — not `Tailr` in the logo lockup
 - Letter-spacing: `-0.02em` (slightly tight)
 - The "t" and "l" being ascenders gives it a subtle vertical rhythm that echoes the document/page metaphor
@@ -46,6 +47,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** The purest form. A single document page with a clean diagonal cut from lower-left to upper-right.
 
 **Visual description:**
+
 - Rounded rectangle (paper), slightly taller than wide, warm white gradient top-to-bottom
 - 8-10 faint horizontal lines inside, varying lengths, suggesting resume text but abstract
 - A bold diagonal line cuts from bottom-left edge to top-right edge at roughly 55 degrees
@@ -63,6 +65,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** Scissors in mid-action, cutting through the document along the same diagonal line.
 
 **Visual description:**
+
 - Same paper shape and content lines as Variation 1
 - The diagonal cut line is present but slightly muted (thinner, lower opacity red)
 - A pair of tailor's scissors positioned so the blades follow the diagonal cut line
@@ -70,7 +73,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 - **Bottom blade:** Slightly darker metallic, crossing underneath, entering from lower-left, exiting upper-right
 - **Pivot screw:** Small circle where blades cross, dark gray with a specular highlight
 - **Handles:** Brand blue gradient (light to dark), finger loops, one handle extending below-left, one above-right. Handles should read as circles/ovals at distance but have slight ergonomic shape up close
-- The scissors should look like they're *currently cutting* — blades are open, not closed
+- The scissors should look like they're _currently cutting_ — blades are open, not closed
 - A tiny paper curl or slight lift at the point where the cut starts (lower-left edge), suggesting the paper is being cut in real time
 
 **Mood:** Action, precision, dynamic. More detailed than Classic — better for larger applications.
@@ -82,6 +85,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** Thread sewn diagonally across the page through stitch holes. The thread IS the cut line.
 
 **Visual description:**
+
 - Same paper shape and content lines
 - A series of evenly spaced small circles (stitch holes) running diagonally from bottom-left to top-right, about 6-7 holes total
 - Holes have thin borders in a warm gray, empty centers showing paper color through
@@ -99,6 +103,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** Three stacked pages, each slightly offset and rotated, with the diagonal cut going through all layers. Reveals colored edges at three depths.
 
 **Visual description:**
+
 - Three identical paper rectangles stacked:
   - **Back layer:** darkest paper color, rotated -2 degrees, offset down-right by ~8px
   - **Middle layer:** mid-tone paper, rotated -1 degree, offset down-right by ~4px
@@ -119,6 +124,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** Scissors in full wide-open position, framing the document. The most dynamic composition.
 
 **Visual description:**
+
 - Paper centered, standard shape and content
 - Cut line present but very thin/subtle — almost a guide line
 - **Scissors:** Blades fully open and crossed in an X shape over the page
@@ -140,6 +146,7 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 **Concept:** The most narrative version. A complete sewing scene: needle with thread knot, curved stitch segments, spool tail, all on the page.
 
 **Visual description:**
+
 - Same paper base with content lines
 - **Stitch holes:** 6-7 circles running diagonal, with the warm gray borders
 - **Thread segments:** Curved between holes in primary blue, thicker than Variation 3. Each segment has a slight S-curve, not just a single arc. A thin dark shadow offset beneath each segment
@@ -157,11 +164,11 @@ The paper should feel physical: subtle warm gradient, soft drop shadow, faint co
 
 The mark must work at three sizes:
 
-| Size | Context | Details that must survive |
-|---|---|---|
-| **48×48px** | App icon, product hunt thumbnail | Paper shape, 2-3 content lines, cut line visible, colored edge hint |
-| **32×32px** | Favicon, browser tab | Paper shape recognizable, cut line visible, content lines reduced to 2-3 abstract dashes |
-| **16×16px** | Tiny inline mark | Paper rectangle + diagonal cut line + colored edge triangle. Minimal, but still readable as "document with cut" |
+| Size        | Context                          | Details that must survive                                                                                       |
+| ----------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| **48×48px** | App icon, product hunt thumbnail | Paper shape, 2-3 content lines, cut line visible, colored edge hint                                             |
+| **32×32px** | Favicon, browser tab             | Paper shape recognizable, cut line visible, content lines reduced to 2-3 abstract dashes                        |
+| **16×16px** | Tiny inline mark                 | Paper rectangle + diagonal cut line + colored edge triangle. Minimal, but still readable as "document with cut" |
 
 At 16px, the mark can drop: content lines, shadows, bevel highlights. Keep: paper shape, cut line, colored edge.
 
@@ -179,12 +186,12 @@ Three approved lockup configurations:
 
 ## Background Treatments
 
-| Context | Treatment |
-|---|---|
-| Dark backgrounds (primary) | Paper in warm white, all colored elements in primary blue family. Drop shadow essential for lift. |
-| Light backgrounds | Same mark, but paper shadow becomes softer and lighter. Blue elements may need to shift to slightly darker values for contrast. |
-| Accent/blue backgrounds | Paper in pure white (no warm tint). Colored edge uses white or very light blue. This is the bold favicon treatment. |
-| Monochrome | All colored elements become the same value as the text. Cut line becomes a thick stroke. Works for single-color printing. |
+| Context                    | Treatment                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Dark backgrounds (primary) | Paper in warm white, all colored elements in primary blue family. Drop shadow essential for lift.                               |
+| Light backgrounds          | Same mark, but paper shadow becomes softer and lighter. Blue elements may need to shift to slightly darker values for contrast. |
+| Accent/blue backgrounds    | Paper in pure white (no warm tint). Colored edge uses white or very light blue. This is the bold favicon treatment.             |
+| Monochrome                 | All colored elements become the same value as the text. Cut line becomes a thick stroke. Works for single-color printing.       |
 
 ---
 
@@ -206,6 +213,7 @@ Three approved lockup configurations:
 14. **README hero** (1280×640) — centered lockup on dark background
 
 All deliverables should be:
+
 - Pure vector (no raster elements)
 - Single-color-compatible (all fills use defined palette tokens)
 - Layered/organized for easy editing

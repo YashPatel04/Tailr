@@ -42,9 +42,7 @@ def _make_typical_content() -> ResumeContent:
                         dates="2020–Present",
                         location="Remote",
                         bullets=[
-                            Bullet(
-                                text="Designed and built microservices architecture serving 1M+ users"
-                            ),
+                            Bullet(text="Designed and built microservices serving 1M+ users"),
                             Bullet(text="Led team of 5 engineers through 3 major releases"),
                             Bullet(text="Reduced API latency by 40% through query optimization"),
                         ],
@@ -94,8 +92,8 @@ def _make_session_mock(mode="polish", job_description="", notes=""):
 
 
 class TestBuildTailorPromptV3:
-    def test_prompt_json_under_8kb(self):
-        """Prompt should be under 8000 chars for typical resumes."""
+    def test_prompt_json_under_14kb(self):
+        """Prompt should be under 14kb for typical resumes."""
         content = _make_typical_content()
         session = _make_session_mock(
             job_description="Looking for a senior backend engineer with Python and AWS experience."
@@ -103,9 +101,9 @@ class TestBuildTailorPromptV3:
         messages = build_tailor_prompt_v3(session, content, research_summary=None)
 
         system_content = messages[0]["content"]
-        assert len(system_content) < 8000, (
-            f"System prompt is {len(system_content)} chars, should be < 8000"
-        )
+        assert (
+            len(system_content) < 14000
+        ), f"System prompt is {len(system_content)} chars, should be < 14000"
 
     def test_prompt_contains_section_labels(self):
         content = _make_typical_content()

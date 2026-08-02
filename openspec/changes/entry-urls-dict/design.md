@@ -7,6 +7,7 @@ The system has 16 typed content operations for editing resume content. All edits
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Support multiple URLs per entry, each with an independent display mask
 - Preserve display text during LaTeX import (`\href{url}{mask}` → `urls[url] = mask`)
 - Provide a dedicated `UpdateEntryUrlsOp` for editing the urls dict
@@ -14,6 +15,7 @@ The system has 16 typed content operations for editing resume content. All edits
 - Update all rendering paths (LaTeX, HTML, docx, txt) to iterate the dict
 
 **Non-Goals:**
+
 - Migration of existing database rows (user confirmed: existing resumes will be deleted)
 - Redesigning the frontend URL editing UI beyond basic functionality
 - Adding URL validation or normalization
@@ -26,6 +28,7 @@ The system has 16 typed content operations for editing resume content. All edits
 **Choice:** `urls: dict[str, str]` where key = URL, value = mask.
 
 **Alternatives considered:**
+
 - `list[{url: str, mask: str}]` — ordered, allows duplicate URLs, more natural for LLM output. But: dict is simpler to update by key, deduplicates automatically, and matches how the user described the requirement.
 - Single `url` + `url_mask` fields — doesn't support multiple URLs.
 
@@ -36,6 +39,7 @@ The system has 16 typed content operations for editing resume content. All edits
 **Choice:** New op: `{"op": "update_entry_urls", "section_label": "...", "entry_index": 0, "urls": {"url": "mask"}}`
 
 **Alternatives considered:**
+
 - Allow `UpdateFieldOp` with `field="urls"` and value as JSON string — messes with the type system, `UpdateFieldOp.value` is `str | None` not `dict`.
 - Allow `UpdateFieldOp` with `field="urls"` and value as dict — breaks the `value: str | None` type contract.
 
@@ -46,6 +50,7 @@ The system has 16 typed content operations for editing resume content. All edits
 **Choice:** When the dict contains `{"" : ""}` or `{"https://example.com": ""}`, the empty string value means "use the URL itself as display text".
 
 **Alternatives considered:**
+
 - `null` value — Pydantic dict values are `str`, not `str | None`. Would need to change the type.
 - Omit the value — dict requires a value.
 

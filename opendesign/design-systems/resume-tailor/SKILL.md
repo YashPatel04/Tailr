@@ -3,9 +3,11 @@
 A design system for the Tailr web application — a three-column desktop app that tailors LaTeX resumes to job descriptions using LLMs.
 
 ## Tokens
+
 - `tokens/colors_and_type.css` — all color and typography custom properties
 
 ## Key characteristics
+
 - **Temperature**: neutral-warm. Paper (#F1F2EE) and Ink (#171B22) have near-zero chroma. Brass (#B8863A) is the single accent.
 - **Typography**: Newsreader (serif) for headings and editorial moments; Public Sans (sans-serif) for UI controls and body; JetBrains Mono for code and LaTeX source.
 - **Layout**: Three-column desktop shell — collapsible sidebar, document canvas, chat rail.

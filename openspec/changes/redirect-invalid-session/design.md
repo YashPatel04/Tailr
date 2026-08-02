@@ -5,10 +5,12 @@ The session page at `app/(app)/session/[id]/page.tsx` uses `useParams()` to get 
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Redirect to `/` when navigating to a non-existent session
 - Minimal code change — leverage existing `useSession` hook
 
 **Non-Goals:**
+
 - Custom 404 page
 - Loading state during existence check
 - Soft-404 handling (empty but 200 response)

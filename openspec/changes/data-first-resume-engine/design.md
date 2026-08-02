@@ -7,6 +7,7 @@ The entire resume builder ecosystem (YAMLResume, JSON Resume, simple-resume, res
 ## Goals / Non-Goals
 
 **Goals:**
+
 - `ResumeSchema` Pydantic model as the single source of truth for all resume content
 - Jinja2-driven LaTeX generation from `ResumeSchema` (no surgical emitter, no recognizers)
 - One-time LLM-based import from `.tex` → `ResumeSchema` with user review
@@ -16,6 +17,7 @@ The entire resume builder ecosystem (YAMLResume, JSON Resume, simple-resume, res
 - Pydantic validation replaces all manual ID-existence and type checks
 
 **Non-Goals:**
+
 - Multi-format export beyond LaTeX + PDF (HTML is a bonus, not required for MVP)
 - Template customization UI — ship one excellent default template; customization via file editing only
 - Real-time collaborative editing
@@ -81,6 +83,7 @@ class ResumeContent(BaseModel):
 **Why not JSON Resume schema:** JSON Resume's `work`/`education`/`projects` sections are hardcoded; users with custom sections (e.g., `RESEARCH`, `LEADERSHIP`, `CERTIFICATIONS`) can't add them. Our schema uses a generic `sections` list where each section has a `label` and either `entries` or `skill_rows`. This matches how resumes are actually written.
 
 **Alternatives considered:**
+
 - JSON Resume standard: too rigid (fixed section names); no support for RESEARCH or custom sections
 - YAMLResume schema: tightly coupled to their LaTeX compiler; heavy weight
 - Keeping Region tree: the entire problem we're solving
@@ -143,6 +146,7 @@ A custom `span_format` Jinja2 filter wraps bold/italic/underline/code spans in t
 **Why not surgical emitter:** The surgical emitter walks a Region tree and replays verbatim slices. It's 300 lines of fragile offset math. A template is ~100 lines of straightforward LaTeX generation.
 
 **Alternatives considered:**
+
 - Keeping surgical serializer: the whole point of this change is to delete it
 - WeasyPrint/Markdown→PDF: loses LaTeX's typesetting quality; users expect LaTeX output
 - Multiple template engines (Handlebars, Mustache): Jinja2 is already in the Python ecosystem; no new dependencies
@@ -152,6 +156,7 @@ A custom `span_format` Jinja2 filter wraps bold/italic/underline/code spans in t
 When a user uploads a master resume `.tex` file:
 
 1. Send the entire `.tex` source to the configured LLM with a structured prompt:
+
    > "Extract the resume content from this LaTeX document into the following JSON schema. Preserve all text exactly, including formatting spans (bold/italic/underline). Map sections by their `\section*{}` labels. Extract entry fields (title, role, organization, dates, location, URL) from header lines. Extract bullet text with formatting spans from `\itemize` blocks. Unknown constructs go in metadata."
 
 2. Parse the LLM response with `ResumeContent.model_validate()`
@@ -165,6 +170,7 @@ When a user uploads a master resume `.tex` file:
 **Why one-time, not per-session:** The content doesn't change between sessions. Parsing once and storing structured data avoids the per-session fragility and cost.
 
 **Alternatives considered:**
+
 - Rule-based recognizers: the current system; proven fragile
 - Manual structured data entry: viable but user-hostile for existing LaTeX users
 - Two-phase (LLM + human): adds friction; LLM-only with user review is the pragmatic balance
@@ -196,6 +202,7 @@ reorder_bullets(section_label="EXPERIENCE", entry_index=0,
 **Why paths, not node IDs:** Paths are stable across regenerations (an entry's position doesn't change unless moved). Node IDs like `ent-3` or `bul-7` change when content is re-imported or regenerated. Paths are also semantically meaningful to the LLM — "the first bullet of the second experience entry" is clearer than "bul-7".
 
 **Why not full-content replacement:** Sending the entire `ResumeContent` back and diffing would be simplest for the LLM, but:
+
 - Token cost scales with resume size (unnecessary for single-bullet edits)
 - Diffs can be noisy (whitespace, ordering)
 - The smaller the LLM response, the fewer hallucinations
@@ -203,6 +210,7 @@ reorder_bullets(section_label="EXPERIENCE", entry_index=0,
 Typed ops strike a balance: targeted edits with semantic addressing.
 
 **Alternatives considered:**
+
 - Full content replacement + server-side diff: higher token cost, noisier diffs
 - Region tree node IDs: the current system; fragile ID persistence
 
@@ -294,6 +302,7 @@ Instead of auto-applying LLM edits, the chat endpoint emits an SSE `proposal` ev
 **Why not auto-apply:** Users wanted to review changes before they land, similar to Claude Code's confirmation pattern. The canvas auto-opens the diff view showing exactly what will change (old→new values, color-coded). This prevents unwanted edits and gives users control.
 
 **Alternatives considered:**
+
 - Auto-apply with undo: undo is complex (multiple document versions); user review is simpler and preferred
 - Server-stored pending ops: DB persistence issues with async SSE generators; passing ops in request body is more reliable
 
@@ -304,6 +313,7 @@ A `RichEditableField` component replaces plain `EditableField` for text that sup
 **Why not a full rich-text editor (Slate/ProseMirror):** The formatting needs are minimal (4 inline styles + links). A custom component with textarea + span tracking is ~150 lines vs 100KB+ for a rich-text library. Span offsets are simple to compute from textarea selection ranges.
 
 **Alternatives considered:**
+
 - Slate.js: heavy dependency, complex API, overkill for 4 inline styles
 - contentEditable: browser inconsistencies make span tracking unreliable across browsers
 

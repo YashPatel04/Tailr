@@ -1,11 +1,12 @@
-import type { ResumeContent, UserPreferences, ModelInfo } from "@/types"
+import type { ResumeContent, UserPreferences, ModelInfo, GroupedSessions } from "@/types"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 
 export function useCurrentUser(opts?: { enabled?: boolean; noAuthRedirect?: boolean }) {
   return useQuery({
     queryKey: ["user", "me"],
-    queryFn: () => apiRequest<any>("GET", "/api/users/me", undefined, { noAuthRedirect: opts?.noAuthRedirect }),
+    queryFn: () =>
+      apiRequest<any>("GET", "/api/users/me", undefined, { noAuthRedirect: opts?.noAuthRedirect }),
     retry: false,
     enabled: opts?.enabled ?? true,
   })
@@ -21,7 +22,11 @@ export function useProviders() {
 export function useModels(providerId: string) {
   return useQuery({
     queryKey: ["providers", providerId, "models"],
-    queryFn: () => apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${providerId}/models`),
+    queryFn: () =>
+      apiRequest<{ models: ModelInfo[]; cached: boolean }>(
+        "GET",
+        `/api/providers/${providerId}/models`
+      ),
     enabled: !!providerId,
     retry: false,
     staleTime: 5 * 60 * 1000,
@@ -29,20 +34,16 @@ export function useModels(providerId: string) {
 }
 
 export function useAllModels(providers: { id: string }[] | undefined) {
-  const queries = (providers || []).map((p) => ({
-    queryKey: ["providers", p.id, "models"],
-    queryFn: () => apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${p.id}/models`),
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  }))
-
   return useQuery({
     queryKey: ["all-models", (providers || []).map((p) => p.id).join(",")],
     queryFn: async () => {
       if (!providers || providers.length === 0) return []
       const results = await Promise.allSettled(
         providers.map((p) =>
-          apiRequest<{ models: ModelInfo[]; cached: boolean }>("GET", `/api/providers/${p.id}/models`)
+          apiRequest<{ models: ModelInfo[]; cached: boolean }>(
+            "GET",
+            `/api/providers/${p.id}/models`
+          )
         )
       )
       return providers.map((p, i) => {
@@ -95,7 +96,7 @@ export function useSessions(opts?: { enabled?: boolean }) {
 export function useGroupedSessions() {
   return useQuery({
     queryKey: ["sessions", "grouped"],
-    queryFn: () => apiRequest<any>("GET", "/api/sessions/grouped"),
+    queryFn: () => apiRequest<GroupedSessions>("GET", "/api/sessions/grouped"),
   })
 }
 
@@ -131,7 +132,7 @@ export function useSessionDocument(sessionId: string | null, docType: string) {
       const doc = session?.latest_document
       if (!doc || doc.document_type !== docType) return null
       const content = doc?.content as ResumeContent | undefined
-      return { ...doc, content, documentModel: doc?.document_model_json }
+      return { ...doc, content }
     },
     enabled: !!sessionId,
   })

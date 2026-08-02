@@ -100,11 +100,7 @@ describe("parseSSEStream", () => {
   })
 
   it("handles chunked stream where message spans multiple chunks", async () => {
-    const stream = createStream([
-      'event: thin',
-      'king\ndata: {"message":"Thin',
-      'king..."}\n\n',
-    ])
+    const stream = createStream(["event: thin", 'king\ndata: {"message":"Thin', 'king..."}\n\n'])
     const events: SSEEvent[] = []
     const controller = new AbortController()
     await parseSSEStream(stream, (e) => events.push(e), controller.signal)
@@ -131,8 +127,8 @@ describe("parseSSEStream", () => {
     const events: SSEEvent[] = []
     const controller = new AbortController()
     controller.abort()
-    await expect(
-      parseSSEStream(stream, (e) => events.push(e), controller.signal)
-    ).rejects.toThrow("Aborted")
+    await expect(parseSSEStream(stream, (e) => events.push(e), controller.signal)).rejects.toThrow(
+      "Aborted"
+    )
   })
 })

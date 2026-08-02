@@ -5,11 +5,13 @@ The resume document canvas supports drag-and-drop reordering at three levels: se
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Skill rows can be dragged to reorder within a section
 - Each section with skill rows shows an "Add skill row" button
 - Matches existing DnD UX patterns (grip handle, hover reveal, optimistic cache update)
 
 **Non-Goals:**
+
 - Moving skill rows between sections (cross-section DnD) — complex, not requested
 - Reordering skill rows across sections — keep it within-section only
 - Changing the SkillRow schema or data model
@@ -27,6 +29,7 @@ Keep `SkillRowRenderer` as the content renderer. Create a separate `SortableSkil
 ### Backend op: `move_skill_row`
 
 Add a `MoveSkillRowOp` to the op union in `content_ops.py`, following the `move_entry` pattern:
+
 ```python
 class MoveSkillRowOp(BaseModel):
     op: Literal["move_skill_row"] = "move_skill_row"

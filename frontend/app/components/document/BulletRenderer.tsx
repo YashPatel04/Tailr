@@ -10,7 +10,6 @@ import { wordDiff } from "@/lib/fieldDiff"
 import { clsx } from "clsx"
 
 interface BulletRendererProps {
-  node?: any
   bullet?: Bullet
   sectionLabel?: string
   entryIndex?: number
@@ -18,16 +17,14 @@ interface BulletRendererProps {
 }
 
 export function BulletRenderer({
-  node,
   bullet,
   sectionLabel,
   entryIndex,
   bulletIndex,
 }: BulletRendererProps) {
-  const id = bullet?.id ?? node?.id
-  const text = bullet?.text ?? node?.text ?? ""
-  const spans = bullet?.spans ?? node?.spans ?? []
-  const bulletDiff = useFieldChanges(bullet?.id ?? node?.id ?? "")
+  const text = bullet?.text ?? ""
+  const spans = bullet?.spans ?? []
+  const bulletDiff = useFieldChanges(bullet?.id ?? "")
   const viewMode = useSessionStore((s) => s.viewMode)
   const queryClient = useQueryClient()
 
@@ -68,12 +65,22 @@ export function BulletRenderer({
         ni++
       } else if (oldSeg?.type === "removed") {
         segments.push(
-          <span key={`r-${oi}`} className="bg-[#fce8e6] dark:bg-[#a50e0e]/30 line-through text-[#c5221f] dark:text-[#f28b82] decoration-1">{oldSeg.text}</span>
+          <span
+            key={`r-${oi}`}
+            className="bg-[#fce8e6] dark:bg-[#a50e0e]/30 line-through text-[#c5221f] dark:text-[#f28b82] decoration-1"
+          >
+            {oldSeg.text}
+          </span>
         )
         oi++
       } else if (newSeg?.type === "added") {
         segments.push(
-          <span key={`a-${ni}`} className="bg-[#e6f4ea] dark:bg-[#137333]/30 text-[#137333] dark:text-[#81c995]">{newSeg.text}</span>
+          <span
+            key={`a-${ni}`}
+            className="bg-[#e6f4ea] dark:bg-[#137333]/30 text-[#137333] dark:text-[#81c995]"
+          >
+            {newSeg.text}
+          </span>
         )
         ni++
       } else if (oldSeg?.type === "same") {
@@ -166,12 +173,19 @@ export function BulletRenderer({
           {diffGutterChar(bulletDiff.kind)}
         </span>
       )}
-      {isInChangesView && bulletDiff?.kind === "modified" &&
-        bulletDiff.old !== undefined &&
-        bulletDiff.new !== undefined ? (
+      {isInChangesView &&
+      bulletDiff?.kind === "modified" &&
+      bulletDiff.old !== undefined &&
+      bulletDiff.new !== undefined ? (
         <span key="diff">{renderWordDiff(bulletDiff.old, bulletDiff.new)}</span>
       ) : showEditable && !isInChangesView ? (
-        <RichEditableField key="editable" value={text} spans={spans} onSave={handleSave} tag="span" />
+        <RichEditableField
+          key="editable"
+          value={text}
+          spans={spans}
+          onSave={handleSave}
+          tag="span"
+        />
       ) : (
         <FormattedText key="static" text={text} spans={spans} />
       )}

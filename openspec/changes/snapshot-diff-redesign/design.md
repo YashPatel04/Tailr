@@ -6,6 +6,7 @@ The diff feature spans two layers:
 - **Frontend**: `DiffView.tsx` wraps document content in a `DiffContext` provider. `buildPathToIdMap(content)` creates a `Map<string, string>` from 80+ path pattern variants to node UUIDs. `findChange(nodeId)` looks up changes by path. Renderers call `useDiff(nodeId)` to get `DiffState` and render gutter markers, colored borders, and inline word diffs.
 
 **Why it's broken:**
+
 1. Path format mismatch: backend emits `sections.EXPERIENCE.entries[0]...`, frontend expects `sections[0].EXPERIENCE.entries[0]...`. Changes never match.
 2. Manual edits invisible: `ContentDiffer` is only called for LLM proposals. Canvas edits go through `ContentEditor.apply_ops()` with no diff computation.
 3. Overengineered: word-level LCS, context providers, 80+ path variants — all for showing "the LLM changed 3 bullets."
@@ -15,6 +16,7 @@ The diff feature spans two layers:
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Replace the entire diff system with a simple field-level comparison between master resume and session document
 - Show word-level highlights on text fields (bullet text, basics fields) in Changes view
 - Accept = dismiss (clear snapshot, changes stay). Reject = revert to snapshot (undo LLM changes, preserve manual edits)
@@ -22,6 +24,7 @@ The diff feature spans two layers:
 - Changes view only — no diff highlights in the normal editing view
 
 **Non-Goals:**
+
 - Updating the master resume on accept (master stays immutable during session work)
 - Side-by-side old/new document comparison
 - Tracking which changes came from LLM vs manual edits
@@ -61,6 +64,7 @@ The diff feature spans two layers:
 **Rationale:** If the user manually edits bullet1, then the LLM proposes changes to bullet2 and bullet3, rejecting should undo only the LLM's changes. The manual edit must survive rejection. By updating the snapshot on manual edit, the snapshot always reflects "the last state the user explicitly accepted."
 
 **Lifecycle:**
+
 - Manual edit → snapshot = current (before edit), then apply edit
 - LLM proposal → snapshot = current (before LLM applies), then apply LLM changes
 - Accept → snapshot = null

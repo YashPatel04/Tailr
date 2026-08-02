@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from "react"
-import { ResumeContent } from "@/app/types"
+import type { ResumeContent } from "@/types"
 
 interface ImportReviewProps {
   content: ResumeContent
@@ -10,7 +10,13 @@ interface ImportReviewProps {
   onReject: () => void
 }
 
-export function ImportReview({ content, originalTex, generatedTex, onAccept, onReject }: ImportReviewProps) {
+export function ImportReview({
+  content,
+  originalTex,
+  generatedTex,
+  onAccept,
+  onReject,
+}: ImportReviewProps) {
   const [showOriginal, setShowOriginal] = useState(true)
   const texSource = showOriginal ? originalTex : generatedTex
 

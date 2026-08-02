@@ -6,11 +6,18 @@ import { ChatRail } from "@/components/chat/ChatRail"
 import { SearchModal } from "@/components/search/SearchModal"
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary"
 import { SettingsModal } from "@/components/settings/SettingsModal"
-import { useLayoutStore } from "@/stores/layout"
+import { useLayoutStore } from "@/stores/layoutStore"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { sidebarCollapsed, setSidebarCollapsed, chatRailWidth, setChatRailWidth, chatRailCollapsed, setChatRailCollapsed, chatRailPeeking } =
-    useLayoutStore()
+  const {
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    chatRailWidth,
+    setChatRailWidth,
+    chatRailCollapsed,
+    setChatRailCollapsed,
+    chatRailPeeking,
+  } = useLayoutStore()
   const [hydrated, setHydrated] = useState(false)
   const [resizing, setResizing] = useState(false)
   const resizeRef = useRef<{ startX: number; startWidth: number }>({ startX: 0, startWidth: 0 })
@@ -78,7 +85,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           style={{ width: chatRailCollapsed ? (chatRailPeeking ? 220 : 52) : chatRailWidth }}
           className="flex-shrink-0 transition-[width] duration-200 ease-out"
         >
-          <ChatRail width={chatRailCollapsed ? (chatRailPeeking ? 220 : 52) : chatRailWidth} />
+          <ChatRail />
         </div>
         <SearchModal />
         <SettingsModal />

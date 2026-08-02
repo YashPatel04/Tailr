@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import type { Entry } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { queueEdit } from "@/lib/editQueue"
-import { EditableField } from "./EditableField"
 import { RichEditableField } from "./RichEditableField"
 import { BulletRenderer } from "./BulletRenderer"
 import { SortableBullet } from "./SortableBullet"
@@ -22,21 +21,22 @@ function reorder(length: number, from: number, to: number): number[] {
 }
 
 interface EntryRendererProps {
-  node?: any
   entry?: Entry
   sectionId?: string
   sectionLabel?: string
   entryIndex?: number
 }
 
-export function EntryRenderer({ node, entry, sectionId, sectionLabel, entryIndex }: EntryRendererProps) {
-  if (entry) {
-    return <EntryRendererNew entry={entry} sectionId={sectionId} sectionLabel={sectionLabel} entryIndex={entryIndex} />
-  }
-  if (node) {
-    return <EntryRendererLegacy node={node} />
-  }
-  return null
+export function EntryRenderer({ entry, sectionId, sectionLabel, entryIndex }: EntryRendererProps) {
+  if (!entry) return null
+  return (
+    <EntryRendererNew
+      entry={entry}
+      sectionId={sectionId}
+      sectionLabel={sectionLabel}
+      entryIndex={entryIndex}
+    />
+  )
 }
 
 function EntryRendererNew({
@@ -120,15 +120,16 @@ function EntryRendererNew({
   }
 
   const editable = sectionLabel !== undefined && entryIndex !== undefined && viewMode !== "changes"
-  const firstUrlKey = entry.urls ? Object.keys(entry.urls).find(k => k !== "") : undefined
-  const roleOrInfo = entry.role != null ? entry.role : entry.organization != null ? entry.organization : null
+  const firstUrlKey = entry.urls ? Object.keys(entry.urls).find((k) => k !== "") : undefined
+  const roleOrInfo =
+    entry.role != null ? entry.role : entry.organization != null ? entry.organization : null
   const [editingUrl, setEditingUrl] = useState(false)
   const [editUrlKey, setEditUrlKey] = useState("")
   const [editUrlText, setEditUrlText] = useState("")
 
   const startEditUrl = () => {
     setEditUrlKey(firstUrlKey || "")
-    setEditUrlText(firstUrlKey ? (entry.urls![firstUrlKey] || "") : "")
+    setEditUrlText(firstUrlKey ? entry.urls![firstUrlKey] || "" : "")
     setEditingUrl(true)
   }
 
@@ -138,7 +139,9 @@ function EntryRendererNew({
     if (editUrlKey.trim()) {
       newUrls[editUrlKey] = editUrlText || editUrlKey
     }
-    updateCache((e) => { e.urls = newUrls })
+    updateCache((e) => {
+      e.urls = newUrls
+    })
     if (sectionLabel && entryIndex !== undefined) {
       queueEdit({
         op: "update_entry_urls",
@@ -181,7 +184,12 @@ function EntryRendererNew({
       )}
       {/* Row 1: Title + Date + Delete */}
       <div className="flex items-baseline justify-between">
-        <span className={clsx("font-semibold text-ink dark:text-[#ececec]", fieldHighlight(isInChangesView ? titleDiff : undefined))}>
+        <span
+          className={clsx(
+            "font-semibold text-ink dark:text-[#ececec]",
+            fieldHighlight(isInChangesView ? titleDiff : undefined)
+          )}
+        >
           {isInChangesView ? (
             <span key="static">{entry.title}</span>
           ) : (
@@ -190,7 +198,9 @@ function EntryRendererNew({
               value={entry.title}
               spans={[]}
               onSave={(v) => {
-                updateCache((e) => { e.title = v })
+                updateCache((e) => {
+                  e.title = v
+                })
                 queueFieldEdit("title", v)
               }}
             />
@@ -198,7 +208,12 @@ function EntryRendererNew({
         </span>
         <div className="flex items-center gap-1">
           {entry.dates ? (
-            <span className={clsx("text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4", fieldHighlight(isInChangesView ? datesDiff : undefined))}>
+            <span
+              className={clsx(
+                "text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4",
+                fieldHighlight(isInChangesView ? datesDiff : undefined)
+              )}
+            >
               {isInChangesView ? (
                 <span key="static">{entry.dates}</span>
               ) : (
@@ -208,7 +223,9 @@ function EntryRendererNew({
                   spans={[]}
                   placeholder="Date"
                   onSave={(v) => {
-                    updateCache((e) => { e.dates = v })
+                    updateCache((e) => {
+                      e.dates = v
+                    })
                     queueFieldEdit("dates", v)
                   }}
                 />
@@ -218,7 +235,9 @@ function EntryRendererNew({
             <AddFieldButton
               label="Date"
               onClick={() => {
-                updateCache((e) => { e.dates = " " })
+                updateCache((e) => {
+                  e.dates = " "
+                })
                 queueFieldEdit("dates", " ")
               }}
             />
@@ -226,17 +245,25 @@ function EntryRendererNew({
           {editable && !isInChangesView && (
             <DeleteButton
               onClick={() => {
-                queueEdit({ op: "delete_entry", section_label: sectionLabel!, entry_index: entryIndex! })
+                queueEdit({
+                  op: "delete_entry",
+                  section_label: sectionLabel!,
+                  entry_index: entryIndex!,
+                })
                 const sessionId = useSessionStore.getState().activeSessionId
                 const docType = useSessionStore.getState().activeDocType
                 if (sessionId) {
-                  queryClient.setQueryData(["sessions", sessionId, "document", docType], (old: any) => {
-                    if (!old?.content) return old
-                    const newContent = structuredClone(old.content)
-                    const sec = newContent.sections.find((s: any) => s.label === sectionLabel)
-                    if (sec) sec.entries = sec.entries.filter((_: any, i: number) => i !== entryIndex)
-                    return { ...old, content: newContent }
-                  })
+                  queryClient.setQueryData(
+                    ["sessions", sessionId, "document", docType],
+                    (old: any) => {
+                      if (!old?.content) return old
+                      const newContent = structuredClone(old.content)
+                      const sec = newContent.sections.find((s: any) => s.label === sectionLabel)
+                      if (sec)
+                        sec.entries = sec.entries.filter((_: any, i: number) => i !== entryIndex)
+                      return { ...old, content: newContent }
+                    }
+                  )
                 }
               }}
             />
@@ -258,7 +285,9 @@ function EntryRendererNew({
                     spans={[]}
                     placeholder="Role"
                     onSave={(v) => {
-                      updateCache((e) => { e.role = v })
+                      updateCache((e) => {
+                        e.role = v
+                      })
                       queueFieldEdit("role", v)
                     }}
                   />
@@ -275,7 +304,9 @@ function EntryRendererNew({
                     spans={[]}
                     placeholder="Info"
                     onSave={(v) => {
-                      updateCache((e) => { e.organization = v })
+                      updateCache((e) => {
+                        e.organization = v
+                      })
                       queueFieldEdit("organization", v)
                     }}
                   />
@@ -286,7 +317,9 @@ function EntryRendererNew({
             <AddFieldButton
               label="Role"
               onClick={() => {
-                updateCache((e) => { e.role = " " })
+                updateCache((e) => {
+                  e.role = " "
+                })
                 queueFieldEdit("role", " ")
               }}
             />
@@ -304,7 +337,9 @@ function EntryRendererNew({
                   spans={[]}
                   placeholder="Location"
                   onSave={(v) => {
-                    updateCache((e) => { e.location = v })
+                    updateCache((e) => {
+                      e.location = v
+                    })
                     queueFieldEdit("location", v)
                   }}
                 />
@@ -314,7 +349,9 @@ function EntryRendererNew({
             <AddFieldButton
               label="Location"
               onClick={() => {
-                updateCache((e) => { e.location = " " })
+                updateCache((e) => {
+                  e.location = " "
+                })
                 queueFieldEdit("location", " ")
               }}
             />
@@ -337,14 +374,15 @@ function EntryRendererNew({
                   placeholder="Label"
                   className="text-xs border border-muted rounded px-1 py-0.5 w-24 bg-canvas text-ink dark:text-[#ececec] dark:bg-[#2d2d2d] focus:outline-none focus:ring-1 focus:ring-brass"
                 />
-                <button onClick={saveUrl} className="text-brass hover:underline">Save</button>
-                <button onClick={cancelEditUrl} className="text-slate hover:underline">Cancel</button>
+                <button onClick={saveUrl} className="text-brass hover:underline">
+                  Save
+                </button>
+                <button onClick={cancelEditUrl} className="text-slate hover:underline">
+                  Cancel
+                </button>
               </span>
             ) : firstUrlKey ? (
-              <button
-                onClick={startEditUrl}
-                className="text-blue-600 hover:underline text-left"
-              >
+              <button onClick={startEditUrl} className="text-blue-600 hover:underline text-left">
                 {entry.urls![firstUrlKey] || firstUrlKey}
               </button>
             ) : null
@@ -434,29 +472,6 @@ function EntryRendererNew({
             + Bullet
           </button>
         </div>
-      )}
-    </div>
-  )
-}
-
-function EntryRendererLegacy({ node }: { node: any }) {
-  const entryDiff = useFieldChanges(`e:${node.id}`)
-
-  return (
-    <div className="mb-3 relative">
-      <div className="flex items-baseline justify-between">
-        <span className="font-semibold text-ink dark:text-[#ececec]">{node.title}</span>
-        {node.dates && (
-          <span className="text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4">
-            {node.dates}
-          </span>
-        )}
-      </div>
-      {node.organization && (
-        <div className="text-sm text-slate dark:text-[#8e8e8e]">{node.organization}</div>
-      )}
-      {node.children?.map((child: any) =>
-        child.type === "bullet" ? <BulletRenderer key={child.id} node={child} /> : null
       )}
     </div>
   )

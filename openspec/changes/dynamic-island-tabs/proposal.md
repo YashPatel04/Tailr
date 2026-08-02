@@ -13,9 +13,11 @@ The resume canvas has no visual separation between the top toolbar and the docum
 ## Capabilities
 
 ### New Capabilities
+
 - `dynamic-island-bezel`: Floating pill-shaped tab bar for switching between Resume and Cover Letter document views, with animated slider indicator
 
 ### Modified Capabilities
+
 - `document-topbar`: Changes/Final toggle conditionally hidden when Cover Letter is active; standalone Cover Letter button removed
 
 ## Impact

@@ -38,9 +38,7 @@ export function DocumentTabs() {
           ref={resumeRef}
           onClick={() => setDocType("resume")}
           className={`relative z-10 flex items-center gap-1.5 px-5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
-            activeDocType === "resume"
-              ? "text-white"
-              : "text-[#8e8e8e] hover:text-[#ececec]"
+            activeDocType === "resume" ? "text-white" : "text-[#8e8e8e] hover:text-[#ececec]"
           }`}
         >
           <FileText size={14} />
@@ -50,16 +48,12 @@ export function DocumentTabs() {
           ref={coverRef}
           onClick={() => setDocType("cover_letter")}
           className={`relative z-10 flex items-center gap-1.5 px-5 py-1.5 rounded-full text-[13px] font-medium transition-colors ${
-            activeDocType === "cover_letter"
-              ? "text-white"
-              : "text-[#8e8e8e] hover:text-[#ececec]"
+            activeDocType === "cover_letter" ? "text-white" : "text-[#8e8e8e] hover:text-[#ececec]"
           }`}
         >
           <Mail size={14} />
           Cover Letter
-          {!hasCoverLetter && (
-            <span className="ml-1 w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />
-          )}
+          {!hasCoverLetter && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-[#f59e0b]" />}
         </button>
       </div>
     </div>

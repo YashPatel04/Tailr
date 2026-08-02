@@ -81,19 +81,6 @@ export interface SessionDocument {
   created_at: string
 }
 
-export interface Patch {
-  id: string
-  session_id: string
-  source_doc_id: string | null
-  target_doc_id: string | null
-  operations_json: PatchOperation[]
-  raw_llm_response: string | null
-  user_message: string | null
-  applied: boolean
-  user_feedback: string | null
-  created_at: string
-}
-
 export interface ChatMessage {
   id: string
   session_id: string
@@ -114,61 +101,10 @@ export interface ResearchSummary {
 
 export type ExportFormat = "tex" | "pdf" | "docx" | "txt"
 
-export type DocNodeType = "section" | "entry" | "bullet" | "text" | "opaque"
-
-export interface DocNode {
-  id: string
-  type: DocNodeType
-  children: DocNode[]
-  metadata: Record<string, unknown>
-}
-
-export interface SectionNode extends DocNode {
-  type: "section"
-  label: string
-}
-
-export interface EntryNode extends DocNode {
-  type: "entry"
-  title: string
-  organization: string | null
-  dates: string | null
-}
-
-export interface BulletNode extends DocNode {
-  type: "bullet"
-  text: string
-  spans: SpanAnnotation[]
-}
-
-export interface TextNode extends DocNode {
-  type: "text"
-  text: string
-  spans: SpanAnnotation[]
-}
-
-export interface OpaqueNode extends DocNode {
-  type: "opaque"
-  content: string
-}
-
 export interface SpanAnnotation {
   start: number
   end: number
   formats: string[]
-}
-
-export interface DiffChangeSet {
-  changes: {
-    node_id?: string
-    path?: string
-    type: "added" | "removed" | "modified" | "moved"
-    old_text?: string
-    new_text?: string
-    old_parent_id?: string
-    new_parent_id?: string
-    reasoning?: string
-  }[]
 }
 
 export type DiffKind = "added" | "removed" | "modified"
@@ -223,7 +159,7 @@ export interface Basics {
   email: string | null
   phone: string | null
   location: string | null
-  profiles: Array<{network: string; username: string; url: string}>
+  profiles: Array<{ network: string; username: string; url: string }>
 }
 
 export interface ResumeContent {
@@ -232,15 +168,10 @@ export interface ResumeContent {
   metadata: Record<string, unknown>
 }
 
-export interface PatchOperation {
-  op: "modify" | "insert" | "delete" | "move" | "ask"
-  reasoning: string
-  target?: string
-  text?: string
-  spans?: SpanAnnotation[]
-  parent?: string
-  after?: string
-  element?: DocNode
-  question?: string
-  context?: string
+export interface GroupedSessions {
+  today: Session[]
+  yesterday: Session[]
+  previous_7_days: Session[]
+  older: Session[]
+  archived_count: number
 }

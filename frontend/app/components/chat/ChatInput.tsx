@@ -53,7 +53,9 @@ export function ChatInput({ onSend }: ChatInputProps) {
           value={text}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={setupOpen ? "Fill in session details above..." : "Describe the changes you want..."}
+          placeholder={
+            setupOpen ? "Fill in session details above..." : "Describe the changes you want..."
+          }
           rows={1}
           disabled={isStreaming}
           className="chat-textarea w-full resize-none rounded-xl border border-muted bg-paper dark:bg-[#2b2b2b] px-4 py-3 pr-12 text-sm text-ink dark:text-[#ececec] placeholder:text-[#8e8e8e] outline-none focus:border-brass focus:ring-1 focus:ring-brass/30 disabled:opacity-50 overflow-y-auto"

@@ -5,6 +5,7 @@ Entry cards in the document canvas have a row of "Add field" buttons that let us
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Fix all "Add field" buttons so they transition from button → editable field
 - Organization field follows progressive disclosure: left side text first, then right side location/links
 - "Add URL" button accepts URL input and persists
@@ -12,6 +13,7 @@ Entry cards in the document canvas have a row of "Add field" buttons that let us
 - Fix TypeScript type mismatch (`url` → `urls`)
 
 **Non-Goals:**
+
 - No backend changes
 - No changes to how fields are stored or synced
 - No new field types beyond existing ones
@@ -25,6 +27,7 @@ The current code uses `!entry.dates` to decide whether to show the "Add date" bu
 ### Organization progressive disclosure
 
 Three states:
+
 1. **No organization**: Show "Add organization" button on left
 2. **Organization present, no location/urls**: Show organization field on left, "Add location" and "Add URL" buttons on right
 3. **Organization + location/urls**: Show all fields
@@ -38,6 +41,7 @@ Currently "Add URL" just sets `urls = {}` with no key/value and no input. Fix: t
 ### Field persistence pattern
 
 All "Add field" buttons follow the same pattern:
+
 1. `updateCache` — set field to empty string `""` (makes it present but empty)
 2. `queueFieldEdit` — persist the empty string to backend
 

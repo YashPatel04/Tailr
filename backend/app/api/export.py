@@ -146,7 +146,7 @@ async def export_document(
                     headers={"Content-Disposition": "attachment; filename=cover_letter.pdf"},
                 )
             except CompileError as e:
-                raise HTTPException(status_code=400, detail=e.message)
+                raise HTTPException(status_code=400, detail=e.message) from e
 
     # Resume export (existing logic)
     doc_result = await db.execute(
@@ -189,7 +189,7 @@ async def export_document(
                 headers={"Content-Disposition": "attachment; filename=resume.pdf"},
             )
         except CompileError as e:
-            raise HTTPException(status_code=400, detail=e.message)
+            raise HTTPException(status_code=400, detail=e.message) from e
 
     if format == "docx":
         from docx import Document as DocxDocument

@@ -7,6 +7,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Editable cover letter canvas with salutation, paragraphs, closing
 - Chat-driven cover letter editing with auto-apply (no proposal/accept step)
 - Two separate chat threads per session (resume + cover letter)
@@ -15,6 +16,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 - Pass research context to cover letter generation
 
 **Non-Goals:**
+
 - Rich text / formatting for cover letters (plain text only)
 - Drag-and-drop reordering of paragraphs
 - Proposal/accept pattern for cover letters (LLM edits directly)
@@ -28,6 +30,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 **Decision**: Add a `doc_type` column to the `chat_messages` table. Filter messages by `doc_type` when fetching.
 
 **Alternatives considered**:
+
 - Separate `cover_letter_messages` table — rejected: duplicates schema, more joins, harder to extend
 - Partition via `metadata_json` — rejected: not queryable, no index, fragile
 
@@ -38,6 +41,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 **Decision**: When `doc_type === "cover_letter"` in the tailor endpoint, parse operations from the LLM response, apply them immediately to the cover letter document, create a new version, and emit a `done` SSE event. No `pending_operations_json`, no `proposal` event.
 
 **Alternatives considered**:
+
 - Reuse proposal pattern — rejected by user: cover letters are lower-stakes, faster iteration preferred
 - Direct text replacement (no structured ops) — rejected: structured ops enable paragraph-level targeting and future undo
 
@@ -48,6 +52,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 **Decision**: Store cover letter as `{ type: "cover_letter", salutation: string, paragraphs: [{id, text}], closing: string }` in `SessionDocument.content_json`.
 
 **Alternatives considered**:
+
 - Flat `{ text: string }` (current) — rejected: can't target individual paragraphs with operations
 - Markdown string — rejected: parsing unreliable, no structured operations possible
 
@@ -64,6 +69,7 @@ The goal is to add a full cover letter editing experience: an editable canvas, c
 **Decision**: When the user sends a message in the cover letter chat with no existing cover letter, the frontend pattern-matches common phrases ("write a cover letter", "generate", "draft") and calls the generate endpoint. Otherwise, shows a system prompt to generate first.
 
 **Alternatives considered**:
+
 - Backend detects intent — rejected: adds latency, LLM call just to detect "generate"
 - Always auto-generate on first cover letter chat message — rejected: user may want to ask questions first
 

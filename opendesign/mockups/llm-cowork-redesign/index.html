@@ -1,1193 +1,2514 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LLM Cowork Redesign — Mockup</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --raw-paper: #ffffff;
-      --raw-ink: #0d0d0d;
-      --raw-slate: #6b6e7b;
-      --raw-accent: #10a37f;
-      --raw-accent-hover: #0d8c6d;
-      --raw-sidebar: #171717;
-      --raw-sidebar-hover: #212121;
-      --raw-sidebar-active: #2b2b2b;
-      --raw-sidebar-text: #ececec;
-      --raw-sidebar-muted: #8e8e8e;
-      --raw-message-assistant: #f7f7f8;
-      --raw-message-user: #f4f4f4;
-      --raw-border: #e5e5e5;
-      --raw-danger: #ef4444;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-      --font-serif: 'Newsreader', Georgia, Cambria, serif;
-      --font-mono: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --radius-2xl: 1.5rem;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LLM Cowork Redesign — Mockup</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --raw-paper: #ffffff;
+        --raw-ink: #0d0d0d;
+        --raw-slate: #6b6e7b;
+        --raw-accent: #10a37f;
+        --raw-accent-hover: #0d8c6d;
+        --raw-sidebar: #171717;
+        --raw-sidebar-hover: #212121;
+        --raw-sidebar-active: #2b2b2b;
+        --raw-sidebar-text: #ececec;
+        --raw-sidebar-muted: #8e8e8e;
+        --raw-message-assistant: #f7f7f8;
+        --raw-message-user: #f4f4f4;
+        --raw-border: #e5e5e5;
+        --raw-danger: #ef4444;
+        --font-sans:
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+          sans-serif;
+        --font-serif: "Newsreader", Georgia, Cambria, serif;
+        --font-mono:
+          ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+        --radius-sm: 0.375rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        --radius-2xl: 1.5rem;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+      }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: var(--font-sans); background: #f0f0f0; color: var(--raw-ink); }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: var(--font-sans);
+        background: #f0f0f0;
+        color: var(--raw-ink);
+      }
 
-    /* === STATE PICKER === */
-    .state-picker {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: var(--raw-sidebar); border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; align-items: center; gap: 8px; padding: 8px 16px;
-      font-size: 12px; color: var(--raw-sidebar-muted);
-    }
-    .state-picker label { color: var(--raw-sidebar-text); font-weight: 600; margin-right: 4px; }
-    .state-picker button {
-      background: transparent; border: 1px solid rgba(255,255,255,0.1);
-      color: var(--raw-sidebar-muted); padding: 4px 10px; border-radius: var(--radius-md);
-      cursor: pointer; font-size: 11px; font-family: var(--font-sans); transition: all 0.15s;
-    }
-    .state-picker button:hover { border-color: rgba(255,255,255,0.2); color: var(--raw-sidebar-text); }
-    .state-picker button.active { background: var(--raw-accent); border-color: var(--raw-accent); color: #fff; }
+      /* === STATE PICKER === */
+      .state-picker {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: var(--raw-sidebar);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        font-size: 12px;
+        color: var(--raw-sidebar-muted);
+      }
+      .state-picker label {
+        color: var(--raw-sidebar-text);
+        font-weight: 600;
+        margin-right: 4px;
+      }
+      .state-picker button {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--raw-sidebar-muted);
+        padding: 4px 10px;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 11px;
+        font-family: var(--font-sans);
+        transition: all 0.15s;
+      }
+      .state-picker button:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: var(--raw-sidebar-text);
+      }
+      .state-picker button.active {
+        background: var(--raw-accent);
+        border-color: var(--raw-accent);
+        color: #fff;
+      }
 
-    /* === APP SHELL === */
-    .app-shell {
-      display: flex; height: 100vh; margin-top: 40px; overflow: hidden;
-    }
+      /* === APP SHELL === */
+      .app-shell {
+        display: flex;
+        height: 100vh;
+        margin-top: 40px;
+        overflow: hidden;
+      }
 
-    /* === SIDEBAR === */
-    .sidebar {
-      width: 260px; background: var(--raw-sidebar); flex-shrink: 0;
-      display: flex; flex-direction: column; transition: width 0.2s ease;
-    }
-    .sidebar.collapsed { width: 52px; }
-    .sidebar-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .sidebar-header .logo {
-      font-family: var(--font-serif); font-size: 16px; font-weight: 600;
-      color: var(--raw-sidebar-text); letter-spacing: -0.02em;
-    }
-    .sidebar-header .collapse-btn {
-      background: none; border: none; color: var(--raw-sidebar-muted);
-      cursor: pointer; padding: 4px; border-radius: var(--radius-sm);
-    }
-    .sidebar-header .collapse-btn:hover { background: var(--raw-sidebar-hover); color: var(--raw-sidebar-text); }
-    .sidebar .new-chat-btn {
-      margin: 12px; padding: 8px 12px; background: transparent;
-      border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-lg);
-      color: var(--raw-sidebar-text); font-size: 13px; font-family: var(--font-sans);
-      cursor: pointer; text-align: left; transition: background 0.15s;
-    }
-    .sidebar .new-chat-btn:hover { background: var(--raw-sidebar-hover); }
-    .sidebar .history-group { padding: 8px 12px; }
-    .sidebar .history-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--raw-sidebar-muted); margin-bottom: 4px; font-weight: 600; }
-    .sidebar .history-item {
-      padding: 6px 8px; border-radius: var(--radius-md); font-size: 13px;
-      color: var(--raw-sidebar-muted); cursor: pointer; white-space: nowrap;
-      overflow: hidden; text-overflow: ellipsis; transition: background 0.15s;
-    }
-    .sidebar .history-item:hover { background: var(--raw-sidebar-hover); color: var(--raw-sidebar-text); }
-    .sidebar .history-item.active { background: var(--raw-sidebar-active); color: var(--raw-sidebar-text); }
+      /* === SIDEBAR === */
+      .sidebar {
+        width: 260px;
+        background: var(--raw-sidebar);
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.2s ease;
+      }
+      .sidebar.collapsed {
+        width: 52px;
+      }
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .sidebar-header .logo {
+        font-family: var(--font-serif);
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--raw-sidebar-text);
+        letter-spacing: -0.02em;
+      }
+      .sidebar-header .collapse-btn {
+        background: none;
+        border: none;
+        color: var(--raw-sidebar-muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+      }
+      .sidebar-header .collapse-btn:hover {
+        background: var(--raw-sidebar-hover);
+        color: var(--raw-sidebar-text);
+      }
+      .sidebar .new-chat-btn {
+        margin: 12px;
+        padding: 8px 12px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius-lg);
+        color: var(--raw-sidebar-text);
+        font-size: 13px;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+      }
+      .sidebar .new-chat-btn:hover {
+        background: var(--raw-sidebar-hover);
+      }
+      .sidebar .history-group {
+        padding: 8px 12px;
+      }
+      .sidebar .history-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--raw-sidebar-muted);
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .sidebar .history-item {
+        padding: 6px 8px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        color: var(--raw-sidebar-muted);
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: background 0.15s;
+      }
+      .sidebar .history-item:hover {
+        background: var(--raw-sidebar-hover);
+        color: var(--raw-sidebar-text);
+      }
+      .sidebar .history-item.active {
+        background: var(--raw-sidebar-active);
+        color: var(--raw-sidebar-text);
+      }
 
-    /* === CANVAS (center) === */
-    .canvas-area {
-      flex: 1; min-width: 0; background: var(--raw-message-assistant);
-      display: flex; align-items: center; justify-content: center;
-      position: relative; overflow: hidden;
-    }
-    .canvas-placeholder {
-      text-align: center; color: var(--raw-slate); font-size: 14px;
-    }
-    .canvas-placeholder .doc-icon {
-      width: 80px; height: 100px; border: 2px dashed var(--raw-border);
-      border-radius: var(--radius-lg); margin: 0 auto 16px; display: flex;
-      align-items: center; justify-content: center; font-size: 32px; color: var(--raw-border);
-    }
-    .canvas-resume {
-      width: 520px; background: #fff; border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md); padding: 40px 36px; font-family: var(--font-serif);
-    }
-    .canvas-resume h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; letter-spacing: -0.02em; }
-    .canvas-resume .subtitle { font-size: 13px; color: var(--raw-slate); margin-bottom: 20px; font-family: var(--font-sans); }
-    .canvas-resume .section-title {
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--raw-accent); border-bottom: 1px solid var(--raw-border);
-      padding-bottom: 4px; margin: 16px 0 8px; font-family: var(--font-sans);
-    }
-    .canvas-resume .entry { margin-bottom: 10px; }
-    .canvas-resume .entry-header { display: flex; justify-content: space-between; align-items: baseline; }
-    .canvas-resume .entry-title { font-size: 14px; font-weight: 600; }
-    .canvas-resume .entry-date { font-size: 12px; color: var(--raw-slate); font-family: var(--font-sans); }
-    .canvas-resume .entry-sub { font-size: 13px; color: var(--raw-slate); margin-bottom: 4px; }
-    .canvas-resume ul { padding-left: 16px; margin: 4px 0; }
-    .canvas-resume li { font-size: 12.5px; line-height: 1.5; margin-bottom: 2px; color: #333; }
+      /* === CANVAS (center) === */
+      .canvas-area {
+        flex: 1;
+        min-width: 0;
+        background: var(--raw-message-assistant);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .canvas-placeholder {
+        text-align: center;
+        color: var(--raw-slate);
+        font-size: 14px;
+      }
+      .canvas-placeholder .doc-icon {
+        width: 80px;
+        height: 100px;
+        border: 2px dashed var(--raw-border);
+        border-radius: var(--radius-lg);
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: var(--raw-border);
+      }
+      .canvas-resume {
+        width: 520px;
+        background: #fff;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 40px 36px;
+        font-family: var(--font-serif);
+      }
+      .canvas-resume h1 {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+      }
+      .canvas-resume .subtitle {
+        font-size: 13px;
+        color: var(--raw-slate);
+        margin-bottom: 20px;
+        font-family: var(--font-sans);
+      }
+      .canvas-resume .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--raw-accent);
+        border-bottom: 1px solid var(--raw-border);
+        padding-bottom: 4px;
+        margin: 16px 0 8px;
+        font-family: var(--font-sans);
+      }
+      .canvas-resume .entry {
+        margin-bottom: 10px;
+      }
+      .canvas-resume .entry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .canvas-resume .entry-title {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .canvas-resume .entry-date {
+        font-size: 12px;
+        color: var(--raw-slate);
+        font-family: var(--font-sans);
+      }
+      .canvas-resume .entry-sub {
+        font-size: 13px;
+        color: var(--raw-slate);
+        margin-bottom: 4px;
+      }
+      .canvas-resume ul {
+        padding-left: 16px;
+        margin: 4px 0;
+      }
+      .canvas-resume li {
+        font-size: 12.5px;
+        line-height: 1.5;
+        margin-bottom: 2px;
+        color: #333;
+      }
 
-    /* === RESIZE HANDLE === */
-    .resize-handle {
-      width: 4px; background: var(--raw-border); cursor: col-resize;
-      flex-shrink: 0; transition: background 0.15s;
-    }
-    .resize-handle:hover, .resize-handle.active { background: var(--raw-accent); }
+      /* === RESIZE HANDLE === */
+      .resize-handle {
+        width: 4px;
+        background: var(--raw-border);
+        cursor: col-resize;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .resize-handle:hover,
+      .resize-handle.active {
+        background: var(--raw-accent);
+      }
 
-    /* === CHAT RAIL === */
-    .chat-rail {
-      width: 360px; flex-shrink: 0; display: flex; flex-direction: column;
-      background: var(--raw-paper); border-left: 1px solid var(--raw-border);
-      transition: width 0.2s ease;
-    }
-    .chat-rail.collapsed { width: 52px; }
-    .chat-rail.collapsed .rail-content { display: none; }
-    .chat-rail.collapsed .rail-collapse-icon { display: flex; }
-    .rail-collapse-icon {
-      display: none; align-items: center; justify-content: center;
-      height: 100%; cursor: pointer; color: var(--raw-slate);
-    }
-    .rail-collapse-icon:hover { background: var(--raw-message-user); }
+      /* === CHAT RAIL === */
+      .chat-rail {
+        width: 360px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--raw-paper);
+        border-left: 1px solid var(--raw-border);
+        transition: width 0.2s ease;
+      }
+      .chat-rail.collapsed {
+        width: 52px;
+      }
+      .chat-rail.collapsed .rail-content {
+        display: none;
+      }
+      .chat-rail.collapsed .rail-collapse-icon {
+        display: flex;
+      }
+      .rail-collapse-icon {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        cursor: pointer;
+        color: var(--raw-slate);
+      }
+      .rail-collapse-icon:hover {
+        background: var(--raw-message-user);
+      }
 
-    /* Rail Header */
-    .rail-header {
-      display: flex; align-items: center; gap: 8px; padding: 10px 16px;
-      border-bottom: 1px solid var(--raw-border); flex-shrink: 0;
-    }
-    .rail-header .collapse-rail-btn {
-      background: none; border: none; color: var(--raw-slate); cursor: pointer;
-      padding: 4px; border-radius: var(--radius-sm); display: flex; align-items: center;
-    }
-    .rail-header .collapse-rail-btn:hover { background: var(--raw-message-user); }
-    .rail-header-info { flex: 1; min-width: 0; }
-    .rail-header-info .company { font-size: 13px; font-weight: 600; color: var(--raw-ink); }
-    .rail-header-info .role { font-size: 11px; color: var(--raw-slate); }
+      /* Rail Header */
+      .rail-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--raw-border);
+        flex-shrink: 0;
+      }
+      .rail-header .collapse-rail-btn {
+        background: none;
+        border: none;
+        color: var(--raw-slate);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+      }
+      .rail-header .collapse-rail-btn:hover {
+        background: var(--raw-message-user);
+      }
+      .rail-header-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .rail-header-info .company {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--raw-ink);
+      }
+      .rail-header-info .role {
+        font-size: 11px;
+        color: var(--raw-slate);
+      }
 
-    /* Chat Messages Area */
-    .chat-messages {
-      flex: 1; overflow-y: auto; padding: 16px; display: flex;
-      flex-direction: column; gap: 12px;
-    }
+      /* Chat Messages Area */
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
 
-    /* Message Bubbles */
-    .msg { display: flex; }
-    .msg-user { justify-content: flex-end; }
-    .msg-assistant { justify-content: flex-start; }
-    .msg-bubble {
-      max-width: 88%; padding: 10px 14px; font-size: 13px; line-height: 1.5;
-      border-radius: var(--radius-2xl);
-    }
-    .msg-user .msg-bubble {
-      background: var(--raw-message-user); color: var(--raw-ink);
-      border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-sm) var(--radius-2xl);
-    }
-    .msg-assistant .msg-bubble {
-      background: var(--raw-message-assistant); color: var(--raw-ink);
-      border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-2xl) var(--radius-sm);
-    }
+      /* Message Bubbles */
+      .msg {
+        display: flex;
+      }
+      .msg-user {
+        justify-content: flex-end;
+      }
+      .msg-assistant {
+        justify-content: flex-start;
+      }
+      .msg-bubble {
+        max-width: 88%;
+        padding: 10px 14px;
+        font-size: 13px;
+        line-height: 1.5;
+        border-radius: var(--radius-2xl);
+      }
+      .msg-user .msg-bubble {
+        background: var(--raw-message-user);
+        color: var(--raw-ink);
+        border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-sm)
+          var(--radius-2xl);
+      }
+      .msg-assistant .msg-bubble {
+        background: var(--raw-message-assistant);
+        color: var(--raw-ink);
+        border-radius: var(--radius-2xl) var(--radius-2xl) var(--radius-2xl)
+          var(--radius-sm);
+      }
 
-    /* Research Expandable */
-    .research-card {
-      background: var(--raw-message-assistant); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl); overflow: hidden;
-    }
-    .research-header {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
-      cursor: pointer; user-select: none;
-    }
-    .research-header:hover { background: var(--raw-message-user); }
-    .research-header .icon { color: var(--raw-accent); flex-shrink: 0; }
-    .research-header .label { font-size: 12px; font-weight: 500; color: var(--raw-ink); flex: 1; }
-    .research-header .chevron { color: var(--raw-slate); transition: transform 0.2s; font-size: 12px; }
-    .research-header .chevron.open { transform: rotate(180deg); }
-    .research-body {
-      padding: 0 14px 12px; font-size: 12px; line-height: 1.6; color: var(--raw-slate);
-      display: none;
-    }
-    .research-body.open { display: block; }
-    .research-body ul { padding-left: 16px; }
-    .research-body li { margin-bottom: 4px; }
-    .research-body .source-link { color: var(--raw-accent); text-decoration: none; font-size: 11px; }
+      /* Research Expandable */
+      .research-card {
+        background: var(--raw-message-assistant);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+      }
+      .research-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .research-header:hover {
+        background: var(--raw-message-user);
+      }
+      .research-header .icon {
+        color: var(--raw-accent);
+        flex-shrink: 0;
+      }
+      .research-header .label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--raw-ink);
+        flex: 1;
+      }
+      .research-header .chevron {
+        color: var(--raw-slate);
+        transition: transform 0.2s;
+        font-size: 12px;
+      }
+      .research-header .chevron.open {
+        transform: rotate(180deg);
+      }
+      .research-body {
+        padding: 0 14px 12px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--raw-slate);
+        display: none;
+      }
+      .research-body.open {
+        display: block;
+      }
+      .research-body ul {
+        padding-left: 16px;
+      }
+      .research-body li {
+        margin-bottom: 4px;
+      }
+      .research-body .source-link {
+        color: var(--raw-accent);
+        text-decoration: none;
+        font-size: 11px;
+      }
 
-    /* Thinking Expandable */
-    .thinking-card {
-      background: var(--raw-message-assistant); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl); overflow: hidden;
-    }
-    .thinking-header {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
-      cursor: pointer; user-select: none;
-    }
-    .thinking-header:hover { background: var(--raw-message-user); }
-    .thinking-header .icon { color: #a78bfa; flex-shrink: 0; }
-    .thinking-header .label { font-size: 12px; font-weight: 500; color: var(--raw-ink); flex: 1; }
-    .thinking-header .chevron { color: var(--raw-slate); transition: transform 0.2s; font-size: 12px; }
-    .thinking-body {
-      padding: 0 14px 12px; font-size: 12px; line-height: 1.6; color: var(--raw-slate);
-      display: none;
-    }
-    .thinking-body.open { display: block; }
+      /* Thinking Expandable */
+      .thinking-card {
+        background: var(--raw-message-assistant);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        overflow: hidden;
+      }
+      .thinking-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        user-select: none;
+      }
+      .thinking-header:hover {
+        background: var(--raw-message-user);
+      }
+      .thinking-header .icon {
+        color: #a78bfa;
+        flex-shrink: 0;
+      }
+      .thinking-header .label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--raw-ink);
+        flex: 1;
+      }
+      .thinking-header .chevron {
+        color: var(--raw-slate);
+        transition: transform 0.2s;
+        font-size: 12px;
+      }
+      .thinking-body {
+        padding: 0 14px 12px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--raw-slate);
+        display: none;
+      }
+      .thinking-body.open {
+        display: block;
+      }
 
-    /* Proposal Card */
-    .proposal-card {
-      background: var(--raw-paper); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl); padding: 16px; margin-top: 4px;
-    }
-    .proposal-section { margin-bottom: 12px; }
-    .proposal-section:last-child { margin-bottom: 0; }
-    .proposal-section-title {
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-      color: var(--raw-slate); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
-    }
-    .proposal-section p { font-size: 13px; line-height: 1.5; color: var(--raw-ink); }
-    .proposal-ops-summary {
-      display: flex; gap: 12px; font-size: 11px; color: var(--raw-slate);
-    }
-    .proposal-ops-summary .op-pill {
-      background: var(--raw-message-user); padding: 3px 8px; border-radius: 999px;
-      font-weight: 500;
-    }
-    .proposal-actions {
-      display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
-    }
-    .proposal-actions .btn-accept {
-      background: var(--raw-accent); color: #fff; border: none;
-      padding: 7px 16px; border-radius: var(--radius-md); font-size: 12px;
-      font-weight: 600; cursor: pointer; font-family: var(--font-sans);
-      transition: background 0.15s;
-    }
-    .proposal-actions .btn-accept:hover { background: var(--raw-accent-hover); }
-    .proposal-actions .btn-decline {
-      background: transparent; color: var(--raw-slate); border: 1px solid var(--raw-border);
-      padding: 7px 16px; border-radius: var(--radius-md); font-size: 12px;
-      font-weight: 500; cursor: pointer; font-family: var(--font-sans);
-      transition: all 0.15s;
-    }
-    .proposal-actions .btn-decline:hover { border-color: var(--raw-danger); color: var(--raw-danger); }
-    .proposal-actions .btn-view-diff {
-      background: transparent; color: var(--raw-accent); border: 1px solid var(--raw-accent);
-      padding: 7px 16px; border-radius: var(--radius-md); font-size: 12px;
-      font-weight: 500; cursor: pointer; font-family: var(--font-sans);
-      transition: all 0.15s;
-    }
-    .proposal-actions .btn-view-diff:hover { background: rgba(16,163,127,0.06); }
+      /* Proposal Card */
+      .proposal-card {
+        background: var(--raw-paper);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        padding: 16px;
+        margin-top: 4px;
+      }
+      .proposal-section {
+        margin-bottom: 12px;
+      }
+      .proposal-section:last-child {
+        margin-bottom: 0;
+      }
+      .proposal-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--raw-slate);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .proposal-section p {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--raw-ink);
+      }
+      .proposal-ops-summary {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--raw-slate);
+      }
+      .proposal-ops-summary .op-pill {
+        background: var(--raw-message-user);
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-weight: 500;
+      }
+      .proposal-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .proposal-actions .btn-accept {
+        background: var(--raw-accent);
+        color: #fff;
+        border: none;
+        padding: 7px 16px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: background 0.15s;
+      }
+      .proposal-actions .btn-accept:hover {
+        background: var(--raw-accent-hover);
+      }
+      .proposal-actions .btn-decline {
+        background: transparent;
+        color: var(--raw-slate);
+        border: 1px solid var(--raw-border);
+        padding: 7px 16px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: all 0.15s;
+      }
+      .proposal-actions .btn-decline:hover {
+        border-color: var(--raw-danger);
+        color: var(--raw-danger);
+      }
+      .proposal-actions .btn-view-diff {
+        background: transparent;
+        color: var(--raw-accent);
+        border: 1px solid var(--raw-accent);
+        padding: 7px 16px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: all 0.15s;
+      }
+      .proposal-actions .btn-view-diff:hover {
+        background: rgba(16, 163, 127, 0.06);
+      }
 
-    /* Reply Input */
-    .proposal-reply {
-      display: flex; gap: 8px; margin-top: 8px; align-items: flex-end;
-    }
-    .proposal-reply input {
-      flex: 1; border: 1px solid var(--raw-border); border-radius: var(--radius-lg);
-      padding: 8px 12px; font-size: 12px; font-family: var(--font-sans);
-      outline: none; color: var(--raw-ink); background: var(--raw-paper);
-    }
-    .proposal-reply input:focus { border-color: var(--raw-accent); }
-    .proposal-reply button {
-      background: var(--raw-accent); color: #fff; border: none;
-      padding: 8px 12px; border-radius: var(--radius-md); font-size: 12px;
-      cursor: pointer; font-family: var(--font-sans); font-weight: 500;
-    }
+      /* Reply Input */
+      .proposal-reply {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        align-items: flex-end;
+      }
+      .proposal-reply input {
+        flex: 1;
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-lg);
+        padding: 8px 12px;
+        font-size: 12px;
+        font-family: var(--font-sans);
+        outline: none;
+        color: var(--raw-ink);
+        background: var(--raw-paper);
+      }
+      .proposal-reply input:focus {
+        border-color: var(--raw-accent);
+      }
+      .proposal-reply button {
+        background: var(--raw-accent);
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: var(--radius-md);
+        font-size: 12px;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        font-weight: 500;
+      }
 
-    /* Mode Switcher (bottom bar) */
-    .mode-bar {
-      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-      border-top: 1px solid var(--raw-border); flex-shrink: 0;
-      background: var(--raw-paper);
-    }
-    .mode-toggle {
-      display: flex; background: var(--raw-message-user); border-radius: var(--radius-lg);
-      padding: 2px; gap: 2px;
-    }
-    .mode-toggle button {
-      padding: 5px 12px; border: none; border-radius: var(--radius-md);
-      font-size: 11px; font-weight: 500; cursor: pointer; font-family: var(--font-sans);
-      background: transparent; color: var(--raw-slate); transition: all 0.15s;
-    }
-    .mode-toggle button.active {
-      background: var(--raw-paper); color: var(--raw-ink); box-shadow: var(--shadow-sm);
-    }
-    .mode-separator { width: 1px; height: 20px; background: var(--raw-border); }
-    .tailoring-pills { display: flex; gap: 4px; }
-    .tailoring-pills button {
-      padding: 4px 10px; border: none; border-radius: 999px;
-      font-size: 10px; font-weight: 500; cursor: pointer; font-family: var(--font-sans);
-      background: transparent; color: var(--raw-slate); transition: all 0.15s;
-      text-transform: capitalize;
-    }
-    .tailoring-pills button.active {
-      background: var(--raw-accent); color: #fff;
-    }
-    .tailoring-pills button:not(.active):hover {
-      background: var(--raw-message-user); color: var(--raw-ink);
-    }
+      /* Mode Switcher (bottom bar) */
+      .mode-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-top: 1px solid var(--raw-border);
+        flex-shrink: 0;
+        background: var(--raw-paper);
+      }
+      .mode-toggle {
+        display: flex;
+        background: var(--raw-message-user);
+        border-radius: var(--radius-lg);
+        padding: 2px;
+        gap: 2px;
+      }
+      .mode-toggle button {
+        padding: 5px 12px;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        background: transparent;
+        color: var(--raw-slate);
+        transition: all 0.15s;
+      }
+      .mode-toggle button.active {
+        background: var(--raw-paper);
+        color: var(--raw-ink);
+        box-shadow: var(--shadow-sm);
+      }
+      .mode-separator {
+        width: 1px;
+        height: 20px;
+        background: var(--raw-border);
+      }
+      .tailoring-pills {
+        display: flex;
+        gap: 4px;
+      }
+      .tailoring-pills button {
+        padding: 4px 10px;
+        border: none;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        background: transparent;
+        color: var(--raw-slate);
+        transition: all 0.15s;
+        text-transform: capitalize;
+      }
+      .tailoring-pills button.active {
+        background: var(--raw-accent);
+        color: #fff;
+      }
+      .tailoring-pills button:not(.active):hover {
+        background: var(--raw-message-user);
+        color: var(--raw-ink);
+      }
 
-    /* Chat Input */
-    .chat-input-area {
-      padding: 12px; border-top: 1px solid var(--raw-border); flex-shrink: 0;
-    }
-    .chat-input-wrapper {
-      position: relative; display: flex; align-items: flex-end;
-      border: 1px solid var(--raw-border); border-radius: var(--radius-xl);
-      background: var(--raw-paper); transition: border-color 0.15s;
-    }
-    .chat-input-wrapper:focus-within { border-color: var(--raw-accent); }
-    .chat-input-wrapper textarea {
-      flex: 1; border: none; outline: none; resize: none; padding: 10px 14px;
-      font-size: 13px; font-family: var(--font-sans); color: var(--raw-ink);
-      background: transparent; line-height: 1.4; min-height: 20px; max-height: 120px;
-    }
-    .chat-input-wrapper textarea::placeholder { color: var(--raw-sidebar-muted); }
-    .chat-input-wrapper .send-btn {
-      background: none; border: none; color: var(--raw-slate); cursor: pointer;
-      padding: 8px 10px; border-radius: var(--radius-md); display: flex;
-      align-items: center; justify-content: center; transition: color 0.15s;
-    }
-    .chat-input-wrapper .send-btn.has-text { color: var(--raw-accent); }
-    .chat-input-wrapper .send-btn:hover { background: var(--raw-message-user); }
+      /* Chat Input */
+      .chat-input-area {
+        padding: 12px;
+        border-top: 1px solid var(--raw-border);
+        flex-shrink: 0;
+      }
+      .chat-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        background: var(--raw-paper);
+        transition: border-color 0.15s;
+      }
+      .chat-input-wrapper:focus-within {
+        border-color: var(--raw-accent);
+      }
+      .chat-input-wrapper textarea {
+        flex: 1;
+        border: none;
+        outline: none;
+        resize: none;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-family: var(--font-sans);
+        color: var(--raw-ink);
+        background: transparent;
+        line-height: 1.4;
+        min-height: 20px;
+        max-height: 120px;
+      }
+      .chat-input-wrapper textarea::placeholder {
+        color: var(--raw-sidebar-muted);
+      }
+      .chat-input-wrapper .send-btn {
+        background: none;
+        border: none;
+        color: var(--raw-slate);
+        cursor: pointer;
+        padding: 8px 10px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s;
+      }
+      .chat-input-wrapper .send-btn.has-text {
+        color: var(--raw-accent);
+      }
+      .chat-input-wrapper .send-btn:hover {
+        background: var(--raw-message-user);
+      }
 
-    /* Mode Suggest Banner */
-    .mode-suggest {
-      background: linear-gradient(135deg, rgba(16,163,127,0.06), rgba(16,163,127,0.02));
-      border: 1px solid rgba(16,163,127,0.2); border-radius: var(--radius-xl);
-      padding: 12px 14px; margin-top: 4px;
-    }
-    .mode-suggest p { font-size: 12px; color: var(--raw-ink); margin-bottom: 8px; line-height: 1.5; }
-    .mode-suggest .suggest-actions { display: flex; gap: 8px; }
-    .mode-suggest .btn-switch {
-      background: var(--raw-accent); color: #fff; border: none;
-      padding: 5px 12px; border-radius: var(--radius-md); font-size: 11px;
-      font-weight: 600; cursor: pointer; font-family: var(--font-sans);
-    }
-    .mode-suggest .btn-stay {
-      background: transparent; color: var(--raw-slate); border: 1px solid var(--raw-border);
-      padding: 5px 12px; border-radius: var(--radius-md); font-size: 11px;
-      font-weight: 500; cursor: pointer; font-family: var(--font-sans);
-    }
+      /* Mode Suggest Banner */
+      .mode-suggest {
+        background: linear-gradient(
+          135deg,
+          rgba(16, 163, 127, 0.06),
+          rgba(16, 163, 127, 0.02)
+        );
+        border: 1px solid rgba(16, 163, 127, 0.2);
+        border-radius: var(--radius-xl);
+        padding: 12px 14px;
+        margin-top: 4px;
+      }
+      .mode-suggest p {
+        font-size: 12px;
+        color: var(--raw-ink);
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+      .mode-suggest .suggest-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .mode-suggest .btn-switch {
+        background: var(--raw-accent);
+        color: #fff;
+        border: none;
+        padding: 5px 12px;
+        border-radius: var(--radius-md);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--font-sans);
+      }
+      .mode-suggest .btn-stay {
+        background: transparent;
+        color: var(--raw-slate);
+        border: 1px solid var(--raw-border);
+        padding: 5px 12px;
+        border-radius: var(--radius-md);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: var(--font-sans);
+      }
 
-    /* Plan Mode Response */
-    .plan-response {
-      background: var(--raw-message-assistant); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl); padding: 14px; font-size: 13px; line-height: 1.6;
-    }
-    .plan-response h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .plan-response ol { padding-left: 18px; margin: 8px 0; }
-    .plan-response li { margin-bottom: 6px; }
-    .plan-response .key-points { margin-top: 10px; }
-    .plan-response .key-points h4 { font-size: 12px; font-weight: 600; color: var(--raw-accent); margin-bottom: 4px; }
-    .plan-response .key-points ul { padding-left: 16px; }
-    .plan-response .key-points li { font-size: 12px; margin-bottom: 3px; color: var(--raw-slate); }
+      /* Plan Mode Response */
+      .plan-response {
+        background: var(--raw-message-assistant);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        padding: 14px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .plan-response h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .plan-response ol {
+        padding-left: 18px;
+        margin: 8px 0;
+      }
+      .plan-response li {
+        margin-bottom: 6px;
+      }
+      .plan-response .key-points {
+        margin-top: 10px;
+      }
+      .plan-response .key-points h4 {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--raw-accent);
+        margin-bottom: 4px;
+      }
+      .plan-response .key-points ul {
+        padding-left: 16px;
+      }
+      .plan-response .key-points li {
+        font-size: 12px;
+        margin-bottom: 3px;
+        color: var(--raw-slate);
+      }
 
-    /* Setup Form (new) */
-    .setup-card {
-      background: var(--raw-paper); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl); padding: 20px; margin: 12px;
-    }
-    .setup-card h3 {
-      font-family: var(--font-serif); font-size: 18px; font-weight: 600;
-      margin-bottom: 4px; letter-spacing: -0.02em;
-    }
-    .setup-card .setup-subtitle { font-size: 12px; color: var(--raw-slate); margin-bottom: 16px; }
-    .setup-card .jd-input-wrapper {
-      position: relative; margin-bottom: 12px;
-    }
-    .setup-card .jd-input-wrapper textarea {
-      width: 100%; border: 1px solid var(--raw-border); border-radius: var(--radius-lg);
-      padding: 12px 14px; font-size: 13px; font-family: var(--font-sans);
-      color: var(--raw-ink); outline: none; resize: none; line-height: 1.4;
-      transition: border-color 0.15s;
-    }
-    .setup-card .jd-input-wrapper textarea:focus { border-color: var(--raw-accent); }
-    .setup-card .jd-input-wrapper textarea::placeholder { color: var(--raw-sidebar-muted); }
-    .setup-card .jd-input-wrapper .url-badge {
-      position: absolute; top: 8px; right: 8px; background: var(--raw-message-user);
-      padding: 2px 8px; border-radius: 999px; font-size: 10px; color: var(--raw-slate);
-      font-weight: 500;
-    }
-    .setup-card .analyze-btn {
-      width: 100%; padding: 10px; background: var(--raw-accent); color: #fff;
-      border: none; border-radius: var(--radius-lg); font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: var(--font-sans); transition: background 0.15s;
-    }
-    .setup-card .analyze-btn:hover { background: var(--raw-accent-hover); }
-    .setup-card .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      /* Setup Form (new) */
+      .setup-card {
+        background: var(--raw-paper);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+        padding: 20px;
+        margin: 12px;
+      }
+      .setup-card h3 {
+        font-family: var(--font-serif);
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        letter-spacing: -0.02em;
+      }
+      .setup-card .setup-subtitle {
+        font-size: 12px;
+        color: var(--raw-slate);
+        margin-bottom: 16px;
+      }
+      .setup-card .jd-input-wrapper {
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .setup-card .jd-input-wrapper textarea {
+        width: 100%;
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-lg);
+        padding: 12px 14px;
+        font-size: 13px;
+        font-family: var(--font-sans);
+        color: var(--raw-ink);
+        outline: none;
+        resize: none;
+        line-height: 1.4;
+        transition: border-color 0.15s;
+      }
+      .setup-card .jd-input-wrapper textarea:focus {
+        border-color: var(--raw-accent);
+      }
+      .setup-card .jd-input-wrapper textarea::placeholder {
+        color: var(--raw-sidebar-muted);
+      }
+      .setup-card .jd-input-wrapper .url-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--raw-message-user);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        color: var(--raw-slate);
+        font-weight: 500;
+      }
+      .setup-card .analyze-btn {
+        width: 100%;
+        padding: 10px;
+        background: var(--raw-accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: background 0.15s;
+      }
+      .setup-card .analyze-btn:hover {
+        background: var(--raw-accent-hover);
+      }
+      .setup-card .analyze-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
 
-    /* Extracted Fields */
-    .extracted-fields {
-      background: var(--raw-message-assistant); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 12px;
-    }
-    .extracted-field {
-      display: flex; align-items: center; gap: 8px; padding: 4px 0;
-    }
-    .extracted-field .field-label { font-size: 11px; font-weight: 600; color: var(--raw-slate); width: 60px; flex-shrink: 0; }
-    .extracted-field .field-value {
-      font-size: 13px; color: var(--raw-ink); flex: 1; padding: 4px 8px;
-      border-radius: var(--radius-sm); border: 1px solid transparent;
-      cursor: text; transition: border-color 0.15s;
-    }
-    .extracted-field .field-value:hover { border-color: var(--raw-border); }
-    .extracted-field .field-edit { font-size: 10px; color: var(--raw-accent); cursor: pointer; }
+      /* Extracted Fields */
+      .extracted-fields {
+        background: var(--raw-message-assistant);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-lg);
+        padding: 12px 14px;
+        margin-bottom: 12px;
+      }
+      .extracted-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+      }
+      .extracted-field .field-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--raw-slate);
+        width: 60px;
+        flex-shrink: 0;
+      }
+      .extracted-field .field-value {
+        font-size: 13px;
+        color: var(--raw-ink);
+        flex: 1;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        border: 1px solid transparent;
+        cursor: text;
+        transition: border-color 0.15s;
+      }
+      .extracted-field .field-value:hover {
+        border-color: var(--raw-border);
+      }
+      .extracted-field .field-edit {
+        font-size: 10px;
+        color: var(--raw-accent);
+        cursor: pointer;
+      }
 
-    /* Session Create Button */
-    .create-session-btn {
-      width: 100%; padding: 10px; background: var(--raw-accent); color: #fff;
-      border: none; border-radius: var(--radius-lg); font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: var(--font-sans); transition: background 0.15s;
-      margin-top: 8px;
-    }
-    .create-session-btn:hover { background: var(--raw-accent-hover); }
+      /* Session Create Button */
+      .create-session-btn {
+        width: 100%;
+        padding: 10px;
+        background: var(--raw-accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-lg);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: background 0.15s;
+        margin-top: 8px;
+      }
+      .create-session-btn:hover {
+        background: var(--raw-accent-hover);
+      }
 
-    /* Processing states */
-    .processing-pulse {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    .spinner {
-      display: inline-block; width: 12px; height: 12px; border: 2px solid var(--raw-border);
-      border-top-color: var(--raw-accent); border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+      /* Processing states */
+      .processing-pulse {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--raw-border);
+        border-top-color: var(--raw-accent);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-    /* Phase progress */
-    .phase-progress {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
-      background: var(--raw-message-assistant); border: 1px solid var(--raw-border);
-      border-radius: var(--radius-xl);
-    }
-    .phase-progress .phase-icon { flex-shrink: 0; }
-    .phase-progress .phase-text { font-size: 12px; color: var(--raw-slate); }
-    .phase-progress .phase-label { font-weight: 500; color: var(--raw-ink); }
+      /* Phase progress */
+      .phase-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: var(--raw-message-assistant);
+        border: 1px solid var(--raw-border);
+        border-radius: var(--radius-xl);
+      }
+      .phase-progress .phase-icon {
+        flex-shrink: 0;
+      }
+      .phase-progress .phase-text {
+        font-size: 12px;
+        color: var(--raw-slate);
+      }
+      .phase-progress .phase-label {
+        font-weight: 500;
+        color: var(--raw-ink);
+      }
 
-    /* HIDDEN STATES */
-    .state-content { display: none; }
-    .state-content.active { display: flex; }
+      /* HIDDEN STATES */
+      .state-content {
+        display: none;
+      }
+      .state-content.active {
+        display: flex;
+      }
 
-    /* Tooltips */
-    .tooltip { position: relative; }
-    .tooltip::after {
-      content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
-      transform: translateX(-50%); background: var(--raw-sidebar); color: var(--raw-sidebar-text);
-      padding: 4px 8px; border-radius: var(--radius-sm); font-size: 10px;
-      white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s;
-    }
-    .tooltip:hover::after { opacity: 1; }
+      /* Tooltips */
+      .tooltip {
+        position: relative;
+      }
+      .tooltip::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--raw-sidebar);
+        color: var(--raw-sidebar-text);
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 10px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+      }
+      .tooltip:hover::after {
+        opacity: 1;
+      }
 
-    /* Plan/Edit badge in header */
-    .mode-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .mode-badge.plan { background: rgba(167,139,250,0.12); color: #7c3aed; }
-    .mode-badge.edit { background: rgba(16,163,127,0.1); color: var(--raw-accent); }
-  </style>
-</head>
-<body>
-
-<!-- STATE PICKER -->
-<div class="state-picker">
-  <label>View:</label>
-  <button class="active" onclick="showState('setup')">1. Setup Form</button>
-  <button onclick="showState('researching')">2. Researching</button>
-  <button onclick="showState('research-expanded')">3. Research Expanded</button>
-  <button onclick="showState('plan-mode')">4. Plan Mode</button>
-  <button onclick="showState('edit-proposal')">5. Edit + Proposal</button>
-  <button onclick="showState('mode-suggest')">6. Mode Suggest</button>
-  <button onclick="showState('collapsed')">7. Collapsed Rail</button>
-</div>
-
-<div class="app-shell">
-
-  <!-- SIDEBAR (shared) -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <span class="logo">Tailr</span>
-      <button class="collapse-btn" onclick="toggleSidebar()" title="Collapse">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      /* Plan/Edit badge in header */
+      .mode-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .mode-badge.plan {
+        background: rgba(167, 139, 250, 0.12);
+        color: #7c3aed;
+      }
+      .mode-badge.edit {
+        background: rgba(16, 163, 127, 0.1);
+        color: var(--raw-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- STATE PICKER -->
+    <div class="state-picker">
+      <label>View:</label>
+      <button class="active" onclick="showState('setup')">1. Setup Form</button>
+      <button onclick="showState('researching')">2. Researching</button>
+      <button onclick="showState('research-expanded')">
+        3. Research Expanded
       </button>
-    </div>
-    <button class="new-chat-btn">+ New session</button>
-    <div class="history-group">
-      <div class="history-label">Today</div>
-      <div class="history-item active">Google — PM, Search</div>
-      <div class="history-item">Stripe — Senior SWE</div>
-    </div>
-    <div class="history-group">
-      <div class="history-label">Yesterday</div>
-      <div class="history-item">Notion — Product Designer</div>
-    </div>
-  </div>
-
-  <!-- CANVAS (center) -->
-  <div class="canvas-area" id="canvas">
-    <!-- STATE 1: Setup -->
-    <div class="state-content active" id="state-setup" style="width:100%;height:100%;align-items:flex-start;justify-content:center;padding:40px;">
-      <div style="width:100%;max-width:520px;margin:0 auto;">
-        <div class="canvas-resume" style="opacity:0.4;transform:scale(0.95);margin-bottom:24px;">
-          <h1>Your Resume</h1>
-          <p class="subtitle">Paste a job description to start tailoring</p>
-          <div class="section-title">Experience</div>
-          <div class="entry"><div class="entry-title" style="color:#ccc;">Company Name — Role</div></div>
-        </div>
-      </div>
+      <button onclick="showState('plan-mode')">4. Plan Mode</button>
+      <button onclick="showState('edit-proposal')">5. Edit + Proposal</button>
+      <button onclick="showState('mode-suggest')">6. Mode Suggest</button>
+      <button onclick="showState('collapsed')">7. Collapsed Rail</button>
     </div>
 
-    <!-- STATE 2: Researching -->
-    <div class="state-content" id="state-researching" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul><li>Led cross-functional team of 8 to launch v2 platform</li><li>Increased user retention by 23% through data-driven iterations</li></ul>
-        </div>
-        <div class="section-title">Education</div>
-        <div class="entry"><div class="entry-title">BS Computer Science</div><div class="entry-sub">Stanford University</div></div>
-      </div>
-    </div>
-
-    <!-- STATE 3: Research Expanded -->
-    <div class="state-content" id="state-research-expanded" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul><li>Led cross-functional team of 8 to launch v2 platform</li><li>Increased user retention by 23% through data-driven iterations</li></ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATE 4: Plan Mode -->
-    <div class="state-content" id="state-plan-mode" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul><li>Led cross-functional team of 8 to launch v2 platform</li><li>Increased user retention by 23% through data-driven iterations</li></ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATE 5: Edit + Proposal -->
-    <div class="state-content" id="state-edit-proposal" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul>
-            <li style="background:rgba(16,163,127,0.08);padding:2px 4px;border-radius:3px;border-left:2px solid var(--raw-accent);">Led cross-functional team of 8 engineers and designers to launch v2 platform, driving 23% increase in user retention</li>
-            <li style="background:rgba(16,163,127,0.08);padding:2px 4px;border-radius:3px;border-left:2px solid var(--raw-accent);">Defined product roadmap and prioritized features using data-driven approach, resulting in 15% faster delivery cycles</li>
-            <li>Conducted user research with 50+ participants to validate product-market fit</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATE 6: Mode Suggest -->
-    <div class="state-content" id="state-mode-suggest" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul><li>Led cross-functional team of 8 to launch v2 platform</li><li>Increased user retention by 23% through data-driven iterations</li></ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- STATE 7: Collapsed Rail -->
-    <div class="state-content" id="state-collapsed" style="width:100%;height:100%;align-items:center;justify-content:center;">
-      <div class="canvas-resume" style="max-width:640px;">
-        <h1>Alex Chen</h1>
-        <p class="subtitle">Product Manager | San Francisco, CA</p>
-        <div class="section-title">Experience</div>
-        <div class="entry">
-          <div class="entry-header"><span class="entry-title">Product Manager</span><span class="entry-date">2022 – Present</span></div>
-          <div class="entry-sub">Acme Corp</div>
-          <ul>
-            <li>Led cross-functional team of 8 engineers and designers to launch v2 platform, driving 23% increase in user retention</li>
-            <li>Defined product roadmap and prioritized features using data-driven approach, resulting in 15% faster delivery cycles</li>
-            <li>Conducted user research with 50+ participants to validate product-market fit</li>
-          </ul>
-        </div>
-        <div class="section-title">Education</div>
-        <div class="entry"><div class="entry-title">BS Computer Science</div><div class="entry-sub">Stanford University, 2020</div></div>
-        <div class="section-title">Skills</div>
-        <div style="font-size:12px;color:#555;">Product Strategy, Data Analysis, Cross-functional Leadership, User Research, SQL, Python, Figma</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RESIZE HANDLE -->
-  <div class="resize-handle" id="resize-handle"></div>
-
-  <!-- CHAT RAIL -->
-  <div class="chat-rail" id="chat-rail">
-    <div class="rail-collapse-icon" onclick="toggleChatRail()" title="Expand chat">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <div class="rail-content" style="display:flex;flex-direction:column;height:100%;">
-
-      <!-- STATE 1: SETUP FORM -->
-      <div class="state-content active" id="rail-setup" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="app-shell">
+      <!-- SIDEBAR (shared) -->
+      <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <span class="logo">Tailr</span>
+          <button
+            class="collapse-btn"
+            onclick="toggleSidebar()"
+            title="Collapse"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M10 4L6 8l4 4"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
-          <div class="rail-header-info">
-            <div class="company">New Session</div>
-            <div class="role">Paste a job description to begin</div>
-          </div>
         </div>
-        <div style="flex:1;overflow-y:auto;padding:12px;">
-          <div class="setup-card">
-            <h3>Tailor your resume</h3>
-            <p class="setup-subtitle">Paste a job description or URL. We'll extract the details.</p>
-            <div class="jd-input-wrapper">
-              <textarea rows="5" placeholder="Paste job description text or enter a URL..."></textarea>
-            </div>
-            <button class="analyze-btn">Analyze Job Posting</button>
-          </div>
+        <button class="new-chat-btn">+ New session</button>
+        <div class="history-group">
+          <div class="history-label">Today</div>
+          <div class="history-item active">Google — PM, Search</div>
+          <div class="history-item">Stripe — Senior SWE</div>
         </div>
-        <div class="mode-bar">
-          <div class="mode-toggle">
-            <button>Plan</button>
-            <button class="active">Edit</button>
-          </div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills">
-            <button class="active">Polish</button>
-            <button>Refine</button>
-            <button>Rewrite</button>
-          </div>
+        <div class="history-group">
+          <div class="history-label">Yesterday</div>
+          <div class="history-item">Notion — Product Designer</div>
         </div>
       </div>
 
-      <!-- STATE 1b: SETUP WITH EXTRACTED FIELDS -->
-      <div class="state-content" id="rail-setup-extracted" style="flex:1;display:flex;flex-direction:column;overflow-y:auto;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">New Session</div>
-            <div class="role">Review extracted details</div>
-          </div>
-        </div>
-        <div style="flex:1;overflow-y:auto;padding:12px;">
-          <div class="setup-card" style="padding:16px;">
-            <div class="extracted-fields">
-              <div class="extracted-field">
-                <span class="field-label">Company</span>
-                <span class="field-value">Google</span>
-                <span class="field-edit">edit</span>
-              </div>
-              <div class="extracted-field">
-                <span class="field-label">Role</span>
-                <span class="field-value">Product Manager, Search</span>
-                <span class="field-edit">edit</span>
-              </div>
-              <div class="extracted-field">
-                <span class="field-label">Source</span>
-                <span class="field-value" style="font-size:11px;color:var(--raw-slate);">careers.google.com/jobs/12345</span>
+      <!-- CANVAS (center) -->
+      <div class="canvas-area" id="canvas">
+        <!-- STATE 1: Setup -->
+        <div
+          class="state-content active"
+          id="state-setup"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px;
+          "
+        >
+          <div style="width: 100%; max-width: 520px; margin: 0 auto">
+            <div
+              class="canvas-resume"
+              style="opacity: 0.4; transform: scale(0.95); margin-bottom: 24px"
+            >
+              <h1>Your Resume</h1>
+              <p class="subtitle">Paste a job description to start tailoring</p>
+              <div class="section-title">Experience</div>
+              <div class="entry">
+                <div class="entry-title" style="color: #ccc">
+                  Company Name — Role
+                </div>
               </div>
             </div>
-            <div style="margin-bottom:12px;">
-              <div style="font-size:11px;font-weight:600;color:var(--raw-slate);margin-bottom:6px;">Tailoring Intensity</div>
-              <div class="tailoring-pills" style="justify-content:flex-start;">
+          </div>
+        </div>
+
+        <!-- STATE 2: Researching -->
+        <div
+          class="state-content"
+          id="state-researching"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li>Led cross-functional team of 8 to launch v2 platform</li>
+                <li>
+                  Increased user retention by 23% through data-driven iterations
+                </li>
+              </ul>
+            </div>
+            <div class="section-title">Education</div>
+            <div class="entry">
+              <div class="entry-title">BS Computer Science</div>
+              <div class="entry-sub">Stanford University</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 3: Research Expanded -->
+        <div
+          class="state-content"
+          id="state-research-expanded"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li>Led cross-functional team of 8 to launch v2 platform</li>
+                <li>
+                  Increased user retention by 23% through data-driven iterations
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 4: Plan Mode -->
+        <div
+          class="state-content"
+          id="state-plan-mode"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li>Led cross-functional team of 8 to launch v2 platform</li>
+                <li>
+                  Increased user retention by 23% through data-driven iterations
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 5: Edit + Proposal -->
+        <div
+          class="state-content"
+          id="state-edit-proposal"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li
+                  style="
+                    background: rgba(16, 163, 127, 0.08);
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    border-left: 2px solid var(--raw-accent);
+                  "
+                >
+                  Led cross-functional team of 8 engineers and designers to
+                  launch v2 platform, driving 23% increase in user retention
+                </li>
+                <li
+                  style="
+                    background: rgba(16, 163, 127, 0.08);
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    border-left: 2px solid var(--raw-accent);
+                  "
+                >
+                  Defined product roadmap and prioritized features using
+                  data-driven approach, resulting in 15% faster delivery cycles
+                </li>
+                <li>
+                  Conducted user research with 50+ participants to validate
+                  product-market fit
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 6: Mode Suggest -->
+        <div
+          class="state-content"
+          id="state-mode-suggest"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li>Led cross-functional team of 8 to launch v2 platform</li>
+                <li>
+                  Increased user retention by 23% through data-driven iterations
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATE 7: Collapsed Rail -->
+        <div
+          class="state-content"
+          id="state-collapsed"
+          style="
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+          "
+        >
+          <div class="canvas-resume" style="max-width: 640px">
+            <h1>Alex Chen</h1>
+            <p class="subtitle">Product Manager | San Francisco, CA</p>
+            <div class="section-title">Experience</div>
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-title">Product Manager</span
+                ><span class="entry-date">2022 – Present</span>
+              </div>
+              <div class="entry-sub">Acme Corp</div>
+              <ul>
+                <li>
+                  Led cross-functional team of 8 engineers and designers to
+                  launch v2 platform, driving 23% increase in user retention
+                </li>
+                <li>
+                  Defined product roadmap and prioritized features using
+                  data-driven approach, resulting in 15% faster delivery cycles
+                </li>
+                <li>
+                  Conducted user research with 50+ participants to validate
+                  product-market fit
+                </li>
+              </ul>
+            </div>
+            <div class="section-title">Education</div>
+            <div class="entry">
+              <div class="entry-title">BS Computer Science</div>
+              <div class="entry-sub">Stanford University, 2020</div>
+            </div>
+            <div class="section-title">Skills</div>
+            <div style="font-size: 12px; color: #555">
+              Product Strategy, Data Analysis, Cross-functional Leadership, User
+              Research, SQL, Python, Figma
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESIZE HANDLE -->
+      <div class="resize-handle" id="resize-handle"></div>
+
+      <!-- CHAT RAIL -->
+      <div class="chat-rail" id="chat-rail">
+        <div
+          class="rail-collapse-icon"
+          onclick="toggleChatRail()"
+          title="Expand chat"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M6 4l4 4-4 4"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <div
+          class="rail-content"
+          style="display: flex; flex-direction: column; height: 100%"
+        >
+          <!-- STATE 1: SETUP FORM -->
+          <div
+            class="state-content active"
+            id="rail-setup"
+            style="
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              overflow-y: auto;
+            "
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">New Session</div>
+                <div class="role">Paste a job description to begin</div>
+              </div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 12px">
+              <div class="setup-card">
+                <h3>Tailor your resume</h3>
+                <p class="setup-subtitle">
+                  Paste a job description or URL. We'll extract the details.
+                </p>
+                <div class="jd-input-wrapper">
+                  <textarea
+                    rows="5"
+                    placeholder="Paste job description text or enter a URL..."
+                  ></textarea>
+                </div>
+                <button class="analyze-btn">Analyze Job Posting</button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button>
+                <button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
                 <button class="active">Polish</button>
                 <button>Refine</button>
                 <button>Rewrite</button>
               </div>
             </div>
-            <button class="create-session-btn">Start Session</button>
           </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle">
-            <button>Plan</button>
-            <button class="active">Edit</button>
-          </div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills">
-            <button class="active">Polish</button>
-            <button>Refine</button>
-            <button>Rewrite</button>
-          </div>
-        </div>
-      </div>
 
-      <!-- STATE 2: RESEARCHING -->
-      <div class="state-content" id="rail-researching" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge edit">Edit</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">Tailor my resume for this role. Focus on my PM experience and cross-functional leadership.</div></div>
-          <div class="phase-progress">
-            <div class="phase-icon"><div class="spinner"></div></div>
-            <div class="phase-text"><span class="phase-label">Researching</span> — Scraping careers page and team blog...</div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Message while research runs..." disabled style="opacity:0.5;"></textarea>
-            <button class="send-btn" disabled>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button>Plan</button><button class="active">Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button class="active">Polish</button><button>Refine</button><button>Rewrite</button></div>
-        </div>
-      </div>
-
-      <!-- STATE 3: RESEARCH EXPANDED -->
-      <div class="state-content" id="rail-research-expanded" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge edit">Edit</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">Tailor my resume for this role. Focus on my PM experience and cross-functional leadership.</div></div>
-
-          <div class="research-card">
-            <div class="research-header" onclick="toggleResearch(this)">
-              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <span class="label">Research Complete</span>
-              <span class="chevron open">&#9660;</span>
+          <!-- STATE 1b: SETUP WITH EXTRACTED FIELDS -->
+          <div
+            class="state-content"
+            id="rail-setup-extracted"
+            style="
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              overflow-y: auto;
+            "
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">New Session</div>
+                <div class="role">Review extracted details</div>
+              </div>
             </div>
-            <div class="research-body open">
-              <ul>
-                <li><strong>Google PM, Search</strong> — focuses on search quality, ranking algorithms, and user intent understanding</li>
-                <li>Team values <strong>data-driven decisions</strong> and A/B testing culture</li>
-                <li>Cross-functional collaboration with engineering, design, and data science teams</li>
-                <li>Emphasis on <strong>impact metrics</strong> — "measure what matters"</li>
-              </ul>
-              <div style="margin-top:8px;">
-                <a href="#" class="source-link">careers.google.com</a> · <a href="#" class="source-link">blog.google</a> · <a href="#" class="source-link">team page</a>
+            <div style="flex: 1; overflow-y: auto; padding: 12px">
+              <div class="setup-card" style="padding: 16px">
+                <div class="extracted-fields">
+                  <div class="extracted-field">
+                    <span class="field-label">Company</span>
+                    <span class="field-value">Google</span>
+                    <span class="field-edit">edit</span>
+                  </div>
+                  <div class="extracted-field">
+                    <span class="field-label">Role</span>
+                    <span class="field-value">Product Manager, Search</span>
+                    <span class="field-edit">edit</span>
+                  </div>
+                  <div class="extracted-field">
+                    <span class="field-label">Source</span>
+                    <span
+                      class="field-value"
+                      style="font-size: 11px; color: var(--raw-slate)"
+                      >careers.google.com/jobs/12345</span
+                    >
+                  </div>
+                </div>
+                <div style="margin-bottom: 12px">
+                  <div
+                    style="
+                      font-size: 11px;
+                      font-weight: 600;
+                      color: var(--raw-slate);
+                      margin-bottom: 6px;
+                    "
+                  >
+                    Tailoring Intensity
+                  </div>
+                  <div
+                    class="tailoring-pills"
+                    style="justify-content: flex-start"
+                  >
+                    <button class="active">Polish</button>
+                    <button>Refine</button>
+                    <button>Rewrite</button>
+                  </div>
+                </div>
+                <button class="create-session-btn">Start Session</button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button>
+                <button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button class="active">Polish</button>
+                <button>Refine</button>
+                <button>Rewrite</button>
               </div>
             </div>
           </div>
 
-          <div class="thinking-card">
-            <div class="thinking-header" onclick="toggleThinking(this)">
-              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4.5-3 5.7V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.3C6.2 13.5 5 11.4 5 9a7 7 0 0 1 7-7z"/><path d="M9 21h6"/><path d="M10 17v4"/><path d="M14 17v4"/></svg>
-              <span class="label">Thinking</span>
-              <span class="chevron">&#9660;</span>
+          <!-- STATE 2: RESEARCHING -->
+          <div
+            class="state-content"
+            id="rail-researching"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge edit">Edit</span>
             </div>
-            <div class="thinking-body">
-              <p style="margin-bottom:6px;">Analyzing resume fit for Google PM, Search role:</p>
-              <ul>
-                <li>Cross-functional leadership at Acme maps well to Google's collaborative culture</li>
-                <li>Data-driven approach (23% retention lift) aligns with Google's metrics-first culture</li>
-                <li>Should emphasize quantified impact and A/B testing experience</li>
-                <li>v2 platform launch demonstrates end-to-end product ownership</li>
-              </ul>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">
+                  Tailor my resume for this role. Focus on my PM experience and
+                  cross-functional leadership.
+                </div>
+              </div>
+              <div class="phase-progress">
+                <div class="phase-icon"><div class="spinner"></div></div>
+                <div class="phase-text">
+                  <span class="phase-label">Researching</span> — Scraping
+                  careers page and team blog...
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Message while research runs..."
+                  disabled
+                  style="opacity: 0.5"
+                ></textarea>
+                <button class="send-btn" disabled>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button><button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button class="active">Polish</button><button>Refine</button
+                ><button>Rewrite</button>
+              </div>
             </div>
           </div>
 
-          <div class="phase-progress">
-            <div class="phase-icon"><div class="spinner"></div></div>
-            <div class="phase-text"><span class="phase-label">Writing changes</span> — Generating tailored resume...</div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Message while writing..." disabled style="opacity:0.5;"></textarea>
-            <button class="send-btn" disabled>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button>Plan</button><button class="active">Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button>Polish</button><button class="active">Refine</button><button>Rewrite</button></div>
-        </div>
-      </div>
-
-      <!-- STATE 4: PLAN MODE -->
-      <div class="state-content" id="rail-plan-mode" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge plan">Plan</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">I'm applying to Google as a PM. What should I emphasize from my background?</div></div>
-
-          <div class="research-card">
-            <div class="research-header" onclick="toggleResearch(this)">
-              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <span class="label">Research Complete</span>
-              <span class="chevron open">&#9660;</span>
+          <!-- STATE 3: RESEARCH EXPANDED -->
+          <div
+            class="state-content"
+            id="rail-research-expanded"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge edit">Edit</span>
             </div>
-            <div class="research-body open">
-              <ul>
-                <li><strong>Google PM, Search</strong> — focuses on search quality, ranking algorithms, and user intent understanding</li>
-                <li>Team values <strong>data-driven decisions</strong> and A/B testing culture</li>
-                <li>Cross-functional collaboration with engineering, design, and data science teams</li>
-              </ul>
-              <div style="margin-top:8px;"><a href="#" class="source-link">careers.google.com</a> · <a href="#" class="source-link">blog.google</a></div>
-            </div>
-          </div>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">
+                  Tailor my resume for this role. Focus on my PM experience and
+                  cross-functional leadership.
+                </div>
+              </div>
 
-          <div class="msg msg-assistant">
-            <div class="msg-bubble" style="max-width:92%;">
-              <div class="plan-response">
-                <h3>Based on your background and this role, here's what I'd recommend:</h3>
-                <ol>
-                  <li><strong>Lead with cross-functional leadership.</strong> Google PMs work across eng, design, and data science. Your Acme v2 launch — leading 8 people across functions — is your strongest signal.</li>
-                  <li><strong>Quantify everything.</strong> Google's culture is metrics-first. Your "23% retention lift" and "15% faster delivery" bullets are gold. Add more numbers where you can.</li>
-                  <li><strong>Emphasize data-driven decisions.</strong> The JD mentions "data-driven" 3 times. Your A/B testing experience and SQL skills should be front and center.</li>
-                </ol>
-                <div class="key-points">
-                  <h4>Key differences from your current resume:</h4>
+              <div class="research-card">
+                <div class="research-header" onclick="toggleResearch(this)">
+                  <svg
+                    class="icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  <span class="label">Research Complete</span>
+                  <span class="chevron open">&#9660;</span>
+                </div>
+                <div class="research-body open">
                   <ul>
-                    <li>Current resume leads with "managed team of 8" — reframe as "led cross-functional initiative"</li>
-                    <li>Bullets are task-focused, not impact-focused — rewrite to lead with outcomes</li>
-                    <li>Missing: any mention of A/B testing or experimentation methodology</li>
+                    <li>
+                      <strong>Google PM, Search</strong> — focuses on search
+                      quality, ranking algorithms, and user intent understanding
+                    </li>
+                    <li>
+                      Team values <strong>data-driven decisions</strong> and A/B
+                      testing culture
+                    </li>
+                    <li>
+                      Cross-functional collaboration with engineering, design,
+                      and data science teams
+                    </li>
+                    <li>
+                      Emphasis on <strong>impact metrics</strong> — "measure
+                      what matters"
+                    </li>
+                  </ul>
+                  <div style="margin-top: 8px">
+                    <a href="#" class="source-link">careers.google.com</a> ·
+                    <a href="#" class="source-link">blog.google</a> ·
+                    <a href="#" class="source-link">team page</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="thinking-card">
+                <div class="thinking-header" onclick="toggleThinking(this)">
+                  <svg
+                    class="icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 2a7 7 0 0 1 7 7c0 2.4-1.2 4.5-3 5.7V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.3C6.2 13.5 5 11.4 5 9a7 7 0 0 1 7-7z"
+                    />
+                    <path d="M9 21h6" />
+                    <path d="M10 17v4" />
+                    <path d="M14 17v4" />
+                  </svg>
+                  <span class="label">Thinking</span>
+                  <span class="chevron">&#9660;</span>
+                </div>
+                <div class="thinking-body">
+                  <p style="margin-bottom: 6px">
+                    Analyzing resume fit for Google PM, Search role:
+                  </p>
+                  <ul>
+                    <li>
+                      Cross-functional leadership at Acme maps well to Google's
+                      collaborative culture
+                    </li>
+                    <li>
+                      Data-driven approach (23% retention lift) aligns with
+                      Google's metrics-first culture
+                    </li>
+                    <li>
+                      Should emphasize quantified impact and A/B testing
+                      experience
+                    </li>
+                    <li>
+                      v2 platform launch demonstrates end-to-end product
+                      ownership
+                    </li>
                   </ul>
                 </div>
               </div>
-              <div class="mode-suggest" style="margin-top:12px;">
-                <p>Ready to apply these changes? Switch to Edit Mode and I'll tailor your resume with these priorities.</p>
+
+              <div class="phase-progress">
+                <div class="phase-icon"><div class="spinner"></div></div>
+                <div class="phase-text">
+                  <span class="phase-label">Writing changes</span> — Generating
+                  tailored resume...
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Message while writing..."
+                  disabled
+                  style="opacity: 0.5"
+                ></textarea>
+                <button class="send-btn" disabled>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button><button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button>Polish</button><button class="active">Refine</button
+                ><button>Rewrite</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATE 4: PLAN MODE -->
+          <div
+            class="state-content"
+            id="rail-plan-mode"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge plan">Plan</span>
+            </div>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">
+                  I'm applying to Google as a PM. What should I emphasize from
+                  my background?
+                </div>
+              </div>
+
+              <div class="research-card">
+                <div class="research-header" onclick="toggleResearch(this)">
+                  <svg
+                    class="icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  <span class="label">Research Complete</span>
+                  <span class="chevron open">&#9660;</span>
+                </div>
+                <div class="research-body open">
+                  <ul>
+                    <li>
+                      <strong>Google PM, Search</strong> — focuses on search
+                      quality, ranking algorithms, and user intent understanding
+                    </li>
+                    <li>
+                      Team values <strong>data-driven decisions</strong> and A/B
+                      testing culture
+                    </li>
+                    <li>
+                      Cross-functional collaboration with engineering, design,
+                      and data science teams
+                    </li>
+                  </ul>
+                  <div style="margin-top: 8px">
+                    <a href="#" class="source-link">careers.google.com</a> ·
+                    <a href="#" class="source-link">blog.google</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="msg msg-assistant">
+                <div class="msg-bubble" style="max-width: 92%">
+                  <div class="plan-response">
+                    <h3>
+                      Based on your background and this role, here's what I'd
+                      recommend:
+                    </h3>
+                    <ol>
+                      <li>
+                        <strong>Lead with cross-functional leadership.</strong>
+                        Google PMs work across eng, design, and data science.
+                        Your Acme v2 launch — leading 8 people across functions
+                        — is your strongest signal.
+                      </li>
+                      <li>
+                        <strong>Quantify everything.</strong> Google's culture
+                        is metrics-first. Your "23% retention lift" and "15%
+                        faster delivery" bullets are gold. Add more numbers
+                        where you can.
+                      </li>
+                      <li>
+                        <strong>Emphasize data-driven decisions.</strong> The JD
+                        mentions "data-driven" 3 times. Your A/B testing
+                        experience and SQL skills should be front and center.
+                      </li>
+                    </ol>
+                    <div class="key-points">
+                      <h4>Key differences from your current resume:</h4>
+                      <ul>
+                        <li>
+                          Current resume leads with "managed team of 8" —
+                          reframe as "led cross-functional initiative"
+                        </li>
+                        <li>
+                          Bullets are task-focused, not impact-focused — rewrite
+                          to lead with outcomes
+                        </li>
+                        <li>
+                          Missing: any mention of A/B testing or experimentation
+                          methodology
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="mode-suggest" style="margin-top: 12px">
+                    <p>
+                      Ready to apply these changes? Switch to Edit Mode and I'll
+                      tailor your resume with these priorities.
+                    </p>
+                    <div class="suggest-actions">
+                      <button class="btn-switch">
+                        Switch to Edit &amp; Tailor
+                      </button>
+                      <button class="btn-stay">Keep Planning</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Ask a follow-up or switch to Edit mode..."
+                ></textarea>
+                <button class="send-btn">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button class="active">Plan</button><button>Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button class="active">Polish</button><button>Refine</button
+                ><button>Rewrite</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATE 5: EDIT + PROPOSAL -->
+          <div
+            class="state-content"
+            id="rail-edit-proposal"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge edit">Edit</span>
+            </div>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">
+                  Tailor my resume for this role. Focus on cross-functional
+                  leadership and quantified impact.
+                </div>
+              </div>
+
+              <div class="research-card">
+                <div class="research-header" onclick="toggleResearch(this)">
+                  <svg
+                    class="icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  <span class="label">Research Complete</span>
+                  <span class="chevron">&#9660;</span>
+                </div>
+                <div class="research-body">
+                  <ul>
+                    <li>
+                      Google PM, Search — search quality, ranking, user intent
+                    </li>
+                    <li>Data-driven decisions, A/B testing culture</li>
+                    <li>Cross-functional collaboration emphasis</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="msg msg-assistant">
+                <div class="msg-bubble" style="max-width: 92%">
+                  <div class="proposal-card">
+                    <div class="proposal-section">
+                      <div class="proposal-section-title">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path
+                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                          />
+                          <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        What I'm proposing
+                      </div>
+                      <p>
+                        Restructured your experience section to lead with
+                        cross-functional impact. Rewrote 2 bullets to mirror
+                        Google's "impact metric" style — numbers-first,
+                        outcome-focused. Added A/B testing to your skill set
+                        based on your retention work.
+                      </p>
+                    </div>
+                    <div class="proposal-section">
+                      <div class="proposal-section-title">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 16v-4" />
+                          <path d="M12 8h.01" />
+                        </svg>
+                        Why these changes
+                      </div>
+                      <p>
+                        JD mentions "cross-functional" 4 times — your current
+                        resume uses "managed team" instead. Google PM interviews
+                        focus on leadership stories with measurable outcomes —
+                        Acme v2 is your strongest example but the bullets buried
+                        the impact. Reworded to lead with the 23% retention
+                        number.
+                      </p>
+                    </div>
+                    <div class="proposal-section">
+                      <div class="proposal-section-title">
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="M12 20V10" />
+                          <path d="M18 20V4" />
+                          <path d="M6 20v-4" />
+                        </svg>
+                        Summary
+                      </div>
+                      <div class="proposal-ops-summary">
+                        <span class="op-pill">2 bullets rewritten</span>
+                        <span class="op-pill">1 section reordered</span>
+                        <span class="op-pill">1 skill added</span>
+                      </div>
+                    </div>
+                    <div class="proposal-actions">
+                      <button class="btn-accept">Accept Changes</button>
+                      <button class="btn-decline">Decline</button>
+                      <button class="btn-view-diff">View Diff</button>
+                    </div>
+                    <div class="proposal-reply">
+                      <input
+                        type="text"
+                        placeholder="Reply to refine this proposal..."
+                      />
+                      <button>Send</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Describe the changes you want..."
+                ></textarea>
+                <button class="send-btn">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button><button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button>Polish</button><button class="active">Refine</button
+                ><button>Rewrite</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATE 6: MODE SUGGEST -->
+          <div
+            class="state-content"
+            id="rail-mode-suggest"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge edit">Edit</span>
+            </div>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">
+                  Can you explain what Google looks for in PM interviews?
+                </div>
+              </div>
+              <div class="msg msg-assistant">
+                <div class="msg-bubble">
+                  <p style="margin-bottom: 8px">
+                    Google PM interviews focus on 4 areas:
+                  </p>
+                  <ol style="padding-left: 18px; margin-bottom: 8px">
+                    <li style="margin-bottom: 4px">
+                      <strong>Product sense</strong> — how you'd improve a
+                      product
+                    </li>
+                    <li style="margin-bottom: 4px">
+                      <strong>Analytical thinking</strong> — metrics, A/B tests,
+                      data
+                    </li>
+                    <li style="margin-bottom: 4px">
+                      <strong>Leadership</strong> — cross-functional influence
+                      without authority
+                    </li>
+                    <li style="margin-bottom: 4px">
+                      <strong>Technical depth</strong> — can you talk to
+                      engineers
+                    </li>
+                  </ol>
+                  <p>
+                    Your background maps well to all 4. Want me to help you
+                    prepare specific stories?
+                  </p>
+                </div>
+              </div>
+              <div class="mode-suggest">
+                <p>
+                  It looks like you're researching and planning. Want to switch
+                  to Plan Mode for a more focused conversation? I won't propose
+                  any edits until you're ready.
+                </p>
                 <div class="suggest-actions">
-                  <button class="btn-switch">Switch to Edit &amp; Tailor</button>
-                  <button class="btn-stay">Keep Planning</button>
+                  <button class="btn-switch">Switch to Plan Mode</button>
+                  <button class="btn-stay">Stay in Edit Mode</button>
                 </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Describe the changes you want..."
+                ></textarea>
+                <button class="send-btn">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button><button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button class="active">Polish</button><button>Refine</button
+                ><button>Rewrite</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STATE 7: COLLAPSED -->
+          <div
+            class="state-content"
+            id="rail-collapsed"
+            style="flex: 1; display: flex; flex-direction: column"
+          >
+            <div class="rail-header">
+              <button
+                class="collapse-rail-btn"
+                onclick="toggleChatRail()"
+                title="Collapse"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div class="rail-header-info">
+                <div class="company">Google</div>
+                <div class="role">Product Manager, Search</div>
+              </div>
+              <span class="mode-badge edit">Edit</span>
+            </div>
+            <div class="chat-messages">
+              <div class="msg msg-user">
+                <div class="msg-bubble">Tailor my resume for this role.</div>
+              </div>
+              <div class="msg msg-assistant">
+                <div class="msg-bubble">
+                  <p>
+                    I've tailored your resume for the Google PM role. Key
+                    changes:
+                  </p>
+                  <ul style="padding-left: 16px; margin-top: 6px">
+                    <li>Rewrote 2 bullets with impact-first framing</li>
+                    <li>
+                      Reordered experience to lead with cross-functional work
+                    </li>
+                    <li>Added A/B testing to skills</li>
+                  </ul>
+                  <p style="margin-top: 8px">Changes accepted and applied.</p>
+                </div>
+              </div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input-wrapper">
+                <textarea
+                  rows="1"
+                  placeholder="Describe the changes you want..."
+                ></textarea>
+                <button class="send-btn">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mode-bar">
+              <div class="mode-toggle">
+                <button>Plan</button><button class="active">Edit</button>
+              </div>
+              <div class="mode-separator"></div>
+              <div class="tailoring-pills">
+                <button>Polish</button><button>Refine</button
+                ><button class="active">Rewrite</button>
               </div>
             </div>
           </div>
         </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Ask a follow-up or switch to Edit mode..."></textarea>
-            <button class="send-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button class="active">Plan</button><button>Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button class="active">Polish</button><button>Refine</button><button>Rewrite</button></div>
-        </div>
       </div>
-
-      <!-- STATE 5: EDIT + PROPOSAL -->
-      <div class="state-content" id="rail-edit-proposal" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge edit">Edit</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">Tailor my resume for this role. Focus on cross-functional leadership and quantified impact.</div></div>
-
-          <div class="research-card">
-            <div class="research-header" onclick="toggleResearch(this)">
-              <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <span class="label">Research Complete</span>
-              <span class="chevron">&#9660;</span>
-            </div>
-            <div class="research-body">
-              <ul>
-                <li>Google PM, Search — search quality, ranking, user intent</li>
-                <li>Data-driven decisions, A/B testing culture</li>
-                <li>Cross-functional collaboration emphasis</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="msg msg-assistant">
-            <div class="msg-bubble" style="max-width:92%;">
-              <div class="proposal-card">
-                <div class="proposal-section">
-                  <div class="proposal-section-title">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    What I'm proposing
-                  </div>
-                  <p>Restructured your experience section to lead with cross-functional impact. Rewrote 2 bullets to mirror Google's "impact metric" style — numbers-first, outcome-focused. Added A/B testing to your skill set based on your retention work.</p>
-                </div>
-                <div class="proposal-section">
-                  <div class="proposal-section-title">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                    Why these changes
-                  </div>
-                  <p>JD mentions "cross-functional" 4 times — your current resume uses "managed team" instead. Google PM interviews focus on leadership stories with measurable outcomes — Acme v2 is your strongest example but the bullets buried the impact. Reworded to lead with the 23% retention number.</p>
-                </div>
-                <div class="proposal-section">
-                  <div class="proposal-section-title">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
-                    Summary
-                  </div>
-                  <div class="proposal-ops-summary">
-                    <span class="op-pill">2 bullets rewritten</span>
-                    <span class="op-pill">1 section reordered</span>
-                    <span class="op-pill">1 skill added</span>
-                  </div>
-                </div>
-                <div class="proposal-actions">
-                  <button class="btn-accept">Accept Changes</button>
-                  <button class="btn-decline">Decline</button>
-                  <button class="btn-view-diff">View Diff</button>
-                </div>
-                <div class="proposal-reply">
-                  <input type="text" placeholder="Reply to refine this proposal..." />
-                  <button>Send</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Describe the changes you want..."></textarea>
-            <button class="send-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button>Plan</button><button class="active">Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button>Polish</button><button class="active">Refine</button><button>Rewrite</button></div>
-        </div>
-      </div>
-
-      <!-- STATE 6: MODE SUGGEST -->
-      <div class="state-content" id="rail-mode-suggest" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge edit">Edit</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">Can you explain what Google looks for in PM interviews?</div></div>
-          <div class="msg msg-assistant">
-            <div class="msg-bubble">
-              <p style="margin-bottom:8px;">Google PM interviews focus on 4 areas:</p>
-              <ol style="padding-left:18px;margin-bottom:8px;">
-                <li style="margin-bottom:4px;"><strong>Product sense</strong> — how you'd improve a product</li>
-                <li style="margin-bottom:4px;"><strong>Analytical thinking</strong> — metrics, A/B tests, data</li>
-                <li style="margin-bottom:4px;"><strong>Leadership</strong> — cross-functional influence without authority</li>
-                <li style="margin-bottom:4px;"><strong>Technical depth</strong> — can you talk to engineers</li>
-              </ol>
-              <p>Your background maps well to all 4. Want me to help you prepare specific stories?</p>
-            </div>
-          </div>
-          <div class="mode-suggest">
-            <p>It looks like you're researching and planning. Want to switch to Plan Mode for a more focused conversation? I won't propose any edits until you're ready.</p>
-            <div class="suggest-actions">
-              <button class="btn-switch">Switch to Plan Mode</button>
-              <button class="btn-stay">Stay in Edit Mode</button>
-            </div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Describe the changes you want..."></textarea>
-            <button class="send-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button>Plan</button><button class="active">Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button class="active">Polish</button><button>Refine</button><button>Rewrite</button></div>
-        </div>
-      </div>
-
-      <!-- STATE 7: COLLAPSED -->
-      <div class="state-content" id="rail-collapsed" style="flex:1;display:flex;flex-direction:column;">
-        <div class="rail-header">
-          <button class="collapse-rail-btn" onclick="toggleChatRail()" title="Collapse">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <div class="rail-header-info">
-            <div class="company">Google</div>
-            <div class="role">Product Manager, Search</div>
-          </div>
-          <span class="mode-badge edit">Edit</span>
-        </div>
-        <div class="chat-messages">
-          <div class="msg msg-user"><div class="msg-bubble">Tailor my resume for this role.</div></div>
-          <div class="msg msg-assistant">
-            <div class="msg-bubble">
-              <p>I've tailored your resume for the Google PM role. Key changes:</p>
-              <ul style="padding-left:16px;margin-top:6px;">
-                <li>Rewrote 2 bullets with impact-first framing</li>
-                <li>Reordered experience to lead with cross-functional work</li>
-                <li>Added A/B testing to skills</li>
-              </ul>
-              <p style="margin-top:8px;">Changes accepted and applied.</p>
-            </div>
-          </div>
-        </div>
-        <div class="chat-input-area">
-          <div class="chat-input-wrapper">
-            <textarea rows="1" placeholder="Describe the changes you want..."></textarea>
-            <button class="send-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="mode-bar">
-          <div class="mode-toggle"><button>Plan</button><button class="active">Edit</button></div>
-          <div class="mode-separator"></div>
-          <div class="tailoring-pills"><button>Polish</button><button>Refine</button><button class="active">Rewrite</button></div>
-        </div>
-      </div>
-
     </div>
-  </div>
-</div>
 
-<script>
-  // State management
-  const stateMap = {
-    'setup': { canvas: 'state-setup', rail: ['rail-setup', 'rail-setup-extracted'], collapsed: false },
-    'researching': { canvas: 'state-researching', rail: ['rail-researching'], collapsed: false },
-    'research-expanded': { canvas: 'state-research-expanded', rail: ['rail-research-expanded'], collapsed: false },
-    'plan-mode': { canvas: 'state-plan-mode', rail: ['rail-plan-mode'], collapsed: false },
-    'edit-proposal': { canvas: 'state-edit-proposal', rail: ['rail-edit-proposal'], collapsed: false },
-    'mode-suggest': { canvas: 'state-mode-suggest', rail: ['rail-mode-suggest'], collapsed: false },
-    'collapsed': { canvas: 'state-collapsed', rail: ['rail-collapsed'], collapsed: true },
-  };
+    <script>
+      // State management
+      const stateMap = {
+        setup: {
+          canvas: "state-setup",
+          rail: ["rail-setup", "rail-setup-extracted"],
+          collapsed: false,
+        },
+        researching: {
+          canvas: "state-researching",
+          rail: ["rail-researching"],
+          collapsed: false,
+        },
+        "research-expanded": {
+          canvas: "state-research-expanded",
+          rail: ["rail-research-expanded"],
+          collapsed: false,
+        },
+        "plan-mode": {
+          canvas: "state-plan-mode",
+          rail: ["rail-plan-mode"],
+          collapsed: false,
+        },
+        "edit-proposal": {
+          canvas: "state-edit-proposal",
+          rail: ["rail-edit-proposal"],
+          collapsed: false,
+        },
+        "mode-suggest": {
+          canvas: "state-mode-suggest",
+          rail: ["rail-mode-suggest"],
+          collapsed: false,
+        },
+        collapsed: {
+          canvas: "state-collapsed",
+          rail: ["rail-collapsed"],
+          collapsed: true,
+        },
+      };
 
-  let currentState = 'setup';
+      let currentState = "setup";
 
-  function showState(state) {
-    currentState = state;
-    const config = stateMap[state];
+      function showState(state) {
+        currentState = state;
+        const config = stateMap[state];
 
-    // Hide all canvas states
-    document.querySelectorAll('.canvas-area .state-content').forEach(el => el.classList.remove('active'));
-    // Hide all rail states
-    document.querySelectorAll('.rail-content .state-content').forEach(el => el.classList.remove('active'));
+        // Hide all canvas states
+        document
+          .querySelectorAll(".canvas-area .state-content")
+          .forEach((el) => el.classList.remove("active"));
+        // Hide all rail states
+        document
+          .querySelectorAll(".rail-content .state-content")
+          .forEach((el) => el.classList.remove("active"));
 
-    // Show active canvas
-    document.getElementById(config.canvas).classList.add('active');
+        // Show active canvas
+        document.getElementById(config.canvas).classList.add("active");
 
-    // Show active rail(s)
-    config.rail.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('active');
-    });
+        // Show active rail(s)
+        config.rail.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add("active");
+        });
 
-    // Handle collapsed state
-    const chatRail = document.getElementById('chat-rail');
-    const resizeHandle = document.getElementById('resize-handle');
-    if (config.collapsed) {
-      chatRail.classList.add('collapsed');
-      resizeHandle.style.display = 'none';
-    } else {
-      chatRail.classList.remove('collapsed');
-      resizeHandle.style.display = '';
-    }
+        // Handle collapsed state
+        const chatRail = document.getElementById("chat-rail");
+        const resizeHandle = document.getElementById("resize-handle");
+        if (config.collapsed) {
+          chatRail.classList.add("collapsed");
+          resizeHandle.style.display = "none";
+        } else {
+          chatRail.classList.remove("collapsed");
+          resizeHandle.style.display = "";
+        }
 
-    // Update picker buttons
-    document.querySelectorAll('.state-picker button').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-  }
+        // Update picker buttons
+        document
+          .querySelectorAll(".state-picker button")
+          .forEach((btn) => btn.classList.remove("active"));
+        event.target.classList.add("active");
+      }
 
-  // Toggle research expandable
-  function toggleResearch(header) {
-    const body = header.nextElementSibling;
-    const chevron = header.querySelector('.chevron');
-    body.classList.toggle('open');
-    chevron.classList.toggle('open');
-  }
+      // Toggle research expandable
+      function toggleResearch(header) {
+        const body = header.nextElementSibling;
+        const chevron = header.querySelector(".chevron");
+        body.classList.toggle("open");
+        chevron.classList.toggle("open");
+      }
 
-  // Toggle thinking expandable
-  function toggleThinking(header) {
-    const body = header.nextElementSibling;
-    const chevron = header.querySelector('.chevron');
-    body.classList.toggle('open');
-    chevron.classList.toggle('open');
-  }
+      // Toggle thinking expandable
+      function toggleThinking(header) {
+        const body = header.nextElementSibling;
+        const chevron = header.querySelector(".chevron");
+        body.classList.toggle("open");
+        chevron.classList.toggle("open");
+      }
 
-  // Toggle sidebar
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-  }
+      // Toggle sidebar
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("collapsed");
+      }
 
-  // Toggle chat rail
-  function toggleChatRail() {
-    const rail = document.getElementById('chat-rail');
-    const resizeHandle = document.getElementById('resize-handle');
-    rail.classList.toggle('collapsed');
-    resizeHandle.style.display = rail.classList.contains('collapsed') ? 'none' : '';
-  }
+      // Toggle chat rail
+      function toggleChatRail() {
+        const rail = document.getElementById("chat-rail");
+        const resizeHandle = document.getElementById("resize-handle");
+        rail.classList.toggle("collapsed");
+        resizeHandle.style.display = rail.classList.contains("collapsed")
+          ? "none"
+          : "";
+      }
 
-  // Mode toggle interaction
-  document.querySelectorAll('.mode-toggle button').forEach(btn => {
-    btn.addEventListener('click', function() {
-      this.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
+      // Mode toggle interaction
+      document.querySelectorAll(".mode-toggle button").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          this.parentElement
+            .querySelectorAll("button")
+            .forEach((b) => b.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
 
-  // Tailoring pills interaction
-  document.querySelectorAll('.tailoring-pills button').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const container = this.closest('.tailoring-pills') || this.parentElement;
-      container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-</script>
-
-</body>
+      // Tailoring pills interaction
+      document.querySelectorAll(".tailoring-pills button").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const container =
+            this.closest(".tailoring-pills") || this.parentElement;
+          container
+            .querySelectorAll("button")
+            .forEach((b) => b.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+    </script>
+  </body>
 </html>

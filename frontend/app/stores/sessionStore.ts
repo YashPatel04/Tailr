@@ -49,7 +49,11 @@ interface SessionState {
   setActiveMode: (mode: "plan" | "edit") => void
   setTailoringMode: (mode: string) => void
   setSelectedModel: (providerId: string | null, model: string | null) => void
-  sendMessage: (content: string, queryClient: QueryClient, proposalContext?: string) => Promise<void>
+  sendMessage: (
+    content: string,
+    queryClient: QueryClient,
+    proposalContext?: string
+  ) => Promise<void>
 }
 
 let controllerRef: AbortController | null = null
@@ -95,7 +99,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setEditingFieldId: (id) => set({ editingFieldId: id }),
   setActiveMode: (mode) => set({ activeMode: mode }),
   setTailoringMode: (mode) => set({ tailoringMode: mode }),
-  setSelectedModel: (providerId, model) => set({ selectedProviderId: providerId, selectedModel: model }),
+  setSelectedModel: (providerId, model) =>
+    set({ selectedProviderId: providerId, selectedModel: model }),
   sendMessage: async (content, queryClient, proposalContext) => {
     const state = get()
     const sessionId = state.activeSessionId
@@ -112,13 +117,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ isStreaming: true, streamingDocType: docType, progressPhase: "", progressMessage: "" })
 
     const queryKey = ["sessions", sessionId, "messages", docType]
-    queryClient.setQueryData(
-      queryKey,
-      (old: any[] | undefined) => [
-        ...(old || []),
-        { id: `optimistic-${Date.now()}`, role: "user", content, doc_type: docType, created_at: new Date().toISOString() },
-      ]
-    )
+    queryClient.setQueryData(queryKey, (old: any[] | undefined) => [
+      ...(old || []),
+      {
+        id: `optimistic-${Date.now()}`,
+        role: "user",
+        content,
+        doc_type: docType,
+        created_at: new Date().toISOString(),
+      },
+    ])
 
     try {
       const csrfToken = await getCsrfToken()
@@ -169,7 +177,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
             const data = JSON.parse(event.data)
             switch (event.event) {
               case "researching":
-                set({ progressPhase: "researching", progressMessage: data.message || "Researching..." })
+                set({
+                  progressPhase: "researching",
+                  progressMessage: data.message || "Researching...",
+                })
                 break
               case "research_done":
                 set({ progressPhase: "research_done", progressMessage: "Research complete" })
@@ -178,10 +189,18 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 set({ progressPhase: "thinking", progressMessage: data.message || "Thinking..." })
                 break
               case "writing":
-                set({ progressPhase: "writing", progressMessage: data.message || "Writing changes..." })
+                set({
+                  progressPhase: "writing",
+                  progressMessage: data.message || "Writing changes...",
+                })
                 break
               case "proposal":
-                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+                set({
+                  isStreaming: false,
+                  streamingDocType: null,
+                  progressPhase: "",
+                  progressMessage: "",
+                })
                 if (data.mode === "plan") {
                   queryClient.invalidateQueries({ queryKey })
                   break
@@ -207,7 +226,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 queryClient.invalidateQueries({ queryKey })
                 break
               case "done":
-                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+                set({
+                  isStreaming: false,
+                  streamingDocType: null,
+                  progressPhase: "",
+                  progressMessage: "",
+                })
                 if (data.document_id) {
                   set({ latestDocument: { id: data.document_id } as any })
                 }
@@ -216,7 +240,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 break
               case "error":
                 controller.abort()
-                set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
+                set({
+                  isStreaming: false,
+                  streamingDocType: null,
+                  progressPhase: "",
+                  progressMessage: "",
+                })
                 toast.error(data.message || "An error occurred")
                 queryClient.invalidateQueries({ queryKey })
                 break

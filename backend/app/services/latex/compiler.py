@@ -27,6 +27,6 @@ class LatexCompiler:
                 raise CompileError(message=f"Compilation failed: {error_body[:300]}")
         except urllib.error.HTTPError as e:
             error_body = e.read().decode("utf-8", errors="replace")
-            raise CompileError(message=error_body[:300])
+            raise CompileError(message=error_body[:300]) from e
         except Exception as e:
-            raise CompileError(message=str(e))
+            raise CompileError(message=str(e)) from e

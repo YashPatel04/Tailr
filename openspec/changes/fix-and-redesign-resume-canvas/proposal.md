@@ -5,6 +5,7 @@ The resume canvas has significant UX regressions (drag-drop broken, undo non-fun
 ## What Changes
 
 **Bug fixes:**
+
 - Fix drag-and-drop: add optimistic cache updates for section/entry reorder, smooth animation
 - Fix Add Section/Subsection/Bullet buttons: wire click handlers, rename to consistent labels
 - Implement undo/redo: command history stack with Ctrl+Z / Ctrl+Shift+Z support
@@ -13,6 +14,7 @@ The resume canvas has significant UX regressions (drag-drop broken, undo non-fun
 - Add "+ Add date", "+ Add location", "+ Add title" controls for missing subheading fields across all section types
 
 **New features:**
+
 - Save status indicator (Saved/Saving.../Error) persisted after every change, with backend save-state tracking
 - Remove "Resume Version —" header and "Resume" label entirely from canvas
 - Cover letter generation: backend endpoint + frontend UI for AI-generated cover letters
@@ -27,11 +29,13 @@ The resume canvas has significant UX regressions (drag-drop broken, undo non-fun
 ## Capabilities
 
 ### New Capabilities
+
 - `cover-letter-generation`: Backend endpoint and frontend UI for generating cover letters from session context
 - `save-state-indicator`: Save/Saving/Error status tracking in edit queue with UI indicator
 - `undo-redo`: Command history stack for canvas edits with keyboard shortcuts
 
 ### Modified Capabilities
+
 None — existing specs are empty; this is a net-new capability set.
 
 ## Impact

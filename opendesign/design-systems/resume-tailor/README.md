@@ -6,17 +6,17 @@ A greenfield web application that tailors LaTeX resumes to job descriptions usin
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 15 (App Router), React 19, TypeScript |
-| Styling | Tailwind CSS v3, custom tokens |
-| State | Zustand (session, layout, search), TanStack Query (server state) |
-| Backend | FastAPI (Python 3.11), SQLAlchemy async, PostgreSQL 16 |
-| Auth | JWT httpOnly cookies + CSRF double-submit pattern |
-| Real-time | Server-Sent Events (SSE) for chat/LLM pipeline |
-| PDF | pypdf (parsing), texlive-full via Docker (compilation) |
-| Email | MailHog (dev), SMTP (prod) |
-| Infra | Docker Compose (6 services: db, redis, latex, backend, frontend, mailhog) |
+| Layer     | Technology                                                                |
+| --------- | ------------------------------------------------------------------------- |
+| Frontend  | Next.js 15 (App Router), React 19, TypeScript                             |
+| Styling   | Tailwind CSS v3, custom tokens                                            |
+| State     | Zustand (session, layout, search), TanStack Query (server state)          |
+| Backend   | FastAPI (Python 3.11), SQLAlchemy async, PostgreSQL 16                    |
+| Auth      | JWT httpOnly cookies + CSRF double-submit pattern                         |
+| Real-time | Server-Sent Events (SSE) for chat/LLM pipeline                            |
+| PDF       | pypdf (parsing), texlive-full via Docker (compilation)                    |
+| Email     | MailHog (dev), SMTP (prod)                                                |
+| Infra     | Docker Compose (6 services: db, redis, latex, backend, frontend, mailhog) |
 
 ---
 
@@ -24,16 +24,16 @@ A greenfield web application that tailors LaTeX resumes to job descriptions usin
 
 **Temperature**: neutral-warm. Paper and Ink carry chroma ≤ 0.02. Brass is the sole accent.
 
-| Token | Light | Dark | Role |
-|-------|-------|------|------|
-| `paper` | `#F1F2EE` | `#171B22` | Primary surface background |
-| `ink` | `#171B22` | `#F1F2EE` | Primary text |
-| `slate` | `#5B6472` | `#9CA3AF` | Secondary text, muted UI |
-| `brass` | `#B8863A` | `#B8863A` | Accent — buttons, active states, focus rings |
-| `brass-hover` | `#9A6F2D` | `#9A6F2D` | Accent hover |
-| `proof-green` | `#2E7D5B` | `#2E7D5B` | Diff additions, success states |
-| `proof-red` | `#B23B3B` | `#B23B3B` | Diff removals, dangerous actions |
-| `danger` | `#B23B3B` | `#B23B3B` | Delete buttons, error borders |
+| Token         | Light     | Dark      | Role                                         |
+| ------------- | --------- | --------- | -------------------------------------------- |
+| `paper`       | `#F1F2EE` | `#171B22` | Primary surface background                   |
+| `ink`         | `#171B22` | `#F1F2EE` | Primary text                                 |
+| `slate`       | `#5B6472` | `#9CA3AF` | Secondary text, muted UI                     |
+| `brass`       | `#B8863A` | `#B8863A` | Accent — buttons, active states, focus rings |
+| `brass-hover` | `#9A6F2D` | `#9A6F2D` | Accent hover                                 |
+| `proof-green` | `#2E7D5B` | `#2E7D5B` | Diff additions, success states               |
+| `proof-red`   | `#B23B3B` | `#B23B3B` | Diff removals, dangerous actions             |
+| `danger`      | `#B23B3B` | `#B23B3B` | Delete buttons, error borders                |
 
 No gradients. No shadows on cards. No colored left-border accent strips. Flat, editorial palette.
 
@@ -41,12 +41,12 @@ No gradients. No shadows on cards. No colored left-border accent strips. Flat, e
 
 ## Typography
 
-| Role | Font | Weight | Size | Usage |
-|------|------|--------|------|-------|
-| Headings (h1, h2) | Newsreader (serif) | 600 | 24px / 20px | Page titles, section headings |
-| Body / UI | Public Sans (sans) | 400–500 | 14px / 16px | Labels, inputs, buttons, sidebar items |
-| Captions / meta | Public Sans | 400 | 12px | Secondary info, timestamps, version numbers |
-| Code | JetBrains Mono | 400 | 12px | LaTeX source preview, code blocks |
+| Role              | Font               | Weight  | Size        | Usage                                       |
+| ----------------- | ------------------ | ------- | ----------- | ------------------------------------------- |
+| Headings (h1, h2) | Newsreader (serif) | 600     | 24px / 20px | Page titles, section headings               |
+| Body / UI         | Public Sans (sans) | 400–500 | 14px / 16px | Labels, inputs, buttons, sidebar items      |
+| Captions / meta   | Public Sans        | 400     | 12px        | Secondary info, timestamps, version numbers |
+| Code              | JetBrains Mono     | 400     | 12px        | LaTeX source preview, code blocks           |
 
 **Casing**: Sentence case for headings and labels. Title case only for brand name ("Tailr"). No all-caps except sidebar group headers (12px, semibold, tracking-wider).
 
@@ -68,6 +68,7 @@ Class-based toggle via `.dark` on `<html>`. Theme preference persisted in `local
 ## Layout Architecture
 
 ### App Shell (`AppShell`)
+
 ```
 ┌──────────┬──────────────────────┬──────────┐
 │ Sidebar  │     Main Canvas      │ Chat Rail│
@@ -83,6 +84,7 @@ Class-based toggle via `.dark` on `<html>`. Theme preference persisted in `local
 - **Chat Rail** (right): session header, message list with progress indicators, text input. Only visible when a session is active.
 
 ### Route Structure
+
 ```
 /                          → Home (redirects to most recent session or shows empty state)
 /session/[id]              → Active session page (document + chat rail)
@@ -99,6 +101,7 @@ Class-based toggle via `.dark` on `<html>`. Theme preference persisted in `local
 ```
 
 ### Settings (Modal)
+
 All settings pages render as a full-screen portal overlay (`createPortal` to `document.body`). Left sidebar nav (Profile, Providers, Master Resume, Account) with highlight on active route. Close (X) button navigates to `/`. Theme toggle in the nav footer.
 
 ---
@@ -106,6 +109,7 @@ All settings pages render as a full-screen portal overlay (`createPortal` to `do
 ## Component Inventory
 
 ### Sidebar (`260px` / `50px` collapsed)
+
 - **SidebarHeader**: Logo/app name + Search button (opens SearchModal) + collapse toggle
 - **SidebarNewChat**: Button that opens SessionSetupForm slide-over
 - **SidebarProjects**: Flat list grouped by company, shows session count per company
@@ -113,6 +117,7 @@ All settings pages render as a full-screen portal overlay (`createPortal` to `do
 - **SidebarProfile**: User avatar (first letter), email, theme toggle, Settings link, Logout button. Collapsed variant shows popover menu.
 
 ### Document Canvas
+
 - **DocumentToolbar**: Document title + version, Changes/Final view toggle (segmented button), Export dropdown (click-to-open, .tex/.pdf/.docx/.txt).
 - **DocumentTabs**: Resume / Cover Letter tab switcher. Cover letter tab hidden when no cover letter exists.
 - **SectionRenderer**: Renders document model nodes (sections, entries, bullets, text) with LaTeX source or plain text.
@@ -120,6 +125,7 @@ All settings pages render as a full-screen portal overlay (`createPortal` to `do
 - **DiffActions**: Accept All / Reject All buttons (visible only in diff mode).
 
 ### Chat Rail
+
 - **ChatRailHeader**: Company + role title, archive button.
 - **ChatMessageList**: Scrollable message list with auto-scroll to bottom. Shows progress banner during streaming with animated phase icons (researching, thinking, writing).
 - **ChatInput**: Auto-resizing textarea, Enter to send, Shift+Enter for newline. Disabled during streaming.
@@ -127,18 +133,21 @@ All settings pages render as a full-screen portal overlay (`createPortal` to `do
 - **SessionSetupForm**: Slide-over panel (mounted in AppShell). Fields: company, role, JD text/URL toggle, tailoring mode (polish/refine/rewrite), provider selector, notes. Auto-triggers first LLM message after creation.
 
 ### Auth Pages
+
 - **Login**: Email + password form, OAuth buttons (GitHub, Google), link to register/forgot-password.
 - **Register**: Email + password + confirm form, password length validation.
 - **Verify**: Success/error state based on token.
 - **ForgotPassword**: Email input, success state.
 
 ### Settings Pages
+
 - **Profile**: Career context textarea (injected into every prompt), Save button.
 - **Providers**: List of configured LLM providers with test/delete actions. Add form with provider type, API key, base URL, model, temperature.
 - **Master Resume**: Upload (hidden file input, .tex/.docx/.txt/.pdf), View modal (shows parsed text), Remove button (with confirmation), Replace button.
 - **Account**: Delete account with confirmation.
 
 ### Shared / UI
+
 - **SearchModal**: Cmd+K style search overlay (portal). Searches sessions, companies, tags. Arrow key navigation, Enter to navigate.
 - **Spinner**: Centered loading indicator, sizes: sm/md/lg.
 - **ProgressMessage**: Phase indicator with icon, displayed in chat during LLM pipeline.
@@ -151,25 +160,26 @@ All settings pages render as a full-screen portal overlay (`createPortal` to `do
 
 ### Zustand Stores
 
-| Store | Key State | Purpose |
-|-------|-----------|---------|
-| `sessionStore` | activeSessionId, activeDocType, viewMode, isStreaming, shouldAutoTailor, progressPhase | Central session state, SSE progress tracking |
-| `layoutStore` | sidebarCollapsed | Sidebar collapse state, persisted to localStorage |
-| `searchStore` | isOpen | Search modal visibility |
+| Store          | Key State                                                                              | Purpose                                           |
+| -------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `sessionStore` | activeSessionId, activeDocType, viewMode, isStreaming, shouldAutoTailor, progressPhase | Central session state, SSE progress tracking      |
+| `layoutStore`  | sidebarCollapsed                                                                       | Sidebar collapse state, persisted to localStorage |
+| `searchStore`  | isOpen                                                                                 | Search modal visibility                           |
 
 ### Server State (TanStack Query)
-| Query | Endpoint | Cache Key |
-|-------|----------|-----------|
-| `useCurrentUser` | `GET /api/users/me` | `["user", "me"]` |
-| `useProviders` | `GET /api/providers` | `["providers"]` |
-| `useMasterResume` | `GET /api/master-resume` | `["master-resume"]` |
-| `useSessions` | `GET /api/sessions` | `["sessions"]` |
-| `useGroupedSessions` | `GET /api/sessions/grouped` | `["sessions", "grouped"]` |
-| `useSession` | `GET /api/sessions/:id` | `["sessions", id]` |
-| `useSessionMessages` | `GET /api/sessions/:id/messages` | `["sessions", id, "messages"]` |
+
+| Query                | Endpoint                                 | Cache Key                               |
+| -------------------- | ---------------------------------------- | --------------------------------------- |
+| `useCurrentUser`     | `GET /api/users/me`                      | `["user", "me"]`                        |
+| `useProviders`       | `GET /api/providers`                     | `["providers"]`                         |
+| `useMasterResume`    | `GET /api/master-resume`                 | `["master-resume"]`                     |
+| `useSessions`        | `GET /api/sessions`                      | `["sessions"]`                          |
+| `useGroupedSessions` | `GET /api/sessions/grouped`              | `["sessions", "grouped"]`               |
+| `useSession`         | `GET /api/sessions/:id`                  | `["sessions", id]`                      |
+| `useSessionMessages` | `GET /api/sessions/:id/messages`         | `["sessions", id, "messages"]`          |
 | `useSessionDocument` | `GET /api/sessions/:id` + docType filter | `["sessions", id, "document", docType]` |
-| `useCompanies` | `GET /api/companies` | `["companies"]` |
-| `useTags` | `GET /api/tags` | `["tags"]` |
+| `useCompanies`       | `GET /api/companies`                     | `["companies"]`                         |
+| `useTags`            | `GET /api/tags`                          | `["tags"]`                              |
 
 ---
 
@@ -244,24 +254,25 @@ Progress shown in chat as an animated banner with phase-specific icons (FileSear
 ## Export
 
 `GET /api/sessions/:id/export?format=` supports `.tex`, `.pdf`, `.docx`, `.txt`.
+
 - **tex**: raw LaTeX source as plain text download
 - **pdf**: compiled via texlive-full in Docker (pdflatex)
 - **docx**: converted from document model (python-docx)
 - **txt**: plain text extraction
-Frontend downloads via `URL.createObjectURL(blob)` + programmatic `<a>` click.
+  Frontend downloads via `URL.createObjectURL(blob)` + programmatic `<a>` click.
 
 ---
 
 ## Hover / Press / Focus States
 
-| Element | Default | Hover | Focus | Active/Pressed |
-|---------|---------|-------|-------|----------------|
-| Primary button (brass) | `bg-brass text-paper` | `bg-brass-hover` | brass ring | same as hover |
-| Secondary/ghost button | transparent | `bg-slate/5` | brass ring | `bg-slate/10` |
-| Text input | `bg-paper border-slate/20` | same | `border-brass ring-1 ring-brass` | same |
-| Sidebar item | transparent | `bg-slate/5` | — | `bg-slate/10` (active) |
-| Export dropdown | `bg-paper shadow-lg` | `bg-slate/5` per item | — | — |
-| Tab (view mode) | transparent | `bg-slate/5` | — | `bg-brass text-paper` (selected) |
+| Element                | Default                    | Hover                 | Focus                            | Active/Pressed                   |
+| ---------------------- | -------------------------- | --------------------- | -------------------------------- | -------------------------------- |
+| Primary button (brass) | `bg-brass text-paper`      | `bg-brass-hover`      | brass ring                       | same as hover                    |
+| Secondary/ghost button | transparent                | `bg-slate/5`          | brass ring                       | `bg-slate/10`                    |
+| Text input             | `bg-paper border-slate/20` | same                  | `border-brass ring-1 ring-brass` | same                             |
+| Sidebar item           | transparent                | `bg-slate/5`          | —                                | `bg-slate/10` (active)           |
+| Export dropdown        | `bg-paper shadow-lg`       | `bg-slate/5` per item | —                                | —                                |
+| Tab (view mode)        | transparent                | `bg-slate/5`          | —                                | `bg-brass text-paper` (selected) |
 
 ---
 

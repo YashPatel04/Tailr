@@ -92,6 +92,8 @@ async def import_from_tex(tex_source: str, llm_adapter, max_retries: int = 2) ->
                     }
                 )
             else:
-                raise ImportError(f"Failed to import resume after {max_retries + 1} attempts: {e}")
+                raise ImportError(
+                    f"Failed to import resume after {max_retries + 1} attempts: {e}"
+                ) from e
 
     raise ImportError("Import failed")

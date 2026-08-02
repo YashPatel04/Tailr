@@ -15,7 +15,12 @@ export default function CompanyPage() {
     queryFn: () => apiRequest<any[]>("GET", `/api/companies/${encodeURIComponent(name)}/sessions`),
   })
 
-  if (isLoading) return <div className="flex-1 flex items-center justify-center"><Spinner size="lg" /></div>
+  if (isLoading)
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    )
 
   return (
     <div className="flex-1 overflow-y-auto bg-canvas dark:bg-[#212121]">
@@ -24,9 +29,15 @@ export default function CompanyPage() {
         {sessions && sessions.length > 0 ? (
           <div className="space-y-2">
             {sessions.map((s) => (
-              <Link key={s.id} href={`/session/${s.id}`} className="block rounded-lg border border-muted p-4 hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors">
+              <Link
+                key={s.id}
+                href={`/session/${s.id}`}
+                className="block rounded-lg border border-muted p-4 hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
+              >
                 <h3 className="text-sm font-medium text-ink dark:text-[#ececec]">{s.role_title}</h3>
-                <p className="text-xs text-slate dark:text-[#8e8e8e] mt-1">{s.tailoring_mode} &middot; {new Date(s.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-slate dark:text-[#8e8e8e] mt-1">
+                  {s.tailoring_mode} &middot; {new Date(s.created_at).toLocaleDateString()}
+                </p>
               </Link>
             ))}
           </div>

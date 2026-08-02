@@ -60,12 +60,11 @@ class TestBasics:
             email="jane@example.com",
             phone="555-1234",
             location="NYC",
-            summary="A great engineer.",
         )
         assert b.email == "jane@example.com"
         assert b.phone == "555-1234"
         assert b.location == "NYC"
-        assert b.summary == "A great engineer."
+        assert b.name == "Jane Doe"
 
     def test_basics_with_profiles(self):
         b = Basics(

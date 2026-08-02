@@ -25,7 +25,9 @@ export function SearchModal() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 150)
@@ -34,39 +36,66 @@ export function SearchModal() {
 
   const q = debouncedQuery.toLowerCase().trim()
 
-  const filteredChats = useMemo(() => (sessions || [])
-    .filter((s) => q && (
-      (s.company_name && s.company_name.toLowerCase().includes(q)) ||
-      (s.role_title && s.role_title.toLowerCase().includes(q))
-    ))
-    .slice(0, 5),
-    [sessions, q])
+  const filteredChats = useMemo(
+    () =>
+      (sessions || [])
+        .filter(
+          (s) =>
+            q &&
+            ((s.company_name && s.company_name.toLowerCase().includes(q)) ||
+              (s.role_title && s.role_title.toLowerCase().includes(q)))
+        )
+        .slice(0, 5),
+    [sessions, q]
+  )
 
-  const filteredCompanies = useMemo(() => (companies || [])
-    .filter((c) => q && c.company_name.toLowerCase().includes(q))
-    .slice(0, 3),
-    [companies, q])
+  const filteredCompanies = useMemo(
+    () =>
+      (companies || []).filter((c) => q && c.company_name.toLowerCase().includes(q)).slice(0, 3),
+    [companies, q]
+  )
 
-  const filteredTags = useMemo(() => (tags || [])
-    .filter((t) => q && t.tag.toLowerCase().includes(q))
-    .slice(0, 3),
-    [tags, q])
+  const filteredTags = useMemo(
+    () => (tags || []).filter((t) => q && t.tag.toLowerCase().includes(q)).slice(0, 3),
+    [tags, q]
+  )
 
-  const results: ResultItem[] = useMemo(() => [
-    ...filteredChats.map((s) => ({ type: "chat" as const, id: s.id, label: `${s.company_name} - ${s.role_title}`, sublabel: s.role_title })),
-    ...filteredCompanies.map((c) => ({ type: "company" as const, id: c.company_name, label: c.company_name, count: c.session_count })),
-    ...filteredTags.map((t) => ({ type: "tag" as const, id: t.tag, label: t.tag, count: t.session_count })),
-  ], [filteredChats, filteredCompanies, filteredTags])
+  const results: ResultItem[] = useMemo(
+    () => [
+      ...filteredChats.map((s) => ({
+        type: "chat" as const,
+        id: s.id,
+        label: `${s.company_name} - ${s.role_title}`,
+        sublabel: s.role_title,
+      })),
+      ...filteredCompanies.map((c) => ({
+        type: "company" as const,
+        id: c.company_name,
+        label: c.company_name,
+        count: c.session_count,
+      })),
+      ...filteredTags.map((t) => ({
+        type: "tag" as const,
+        id: t.tag,
+        label: t.tag,
+        count: t.session_count,
+      })),
+    ],
+    [filteredChats, filteredCompanies, filteredTags]
+  )
 
   const total = results.length
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  const handleSelect = useCallback((item: ResultItem) => {
-    close()
-    if (item.type === "chat") router.push(`/session/${item.id}`)
-    else if (item.type === "company") router.push(`/company/${encodeURIComponent(item.id!)}`)
-    else if (item.type === "tag") router.push(`/tag/${encodeURIComponent(item.id!)}`)
-  }, [close, router])
+  const handleSelect = useCallback(
+    (item: ResultItem) => {
+      close()
+      if (item.type === "chat") router.push(`/session/${item.id}`)
+      else if (item.type === "company") router.push(`/company/${encodeURIComponent(item.id!)}`)
+      else if (item.type === "tag") router.push(`/tag/${encodeURIComponent(item.id!)}`)
+    },
+    [close, router]
+  )
 
   useEffect(() => {
     setSelectedIndex(0)
@@ -114,17 +143,32 @@ export function SearchModal() {
             <div className="max-h-[380px] overflow-y-auto p-2">
               {chatCount > 0 && (
                 <>
-                  <div                   className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">Chats</div>
+                  <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">
+                    Chats
+                  </div>
                   {filteredChats.map((s, i) => (
                     <button
                       key={s.id}
-                      onClick={() => handleSelect({ type: "chat", id: s.id, label: `${s.company_name} - ${s.role_title}` })}
+                      onClick={() =>
+                        handleSelect({
+                          type: "chat",
+                          id: s.id,
+                          label: `${s.company_name} - ${s.role_title}`,
+                        })
+                      }
                       className={`flex items-center gap-3 w-full px-3 py-2 rounded-md text-left transition-colors ${i === selectedIndex ? "bg-[#f4f4f4] dark:bg-[#2b2b2b]" : "hover:bg-[#f7f7f8] dark:hover:bg-[#40414f]"}`}
                     >
-                      <MessageSquare size={16} className="text-slate dark:text-[#8e8e8e] flex-shrink-0" />
-                      <span className="text-sm text-ink dark:text-[#ececec] truncate">{s.company_name} - {s.role_title}</span>
+                      <MessageSquare
+                        size={16}
+                        className="text-slate dark:text-[#8e8e8e] flex-shrink-0"
+                      />
+                      <span className="text-sm text-ink dark:text-[#ececec] truncate">
+                        {s.company_name} - {s.role_title}
+                      </span>
                       {s.is_archived && (
-                        <span className="ml-auto text-xs text-[#6e6e6e] flex-shrink-0">(archived)</span>
+                        <span className="ml-auto text-xs text-[#6e6e6e] flex-shrink-0">
+                          (archived)
+                        </span>
                       )}
                     </button>
                   ))}
@@ -132,32 +176,57 @@ export function SearchModal() {
               )}
               {companyCount > 0 && (
                 <>
-                  <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">Companies</div>
+                  <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">
+                    Companies
+                  </div>
                   {filteredCompanies.map((c) => (
                     <button
                       key={c.company_name}
-                      onClick={() => handleSelect({ type: "company", id: c.company_name, label: c.company_name, count: c.session_count })}
+                      onClick={() =>
+                        handleSelect({
+                          type: "company",
+                          id: c.company_name,
+                          label: c.company_name,
+                          count: c.session_count,
+                        })
+                      }
                       className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-left hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
                     >
-                      <Building2 size={16} className="text-slate dark:text-[#8e8e8e] flex-shrink-0" />
+                      <Building2
+                        size={16}
+                        className="text-slate dark:text-[#8e8e8e] flex-shrink-0"
+                      />
                       <span className="text-sm text-ink dark:text-[#ececec]">{c.company_name}</span>
-                      <span className="ml-auto text-xs text-slate dark:text-[#8e8e8e]">{c.session_count}</span>
+                      <span className="ml-auto text-xs text-slate dark:text-[#8e8e8e]">
+                        {c.session_count}
+                      </span>
                     </button>
                   ))}
                 </>
               )}
               {tagCount > 0 && (
                 <>
-                  <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">Tags</div>
+                  <div className="px-3 py-1.5 text-xs font-semibold uppercase text-slate dark:text-[#8e8e8e] tracking-wider">
+                    Tags
+                  </div>
                   {filteredTags.map((t) => (
                     <button
                       key={t.tag}
-                      onClick={() => handleSelect({ type: "tag", id: t.tag, label: t.tag, count: t.session_count })}
+                      onClick={() =>
+                        handleSelect({
+                          type: "tag",
+                          id: t.tag,
+                          label: t.tag,
+                          count: t.session_count,
+                        })
+                      }
                       className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-left hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
                     >
                       <Hash size={16} className="text-slate dark:text-[#8e8e8e] flex-shrink-0" />
                       <span className="text-sm text-ink dark:text-[#ececec]">{t.tag}</span>
-                      <span className="ml-auto text-xs text-slate dark:text-[#8e8e8e]">{t.session_count}</span>
+                      <span className="ml-auto text-xs text-slate dark:text-[#8e8e8e]">
+                        {t.session_count}
+                      </span>
                     </button>
                   ))}
                 </>

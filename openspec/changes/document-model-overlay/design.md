@@ -11,6 +11,7 @@ This change replaces the parser, extractor, document model, patch protocol, appl
 ## Goals / Non-Goals
 
 **Goals:**
+
 - The canvas renders the user's actual resume — populated sections, populated entries with title/dates/role/location fields, populated bullets with formatted spans.
 - LLM tailoring patches land on real, addressable typed content; round-trip preserves the user's template idiom.
 - User can inline-edit any bullet, entry field (including swapping dates with location by drag), skill row, or section heading directly in the canvas.
@@ -19,6 +20,7 @@ This change replaces the parser, extractor, document model, patch protocol, appl
 - Arbitrary LaTeX templates degrade gracefully: unknown constructs become opaque regions that still round-trip; nothing is blank, nothing is broken at export.
 
 **Non-Goals:**
+
 - A general-purpose LaTeX AST (we model the resume idiom, not arbitrary LaTeX).
 - Live multi-user collaboration.
 - Editing preamble/package configuration from the canvas (preamble stays opaque; users edit their template outside the app).
@@ -52,10 +54,10 @@ Shipped recognizers (priority order):
 3. `SectionRecognizer` — owns `\section*{...}`/`\section{...}`/`\subsection{...}`/`\cvsection{...}`/`\resumesection{...}`. Emits a `SectionRegion(label)`.
 4. `EntryRecognizer` — owns the run of "header line + optional `itemize` block" that forms one experience/research/project entry. Heuristically parses the header line into `title`, `role`, `organization`, `dates`, `location`, `link` fields and the itemize into bullet children. Emits an `EntryRegion`.
 5. `SkillRowRecognizer` — owns the `\textbf{Category:} <items> \\` line shape. Emits a `SkillRowRegion(category, items)`.
-6. `BulletRecognizer` — owns one `\item <body>` inside an itemize. Emits a `BulletRegion(text, spans)` where `text` is the *parsed* bullet body (not empty) and `spans` is computed from `\textbf`/`\textit`/`\underline`/`\texttt`/`\href`.
+6. `BulletRecognizer` — owns one `\item <body>` inside an itemize. Emits a `BulletRegion(text, spans)` where `text` is the _parsed_ bullet body (not empty) and `spans` is computed from `\textbf`/`\textit`/`\underline`/`\texttt`/`\href`.
 7. `OpaqueRecognizer` — fallback for everything else (orphan `\\`, `\hfill`, `\noindent`, stray comments, unrecognized macros). Emits an `OpaqueRegion`.
 
-The catalog is **extensible**: when the user uploads a `moderncv` resume, ship a `CvEntryRecognizer` for `\cventry{...}{...}{...}{...}`. Unknown templates never break the pipeline — they just produce more opaque regions and fewer typed regions. The model degrades *gracefully*, not catastrophically.
+The catalog is **extensible**: when the user uploads a `moderncv` resume, ship a `CvEntryRecognizer` for `\cventry{...}{...}{...}{...}`. Unknown templates never break the pipeline — they just produce more opaque regions and fewer typed regions. The model degrades _gracefully_, not catastrophically.
 
 ### Decision 3: Region tree with verbatim slices, not a typed-only DocNode tree
 
@@ -76,6 +78,7 @@ Region
 ```
 
 Two facts live on one node:
+
 1. A **verbatim byte-slice** into the original `tex_source` → round-trip insurance.
 2. A **parsed typed payload** (`text`, `spans`, `fields`, `layout`) → frontend rendering + LLM addressing + canvas editing.
 
@@ -91,7 +94,7 @@ The tree contains **no absolute offsets that must be maintained**. Slice positio
 - For inserted bullets/entries: harvest the user's own idiom from a neighboring region's slice (same `\begin{itemize}[...]`, same `\\` rhythm, same `\hfill` placement). The result reads as if the user wrote it.
 - For moved regions: re-emit the regions in the new tree-traversal order — no offset bookkeeping.
 
-Layout glue (`\\`, `\hfill`, `\noindent`, `\item`, `\begin`/`\end` of itemize) is **serializer-managed and never stored as a draggable node**. The user manipulates *intent* ("dates on the right of title"); the serializer translates that intent into LaTeX glue.
+Layout glue (`\\`, `\hfill`, `\noindent`, `\item`, `\begin`/`\end` of itemize) is **serializer-managed and never stored as a draggable node**. The user manipulates _intent_ ("dates on the right of title"); the serializer translates that intent into LaTeX glue.
 
 ### Decision 5: Typed op catalog, source-tagged, single applier
 
@@ -212,6 +215,7 @@ Request shape (用户-or-import path):
 ```
 
 The endpoint:
+
 - Authenticates, fetches current `SessionDocument`.
 - Loads the Region tree.
 - Runs the applier (same as LLM path).
@@ -238,7 +242,7 @@ This preserves the audit history and lets us delete the legacy path once every a
 
 - **[Risk] User + LLM edits collide.** Inside one session the user is mid-edit while an LLM tailoring patch arrives. Mitigation: optimistic-update store tracks "in-flight user ops"; on LLM patch arrival, if there are pending user ops, hold the LLM patch and surface a conflict banner. The user resolves (keep mine / keep AI's / merge). No silent clobber.
 
-- **[Risk] Span offsets drift after a `ReplaceText` op.** Once text changes, any spans stored against the old text are invalid. Mitigation: `ReplaceText` *requires* spans in the op payload (either recomputed by the LLM/canvas where the edit happened, or empty). The applier does not "carry over" old spans.
+- **[Risk] Span offsets drift after a `ReplaceText` op.** Once text changes, any spans stored against the old text are invalid. Mitigation: `ReplaceText` _requires_ spans in the op payload (either recomputed by the LLM/canvas where the edit happened, or empty). The applier does not "carry over" old spans.
 
 - **[Risk] Migrating lazy sessions on a slow parser.** If a user has 100 old sessions, the first open of each re-parses. Mitigation: parsing a 5-page resume should be ≤50ms; even 100 sessions costs 5s total. Acceptable. If parsing ever does turn out slow, a background job can pre-warm V2 documents.
 

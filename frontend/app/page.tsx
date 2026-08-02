@@ -23,8 +23,13 @@ export default function RootPage() {
   const { data: sessions, isLoading: sessionsLoading } = useSessions({ enabled: !!user })
 
   useEffect(() => {
-    if (!isLoading && user && !sessionsLoading && sessions && sessions.length > 0) {
-      router.replace(`/session/${sessions[0].id}`)
+    if (!isLoading && user && !sessionsLoading) {
+      if (sessions && sessions.length > 0) {
+        router.replace(`/session/${sessions[0].id}`)
+      } else {
+        // No sessions — show the app empty state
+        router.replace("/dashboard")
+      }
     }
   }, [isLoading, user, sessions, sessionsLoading, router])
 
@@ -61,7 +66,10 @@ const c = {
 
 function LandingPage() {
   return (
-    <div className={`${geist.variable} ${geistMono.variable}`} style={{ background: c.bg, color: c.ink }}>
+    <div
+      className={`${geist.variable} ${geistMono.variable}`}
+      style={{ background: c.bg, color: c.ink }}
+    >
       <LandingNav />
       <main>
         <HeroSection />
@@ -93,15 +101,53 @@ function LandingNav() {
           <span className="text-lg leading-none">📄</span> Tailr
         </Link>
         <ul className="hidden md:flex items-center gap-8 list-none">
-          <li><a href="#features" className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal">Features</a></li>
-          <li><a href="#open-source" className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal">Open Source</a></li>
-          <li><a href="#" className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal">Docs</a></li>
-          <li><a href="#" className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal">GitHub</a></li>
+          <li>
+            <a
+              href="#features"
+              className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal"
+            >
+              Features
+            </a>
+          </li>
+          <li>
+            <a
+              href="#open-source"
+              className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal"
+            >
+              Open Source
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal"
+            >
+              Docs
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              className="text-sm text-[#777] hover:text-[#e8e8e8] transition-colors font-normal"
+            >
+              GitHub
+            </a>
+          </li>
         </ul>
       </div>
       <div className="flex items-center gap-4">
-        <a href="/login" className="text-sm font-medium text-[#e8e8e8] px-4 py-2 rounded-md hover:bg-white/[0.06] transition-colors">Sign In</a>
-        <a href="/register" className="text-sm font-medium px-5 py-2 rounded-md bg-white text-[#0a0a0a] hover:bg-[#e0e0e0] transition-all hover:-translate-y-px">Get Started</a>
+        <a
+          href="/login"
+          className="text-sm font-medium text-[#e8e8e8] px-4 py-2 rounded-md hover:bg-white/[0.06] transition-colors"
+        >
+          Sign In
+        </a>
+        <a
+          href="/register"
+          className="text-sm font-medium px-5 py-2 rounded-md bg-white text-[#0a0a0a] hover:bg-[#e0e0e0] transition-all hover:-translate-y-px"
+        >
+          Get Started
+        </a>
       </div>
     </nav>
   )
@@ -120,44 +166,103 @@ function HeroSection() {
             open-source resume tailoring
           </div>
           <h1 className="text-[clamp(2.5rem,5vw,4rem)] font-semibold leading-[1.08] tracking-[-0.035em] mb-6">
-            Tailor your resume<br />to <em className="not-italic text-[#10a37f]">every</em> job.
+            Tailor your resume
+            <br />
+            to <em className="not-italic text-[#10a37f]">every</em> job.
           </h1>
           <p className="text-[clamp(1.0625rem,1.5vw,1.25rem)] text-[#777] leading-relaxed max-w-[460px] mb-10">
-            One master resume. One job description. AI-powered tailoring that preserves your formatting and shows every change.
+            One master resume. One job description. AI-powered tailoring that preserves your
+            formatting and shows every change.
           </p>
           <div className="flex items-center gap-4 flex-wrap">
-            <a href="/register" className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl bg-[#10a37f] text-white hover:bg-[#0d8c6d] transition-all hover:-translate-y-px">Get Started Free</a>
-            <a href="#open-source" className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl border border-[rgba(255,255,255,0.12)] text-[#e8e8e8] hover:border-[rgba(255,255,255,0.25)] transition-all">Self-Host It</a>
+            <a
+              href="/register"
+              className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl bg-[#10a37f] text-white hover:bg-[#0d8c6d] transition-all hover:-translate-y-px"
+            >
+              Get Started Free
+            </a>
+            <a
+              href="#open-source"
+              className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl border border-[rgba(255,255,255,0.12)] text-[#e8e8e8] hover:border-[rgba(255,255,255,0.25)] transition-all"
+            >
+              Self-Host It
+            </a>
           </div>
         </div>
 
         <div id="heroWindow" className="flex-1 basis-1/2 min-w-0">
-          <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]" style={{ background: c.bgSurface }}>
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[rgba(255,255,255,0.08)]" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div
+            className="rounded-2xl border border-[rgba(255,255,255,0.08)] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3),0_2px_8px_rgba(0,0,0,0.2)]"
+            style={{ background: c.bgSurface }}
+          >
+            <div
+              className="flex items-center gap-2 px-4 py-3 border-b border-[rgba(255,255,255,0.08)]"
+              style={{ background: "rgba(255,255,255,0.03)" }}
+            >
               <span className="w-[11px] h-[11px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#ff5f57]" />
               <span className="w-[11px] h-[11px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#febc2e]" />
               <span className="w-[11px] h-[11px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#28c840]" />
-              <span className="flex-1 text-center text-xs text-[rgba(255,255,255,0.4)]">Tailr — Google SWE Internship</span>
+              <span className="flex-1 text-center text-xs text-[rgba(255,255,255,0.4)]">
+                Tailr — Google SWE Internship
+              </span>
             </div>
             <div className="grid grid-cols-2 min-h-[360px]">
-              <div className="p-8 border-r border-[rgba(255,255,255,0.08)]" style={{ background: "rgba(255,255,255,0.02)" }}>
-                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">Original</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">Led team of engineers to build and deploy services</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">Worked on improving system performance</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">Used Python and SQL for data processing</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">Helped with code reviews and mentoring</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#777]">Participated in on-call rotation</div>
+              <div
+                className="p-8 border-r border-[rgba(255,255,255,0.08)]"
+                style={{ background: "rgba(255,255,255,0.02)" }}
+              >
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">
+                  Original
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">
+                  Led team of engineers to build and deploy services
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">
+                  Worked on improving system performance
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">
+                  Used Python and SQL for data processing
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#777] mb-2">
+                  Helped with code reviews and mentoring
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#777]">
+                  Participated in on-call rotation
+                </div>
               </div>
               <div className="p-8">
-                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">Tailored</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">Led team of <strong className="font-semibold">5 engineers</strong> to design and deploy <strong className="font-semibold">12 microservices</strong> on <strong className="font-semibold">Kubernetes</strong></div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">Reduced P99 latency by <strong className="font-semibold">40%</strong> across 3 production services</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">Built ETL pipelines processing <strong className="font-semibold">2M+ records/day</strong> using Python and PostgreSQL</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">Mentored <strong className="font-semibold">4 junior engineers</strong> and led weekly architecture reviews</div>
-                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-6">Maintained <strong className="font-semibold">99.9% uptime SLA</strong> across 8 production services</div>
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">
+                  Tailored
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">
+                  Led team of <strong className="font-semibold">5 engineers</strong> to design and
+                  deploy <strong className="font-semibold">12 microservices</strong> on{" "}
+                  <strong className="font-semibold">Kubernetes</strong>
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">
+                  Reduced P99 latency by <strong className="font-semibold">40%</strong> across 3
+                  production services
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">
+                  Built ETL pipelines processing{" "}
+                  <strong className="font-semibold">2M+ records/day</strong> using Python and
+                  PostgreSQL
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-2">
+                  Mentored <strong className="font-semibold">4 junior engineers</strong> and led
+                  weekly architecture reviews
+                </div>
+                <div className="text-[0.8125rem] leading-[1.7] text-[#10a37f] pl-3 border-l-2 border-[#10a37f] mb-6">
+                  Maintained <strong className="font-semibold">99.9% uptime SLA</strong> across 8
+                  production services
+                </div>
                 <div className="flex items-baseline gap-3 pt-5 border-t border-[rgba(255,255,255,0.08)]">
-                  <span className="text-xs text-[rgba(255,255,255,0.5)] font-medium">ATS Match</span>
-                  <span className="text-2xl font-semibold text-[#10a37f] font-[family-name:var(--font-geist-mono)] tracking-tight">94%</span>
+                  <span className="text-xs text-[rgba(255,255,255,0.5)] font-medium">
+                    ATS Match
+                  </span>
+                  <span className="text-2xl font-semibold text-[#10a37f] font-[family-name:var(--font-geist-mono)] tracking-tight">
+                    94%
+                  </span>
                 </div>
               </div>
             </div>
@@ -176,20 +281,67 @@ function ProblemSection() {
     <section id="problem" className="relative" style={{ height: "300vh" }}>
       <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-8">
         <div className="w-full max-w-[800px] text-center relative" style={{ height: "10rem" }}>
-          <div id="problemLine0" className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0">
-            Generic resumes<br />don&apos;t land <span className="text-[#10a37f] relative"><span className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out" style={{ width: "0%" }} />interviews</span>.
+          <div
+            id="problemLine0"
+            className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0"
+          >
+            Generic resumes
+            <br />
+            don&apos;t land{" "}
+            <span className="text-[#10a37f] relative">
+              <span
+                className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out"
+                style={{ width: "0%" }}
+              />
+              interviews
+            </span>
+            .
           </div>
-          <div id="problemLine1" className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0">
-            Tailoring by hand<br />takes <span className="text-[#10a37f] relative"><span className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out" style={{ width: "0%" }} />hours per application</span>.
+          <div
+            id="problemLine1"
+            className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0"
+          >
+            Tailoring by hand
+            <br />
+            takes{" "}
+            <span className="text-[#10a37f] relative">
+              <span
+                className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out"
+                style={{ width: "0%" }}
+              />
+              hours per application
+            </span>
+            .
           </div>
-          <div id="problemLine2" className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0">
-            ATS filters reject<br /><span className="text-[#10a37f] relative"><span className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out" style={{ width: "0%" }} />75% of resumes</span> before a human sees them.
+          <div
+            id="problemLine2"
+            className="absolute top-0 left-0 right-0 text-[clamp(1.75rem,4vw,3rem)] font-medium leading-[1.25] tracking-[-0.025em] opacity-0"
+          >
+            ATS filters reject
+            <br />
+            <span className="text-[#10a37f] relative">
+              <span
+                className="absolute bottom-[-2px] left-0 h-[3px] bg-[#10a37f] rounded-sm transition-[width] duration-600 ease-out"
+                style={{ width: "0%" }}
+              />
+              75% of resumes
+            </span>{" "}
+            before a human sees them.
           </div>
         </div>
         <div id="problemCounter" className="mt-12 flex gap-2">
-          <div className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300" data-idx="0" />
-          <div className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300" data-idx="1" />
-          <div className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300" data-idx="2" />
+          <div
+            className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300"
+            data-idx="0"
+          />
+          <div
+            className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300"
+            data-idx="1"
+          />
+          <div
+            className="w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] transition-all duration-300"
+            data-idx="2"
+          />
         </div>
       </div>
     </section>
@@ -204,46 +356,97 @@ function HowItWorksSection() {
     <section id="features" className="relative" style={{ height: "350vh" }}>
       <div className="sticky top-0 h-screen flex items-center overflow-hidden">
         <div className="w-full max-w-[1200px] mx-auto px-10 relative">
-          <h2 id="howHeading" className="text-[clamp(1.5rem,3vw,2.25rem)] font-medium tracking-[-0.025em] leading-[1.15] opacity-0 translate-y-5 transition-all duration-600 ease-out">
+          <h2
+            id="howHeading"
+            className="text-[clamp(1.5rem,3vw,2.25rem)] font-medium tracking-[-0.025em] leading-[1.15] opacity-0 translate-y-5 transition-all duration-600 ease-out"
+          >
             Three steps. No forms. No fluff.
           </h2>
 
           <div className="relative h-[60vh] mt-12">
             {/* Panel 1: Upload */}
-            <div id="howPanel0" className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none">
+            <div
+              id="howPanel0"
+              className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none"
+            >
               <div>
-                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">01</div>
-                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">Upload your resume</div>
-                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">PDF, LaTeX, DOCX, or plain text. Tailr parses it into a structured document you can edit, section by section.</div>
+                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">
+                  01
+                </div>
+                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">
+                  Upload your resume
+                </div>
+                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">
+                  PDF, LaTeX, DOCX, or plain text. Tailr parses it into a structured document you
+                  can edit, section by section.
+                </div>
               </div>
-              <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center" style={{ background: c.bgSurface }}>
-                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">Upload</div>
+              <div
+                className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center"
+                style={{ background: c.bgSurface }}
+              >
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">
+                  Upload
+                </div>
                 <div className="border-2 border-dashed border-[rgba(255,255,255,0.12)] rounded-xl p-10 text-center">
-                  <div className="w-10 h-10 mx-auto mb-4 rounded-md bg-[#10a37f] flex items-center justify-center text-white text-xl">↑</div>
+                  <div className="w-10 h-10 mx-auto mb-4 rounded-md bg-[#10a37f] flex items-center justify-center text-white text-xl">
+                    ↑
+                  </div>
                   <div className="text-sm font-medium mb-1">Drop your resume here</div>
-                  <div className="text-xs text-[rgba(255,255,255,0.4)]">PDF, .tex, .docx, or .txt</div>
+                  <div className="text-xs text-[rgba(255,255,255,0.4)]">
+                    PDF, .tex, .docx, or .txt
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Panel 2: Paste JD */}
-            <div id="howPanel1" className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none">
+            <div
+              id="howPanel1"
+              className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none"
+            >
               <div>
-                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">02</div>
-                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">Paste a job description</div>
-                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">Drop a link or paste the text. Tailr extracts keywords, requirements, and company context automatically.</div>
+                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">
+                  02
+                </div>
+                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">
+                  Paste a job description
+                </div>
+                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">
+                  Drop a link or paste the text. Tailr extracts keywords, requirements, and company
+                  context automatically.
+                </div>
               </div>
-              <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center" style={{ background: c.bgSurface }}>
-                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">Job Description</div>
+              <div
+                className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center"
+                style={{ background: c.bgSurface }}
+              >
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">
+                  Job Description
+                </div>
                 <div className="flex flex-col gap-3">
-                  <div className="text-[0.8125rem] font-medium pb-3 border-b border-[rgba(255,255,255,0.08)]">Google — Software Engineering Intern, Summer 2026</div>
+                  <div className="text-[0.8125rem] font-medium pb-3 border-b border-[rgba(255,255,255,0.08)]">
+                    Google — Software Engineering Intern, Summer 2026
+                  </div>
                   <div className="h-2.5 rounded bg-[rgba(255,255,255,0.1)] w-full" />
                   <div className="h-2.5 rounded bg-[rgba(255,255,255,0.1)] w-[85%]" />
                   <div className="h-2.5 rounded bg-[rgba(255,255,255,0.1)] w-[92%]" />
                   <div className="h-2.5 rounded bg-[rgba(255,255,255,0.1)] w-[60%]" />
                   <div className="flex flex-wrap gap-1.5 mt-3">
-                    {["Kubernetes", "microservices", "Python", "PostgreSQL", "mentorship", "SLA"].map((kw) => (
-                      <span key={kw} className="text-[0.6875rem] font-medium px-2 py-1 rounded bg-[rgba(16,163,127,0.15)] text-[#10a37f]">{kw}</span>
+                    {[
+                      "Kubernetes",
+                      "microservices",
+                      "Python",
+                      "PostgreSQL",
+                      "mentorship",
+                      "SLA",
+                    ].map((kw) => (
+                      <span
+                        key={kw}
+                        className="text-[0.6875rem] font-medium px-2 py-1 rounded bg-[rgba(16,163,127,0.15)] text-[#10a37f]"
+                      >
+                        {kw}
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -251,35 +454,81 @@ function HowItWorksSection() {
             </div>
 
             {/* Panel 3: Review */}
-            <div id="howPanel2" className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none">
+            <div
+              id="howPanel2"
+              className="absolute inset-0 grid grid-cols-2 gap-16 items-center opacity-0 translate-x-[60px] pointer-events-none"
+            >
               <div>
-                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">03</div>
-                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">Review and export</div>
-                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">See every change in a side-by-side diff. Accept, reject, or iterate. Export to PDF, LaTeX, DOCX, or plain text.</div>
+                <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide opacity-80">
+                  03
+                </div>
+                <div className="text-[clamp(1.5rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] mb-4 leading-[1.15]">
+                  Review and export
+                </div>
+                <div className="text-base text-[rgba(255,255,255,0.5)] leading-[1.65] max-w-[400px]">
+                  See every change in a side-by-side diff. Accept, reject, or iterate. Export to
+                  PDF, LaTeX, DOCX, or plain text.
+                </div>
               </div>
-              <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center" style={{ background: c.bgSurface }}>
-                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">Review</div>
+              <div
+                className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-8 min-h-[280px] flex flex-col justify-center"
+                style={{ background: c.bgSurface }}
+              >
+                <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-5">
+                  Review
+                </div>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2 pb-3 border-b border-[rgba(255,255,255,0.12)]">
-                    <div className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#10a37f] text-white">Changes</div>
-                    <div className="text-xs font-medium text-[#777] px-3 py-1.5 rounded-md">Final</div>
+                    <div className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#10a37f] text-white">
+                      Changes
+                    </div>
+                    <div className="text-xs font-medium text-[#777] px-3 py-1.5 rounded-md">
+                      Final
+                    </div>
                   </div>
-                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#ef4444] text-[#777] line-through opacity-35">Led team of engineers to build services</div>
-                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#10a37f] text-[#10a37f]">Led team of 5 engineers to design and deploy 12 microservices on Kubernetes</div>
-                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#ef4444] text-[#777] line-through opacity-35">Worked on improving system performance</div>
-                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#10a37f] text-[#10a37f]">Reduced P99 latency by 40% across 3 production services</div>
+                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#ef4444] text-[#777] line-through opacity-35">
+                    Led team of engineers to build services
+                  </div>
+                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#10a37f] text-[#10a37f]">
+                    Led team of 5 engineers to design and deploy 12 microservices on Kubernetes
+                  </div>
+                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#ef4444] text-[#777] line-through opacity-35">
+                    Worked on improving system performance
+                  </div>
+                  <div className="text-[0.8125rem] leading-[1.6] pl-3 border-l-2 border-[#10a37f] text-[#10a37f]">
+                    Reduced P99 latency by 40% across 3 production services
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="absolute bottom-8 left-10 right-10 h-0.5 bg-[rgba(255,255,255,0.08)] rounded">
-            <div id="howProgressFill" className="h-full bg-[#10a37f] rounded transition-[width] duration-300 ease-out" style={{ width: "0%" }} />
+            <div
+              id="howProgressFill"
+              className="h-full bg-[#10a37f] rounded transition-[width] duration-300 ease-out"
+              style={{ width: "0%" }}
+            />
           </div>
           <div className="absolute bottom-[calc(2rem+12px)] left-10 flex gap-8">
-            <span className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors" data-idx="0">Upload</span>
-            <span className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors" data-idx="1">Job Description</span>
-            <span className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors" data-idx="2">Review</span>
+            <span
+              className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors"
+              data-idx="0"
+            >
+              Upload
+            </span>
+            <span
+              className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors"
+              data-idx="1"
+            >
+              Job Description
+            </span>
+            <span
+              className="how-progress-dot text-[0.6875rem] font-medium text-[rgba(255,255,255,0.2)] font-[family-name:var(--font-geist-mono)] transition-colors"
+              data-idx="2"
+            >
+              Review
+            </span>
           </div>
         </div>
       </div>
@@ -298,37 +547,109 @@ function DiffSection() {
           <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-medium tracking-[-0.025em] leading-[1.15] mb-12 max-w-[600px]">
             See every change. Accept what works. Iterate on the rest.
           </h2>
-          <div className="grid grid-cols-2 rounded-2xl border border-[rgba(255,255,255,0.08)] overflow-hidden" style={{ background: c.bgSurface }}>
+          <div
+            className="grid grid-cols-2 rounded-2xl border border-[rgba(255,255,255,0.08)] overflow-hidden"
+            style={{ background: c.bgSurface }}
+          >
             <div id="diffColOriginal" className="p-8 border-r border-[rgba(255,255,255,0.08)]">
-              <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-6">Original</div>
-              {["Led team of engineers to build and deploy services", "Worked on improving system performance", "Used Python and SQL for data processing", "Helped with code reviews and mentoring", "Participated in on-call rotation"].map((line, i) => (
-                <div key={i} className="diff-orig-line text-[0.8125rem] leading-[1.7] mb-2.5 transition-all duration-500" data-idx={i}>{line}</div>
+              <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-6">
+                Original
+              </div>
+              {[
+                "Led team of engineers to build and deploy services",
+                "Worked on improving system performance",
+                "Used Python and SQL for data processing",
+                "Helped with code reviews and mentoring",
+                "Participated in on-call rotation",
+              ].map((line, i) => (
+                <div
+                  key={i}
+                  className="diff-orig-line text-[0.8125rem] leading-[1.7] mb-2.5 transition-all duration-500"
+                  data-idx={i}
+                >
+                  {line}
+                </div>
               ))}
             </div>
             <div id="diffColTailored" className="p-8">
               <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[rgba(255,255,255,0.4)] font-[family-name:var(--font-geist-mono)] mb-6 flex items-center gap-3">
                 Tailored
-                <span id="diffBadge" className="text-[0.6875rem] font-medium normal-case tracking-normal font-[family-name:var(--font-geist)] text-[#10a37f] px-2 py-0.5 rounded bg-[rgba(16,163,127,0.15)] opacity-0 transition-opacity duration-600">+3 keywords</span>
+                <span
+                  id="diffBadge"
+                  className="text-[0.6875rem] font-medium normal-case tracking-normal font-[family-name:var(--font-geist)] text-[#10a37f] px-2 py-0.5 rounded bg-[rgba(16,163,127,0.15)] opacity-0 transition-opacity duration-600"
+                >
+                  +3 keywords
+                </span>
               </div>
               {[
-                { text: "Led team of ", kw: ["5 engineers"], mid: " to design and deploy ", kw2: ["12 microservices"], end: " on ", kw3: ["Kubernetes"] },
-                { text: "Reduced P99 latency by ", kw: ["40%"], end: " across 3 production services" },
-                { text: "Built ETL pipelines processing ", kw: ["2M+ records/day"], end: " using Python and PostgreSQL" },
-                { text: "Mentored ", kw: ["4 junior engineers"], end: " and led weekly architecture reviews" },
-                { text: "Maintained ", kw: ["99.9% uptime SLA"], end: " across 8 production services" },
+                {
+                  text: "Led team of ",
+                  kw: ["5 engineers"],
+                  mid: " to design and deploy ",
+                  kw2: ["12 microservices"],
+                  end: " on ",
+                  kw3: ["Kubernetes"],
+                },
+                {
+                  text: "Reduced P99 latency by ",
+                  kw: ["40%"],
+                  end: " across 3 production services",
+                },
+                {
+                  text: "Built ETL pipelines processing ",
+                  kw: ["2M+ records/day"],
+                  end: " using Python and PostgreSQL",
+                },
+                {
+                  text: "Mentored ",
+                  kw: ["4 junior engineers"],
+                  end: " and led weekly architecture reviews",
+                },
+                {
+                  text: "Maintained ",
+                  kw: ["99.9% uptime SLA"],
+                  end: " across 8 production services",
+                },
               ].map((item, i) => (
-                <div key={i} className="diff-tail-line text-[0.8125rem] leading-[1.7] mb-2.5 transition-all duration-500" data-idx={i}>
-                  {item.text}{item.kw.map((k, j) => <strong key={j} className="font-semibold text-[#10a37f]">{k}</strong>)}{item.mid || ""}{item.kw2?.map((k, j) => <strong key={j} className="font-semibold text-[#10a37f]">{k}</strong>)}{item.end || ""}{item.kw3?.map((k, j) => <strong key={j} className="font-semibold text-[#10a37f]">{k}</strong>)}
+                <div
+                  key={i}
+                  className="diff-tail-line text-[0.8125rem] leading-[1.7] mb-2.5 transition-all duration-500"
+                  data-idx={i}
+                >
+                  {item.text}
+                  {item.kw.map((k, j) => (
+                    <strong key={j} className="font-semibold text-[#10a37f]">
+                      {k}
+                    </strong>
+                  ))}
+                  {item.mid || ""}
+                  {item.kw2?.map((k, j) => (
+                    <strong key={j} className="font-semibold text-[#10a37f]">
+                      {k}
+                    </strong>
+                  ))}
+                  {item.end || ""}
+                  {item.kw3?.map((k, j) => (
+                    <strong key={j} className="font-semibold text-[#10a37f]">
+                      {k}
+                    </strong>
+                  ))}
                 </div>
               ))}
             </div>
           </div>
           <div className="flex items-baseline gap-4 mt-10">
             <span className="text-xs text-[rgba(255,255,255,0.5)] font-medium">ATS Match Rate</span>
-            <span id="diffScoreVal" className="font-[family-name:var(--font-geist-mono)] text-5xl font-semibold tracking-[-0.03em] text-[rgba(255,255,255,0.15)] transition-colors duration-700">62</span>
+            <span
+              id="diffScoreVal"
+              className="font-[family-name:var(--font-geist-mono)] text-5xl font-semibold tracking-[-0.03em] text-[rgba(255,255,255,0.15)] transition-colors duration-700"
+            >
+              62
+            </span>
           </div>
           <p className="mt-8 text-[0.8125rem] text-[rgba(255,255,255,0.45)] max-w-[460px] leading-relaxed">
-            Your resume never leaves your workspace. No AI-generated experience — only better wording of what you already did.
+            Your resume never leaves your workspace. No AI-generated experience — only better
+            wording of what you already did.
           </p>
         </div>
       </div>
@@ -342,21 +663,45 @@ function DiffSection() {
 function OpenSourceSection() {
   return (
     <section id="open-source" className="py-[clamp(6rem,10vw,10rem)] px-10 max-w-[1200px] mx-auto">
-      <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide">open source</div>
-      <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-semibold tracking-[-0.03em] mb-5 leading-[1.1]">Own your tools.</h2>
+      <div className="text-xs font-medium text-[#10a37f] mb-4 font-[family-name:var(--font-geist-mono)] tracking-wide">
+        open source
+      </div>
+      <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-semibold tracking-[-0.03em] mb-5 leading-[1.1]">
+        Own your tools.
+      </h2>
       <p className="text-[1.0625rem] text-[rgba(255,255,255,0.5)] leading-relaxed max-w-[520px] mb-14">
-        Tailr is fully open-source and self-hosted. Your data stays on your infrastructure. No vendor lock-in, no usage caps, no surprises.
+        Tailr is fully open-source and self-hosted. Your data stays on your infrastructure. No
+        vendor lock-in, no usage caps, no surprises.
       </p>
       <div className="grid grid-cols-3 gap-6 mb-14">
         {[
-          { icon: "⬡", title: "Self-hosted", desc: "Docker Compose up and running in minutes. PostgreSQL, Redis, and texlive — all containerized. No external services required." },
-          { icon: "λ", title: "LaTeX-native", desc: "Full LaTeX parsing and compilation. Your formatting is preserved exactly — no conversions, no approximations, no broken layouts." },
-          { icon: "◈", title: "Bring your own LLM", desc: "Connect any OpenAI-compatible provider. Use GPT-4, Claude, Llama, or a local model. Your API key, your choice." },
+          {
+            icon: "⬡",
+            title: "Self-hosted",
+            desc: "Docker Compose up and running in minutes. PostgreSQL, Redis, and texlive — all containerized. No external services required.",
+          },
+          {
+            icon: "λ",
+            title: "LaTeX-native",
+            desc: "Full LaTeX parsing and compilation. Your formatting is preserved exactly — no conversions, no approximations, no broken layouts.",
+          },
+          {
+            icon: "◈",
+            title: "Bring your own LLM",
+            desc: "Connect any OpenAI-compatible provider. Use GPT-4, Claude, Llama, or a local model. Your API key, your choice.",
+          },
         ].map((card) => (
-          <div key={card.title} className="oss-card p-8 rounded-xl border border-[rgba(255,255,255,0.12)] transition-border-color hover:border-[#10a37f]">
-            <div className="w-9 h-9 rounded-lg bg-[rgba(16,163,127,0.12)] flex items-center justify-center mb-5 text-[#10a37f]">{card.icon}</div>
+          <div
+            key={card.title}
+            className="oss-card p-8 rounded-xl border border-[rgba(255,255,255,0.12)] transition-border-color hover:border-[#10a37f]"
+          >
+            <div className="w-9 h-9 rounded-lg bg-[rgba(16,163,127,0.12)] flex items-center justify-center mb-5 text-[#10a37f]">
+              {card.icon}
+            </div>
             <div className="text-base font-semibold mb-2 tracking-tight">{card.title}</div>
-            <div className="text-[0.8125rem] text-[rgba(255,255,255,0.5)] leading-relaxed">{card.desc}</div>
+            <div className="text-[0.8125rem] text-[rgba(255,255,255,0.5)] leading-relaxed">
+              {card.desc}
+            </div>
           </div>
         ))}
       </div>
@@ -365,15 +710,22 @@ function OpenSourceSection() {
           <span className="w-2.5 h-2.5 rounded-full border border-[rgba(255,255,255,0.15)] bg-[#ff5f57]" />
           <span className="w-2.5 h-2.5 rounded-full border border-[rgba(255,255,255,0.15)] bg-[#febc2e]" />
           <span className="w-2.5 h-2.5 rounded-full border border-[rgba(255,255,255,0.15)] bg-[#28c840]" />
-          <span className="font-[family-name:var(--font-geist-mono)] text-[0.6875rem] text-[rgba(255,255,255,0.4)] ml-2">terminal</span>
+          <span className="font-[family-name:var(--font-geist-mono)] text-[0.6875rem] text-[rgba(255,255,255,0.4)] ml-2">
+            terminal
+          </span>
         </div>
         <pre className="font-[family-name:var(--font-geist-mono)] text-[0.8125rem] leading-[1.7] text-[#c9d1d9]">
-          <span className="text-[#555]"># Clone and start</span>{"\n"}
-          <span className="text-[#10a37f]">git clone</span> <span className="text-[#8b949e]">https://github.com/tailr/tailr</span>{"\n"}
-          <span className="text-[#10a37f]">cd</span> tailr && <span className="text-[#10a37f]">cp</span> backend/.env.example backend/.env{"\n"}
+          <span className="text-[#555]"># Clone and start</span>
+          {"\n"}
+          <span className="text-[#10a37f]">git clone</span>{" "}
+          <span className="text-[#8b949e]">https://github.com/tailr/tailr</span>
+          {"\n"}
+          <span className="text-[#10a37f]">cd</span> tailr &&{" "}
+          <span className="text-[#10a37f]">cp</span> backend/.env.example backend/.env{"\n"}
           <span className="text-[#10a37f]">docker compose</span> up --build{"\n"}
           {"\n"}
-          <span className="text-[#555]"># Run migrations</span>{"\n"}
+          <span className="text-[#555]"># Run migrations</span>
+          {"\n"}
           <span className="text-[#10a37f]">docker compose exec</span> backend alembic upgrade head
         </pre>
       </div>
@@ -396,14 +748,29 @@ function ExportSection() {
     <section id="export" className="relative" style={{ height: "250vh" }}>
       <div className="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
         <div className="max-w-[1000px] w-full px-10 text-center">
-          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-semibold tracking-[-0.03em] mb-4 leading-[1.15]">Export anywhere.</h2>
-          <p className="text-base text-[rgba(255,255,255,0.5)] mb-12">Your tailored resume, in whatever format you need.</p>
+          <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-semibold tracking-[-0.03em] mb-4 leading-[1.15]">
+            Export anywhere.
+          </h2>
+          <p className="text-base text-[rgba(255,255,255,0.5)] mb-12">
+            Your tailored resume, in whatever format you need.
+          </p>
           <div id="exportGrid" className="grid grid-cols-4 gap-5">
             {tiles.map((tile, i) => (
-              <div key={tile.ext} className="export-tile p-10 rounded-xl border border-[rgba(255,255,255,0.12)] text-center opacity-0 translate-y-[30px]" data-idx={i}>
-                <div className="w-12 h-12 mx-auto mb-5 rounded-md border border-[rgba(255,255,255,0.08)] flex items-center justify-center font-[family-name:var(--font-geist-mono)] text-[0.8125rem] font-semibold text-[#10a37f] transition-all hover:bg-[rgba(16,163,127,0.12)] hover:border-[#10a37f]" style={{ background: c.bgSurface }}>{tile.ext}</div>
+              <div
+                key={tile.ext}
+                className="export-tile p-10 rounded-xl border border-[rgba(255,255,255,0.12)] text-center opacity-0 translate-y-[30px]"
+                data-idx={i}
+              >
+                <div
+                  className="w-12 h-12 mx-auto mb-5 rounded-md border border-[rgba(255,255,255,0.08)] flex items-center justify-center font-[family-name:var(--font-geist-mono)] text-[0.8125rem] font-semibold text-[#10a37f] transition-all hover:bg-[rgba(16,163,127,0.12)] hover:border-[#10a37f]"
+                  style={{ background: c.bgSurface }}
+                >
+                  {tile.ext}
+                </div>
                 <div className="text-base font-semibold mb-1.5 tracking-tight">{tile.name}</div>
-                <div className="text-xs text-[rgba(255,255,255,0.45)] leading-relaxed">{tile.desc}</div>
+                <div className="text-xs text-[rgba(255,255,255,0.45)] leading-relaxed">
+                  {tile.desc}
+                </div>
               </div>
             ))}
           </div>
@@ -419,12 +786,28 @@ function ExportSection() {
 function CtaSection() {
   return (
     <section className="py-[clamp(8rem,12vw,12rem)] px-8 text-center">
-      <div className="text-xs font-medium text-[#10a37f] mb-6 font-[family-name:var(--font-geist-mono)] tracking-wide">Ready?</div>
-      <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-semibold tracking-[-0.03em] mb-4 leading-[1.1]">Tailor your next resume.</h2>
-      <p className="text-[1.0625rem] text-[rgba(255,255,255,0.5)] mb-10">Start with your resume and a job description.</p>
+      <div className="text-xs font-medium text-[#10a37f] mb-6 font-[family-name:var(--font-geist-mono)] tracking-wide">
+        Ready?
+      </div>
+      <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-semibold tracking-[-0.03em] mb-4 leading-[1.1]">
+        Tailor your next resume.
+      </h2>
+      <p className="text-[1.0625rem] text-[rgba(255,255,255,0.5)] mb-10">
+        Start with your resume and a job description.
+      </p>
       <div className="flex items-center justify-center gap-4 flex-wrap">
-        <a href="/register" className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl bg-[#10a37f] text-white hover:bg-[#0d8c6d] transition-all hover:-translate-y-px">Get Started Free</a>
-        <a href="#" className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl border border-[rgba(255,255,255,0.12)] text-[#e8e8e8] hover:border-[rgba(255,255,255,0.25)] transition-all">View on GitHub</a>
+        <a
+          href="/register"
+          className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl bg-[#10a37f] text-white hover:bg-[#0d8c6d] transition-all hover:-translate-y-px"
+        >
+          Get Started Free
+        </a>
+        <a
+          href="#"
+          className="text-[0.9375rem] font-medium px-8 py-3 rounded-xl border border-[rgba(255,255,255,0.12)] text-[#e8e8e8] hover:border-[rgba(255,255,255,0.25)] transition-all"
+        >
+          View on GitHub
+        </a>
       </div>
     </section>
   )
@@ -435,9 +818,21 @@ function LandingFooter() {
     <footer className="py-8 px-10 flex items-center justify-between text-xs text-[#777] border-t border-[rgba(255,255,255,0.12)] max-w-[1200px] mx-auto">
       <span>Tailr &copy; 2026</span>
       <ul className="flex gap-6 list-none">
-        <li><a href="#" className="hover:text-[#e8e8e8] transition-colors">GitHub</a></li>
-        <li><a href="#" className="hover:text-[#e8e8e8] transition-colors">Docs</a></li>
-        <li><a href="#" className="hover:text-[#e8e8e8] transition-colors">Privacy</a></li>
+        <li>
+          <a href="#" className="hover:text-[#e8e8e8] transition-colors">
+            GitHub
+          </a>
+        </li>
+        <li>
+          <a href="#" className="hover:text-[#e8e8e8] transition-colors">
+            Docs
+          </a>
+        </li>
+        <li>
+          <a href="#" className="hover:text-[#e8e8e8] transition-colors">
+            Privacy
+          </a>
+        </li>
       </ul>
     </footer>
   )
@@ -450,7 +845,10 @@ function ScrollEngine() {
   const rafRef = useRef<number | null>(null)
   const tickingRef = useRef(false)
 
-  const clamp = useCallback((v: number, min: number, max: number) => Math.max(min, Math.min(max, v)), [])
+  const clamp = useCallback(
+    (v: number, min: number, max: number) => Math.max(min, Math.min(max, v)),
+    []
+  )
   const lerp = useCallback((a: number, b: number, t: number) => a + (b - a) * t, [])
   const easeOut = useCallback((t: number) => 1 - Math.pow(1 - t, 3), [])
 
@@ -708,7 +1106,7 @@ function ScrollEngine() {
       const vh = window.innerHeight
 
       // Nav border
-      nav.style.borderColor = scrollY > 10 ? "rgba(255,255,255,0.08)" : "transparent"
+      nav!.style.borderColor = scrollY > 10 ? "rgba(255,255,255,0.08)" : "transparent"
 
       // Pinned sections
       for (const s of sections) {

@@ -8,11 +8,13 @@ import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Target, BarChart3, Check, X, ArrowRight } from "lucide-react"
 
 export function EnhancedProposal() {
-  const { pendingProposal, setPendingProposal, setViewMode, clearSnapshot, activeSessionId } = useSessionStore()
+  const { pendingProposal, setPendingProposal, setViewMode, clearSnapshot, activeSessionId } =
+    useSessionStore()
   const storeSendMessage = useSessionStore((s) => s.sendMessage)
   const queryClient = useQueryClient()
   const sendMessage = useCallback(
-    (content: string, proposalContext?: string) => storeSendMessage(content, queryClient, proposalContext),
+    (content: string, proposalContext?: string) =>
+      storeSendMessage(content, queryClient, proposalContext),
     [storeSendMessage, queryClient]
   )
   const [replyText, setReplyText] = useState("")
@@ -24,7 +26,11 @@ export function EnhancedProposal() {
   const accept = async () => {
     if (!activeSessionId || !pendingProposal?.operations) return
     try {
-      await apiRequest("POST", `/api/sessions/${activeSessionId}/proposal/accept`, pendingProposal.operations)
+      await apiRequest(
+        "POST",
+        `/api/sessions/${activeSessionId}/proposal/accept`,
+        pendingProposal.operations
+      )
       setStatus("accepted")
       setPendingProposal(null)
       clearSnapshot()

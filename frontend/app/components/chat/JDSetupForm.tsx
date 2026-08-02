@@ -26,16 +26,18 @@ export function JDSetupForm() {
   const [pickedProviderId, setPickedProviderId] = useState<string | null>(null)
   const [pickedModel, setPickedModel] = useState<string | null>(null)
 
-  const { setActiveSession, setSetupOpen, setSelectedModel: storeSetSelectedModel } = useSessionStore()
+  const {
+    setActiveSession,
+    setSetupOpen,
+    setSelectedModel: storeSetSelectedModel,
+  } = useSessionStore()
   const analyzeMutation = useAnalyzeMutation()
   const queryClient = useQueryClient()
 
   const handleAnalyze = async () => {
     const content = useUrl ? jdUrl : jdText
     if (!content.trim()) return
-    const payload = useUrl
-      ? { job_description_url: jdUrl }
-      : { job_description: jdText }
+    const payload = useUrl ? { job_description_url: jdUrl } : { job_description: jdText }
 
     try {
       const result = await analyzeMutation.mutateAsync(payload)
@@ -45,7 +47,9 @@ export function JDSetupForm() {
         setSourceUrl(result.source_url || "")
         setStep("extracted")
       } else {
-        setClarifyingQuestion(result.question || "Could not extract fields. Please provide them manually.")
+        setClarifyingQuestion(
+          result.question || "Could not extract fields. Please provide them manually."
+        )
         setStep("error")
       }
     } catch {
@@ -83,19 +87,17 @@ export function JDSetupForm() {
     }
   }
 
-  const handleManualFill = () => {
-    setCompany("")
-    setRole("")
-    setStep("extracted")
-  }
-
   if (step === "input") {
     return (
       <div className="px-3 pb-3">
         <div className="space-y-3">
           <div>
-            <h3 className="text-base font-semibold text-ink dark:text-[#ececec] mb-0.5">Tailor your resume</h3>
-            <p className="text-xs text-slate dark:text-[#8e8e8e]">Paste a job description or URL. We&apos;ll extract the details.</p>
+            <h3 className="text-base font-semibold text-ink dark:text-[#ececec] mb-0.5">
+              Tailor your resume
+            </h3>
+            <p className="text-xs text-slate dark:text-[#8e8e8e]">
+              Paste a job description or URL. We&apos;ll extract the details.
+            </p>
           </div>
           <div className="flex gap-1">
             <button
@@ -140,7 +142,9 @@ export function JDSetupForm() {
           </div>
           <button
             onClick={handleAnalyze}
-            disabled={(!useUrl && !jdText.trim()) || (useUrl && !jdUrl.trim()) || analyzeMutation.isPending}
+            disabled={
+              (!useUrl && !jdText.trim()) || (useUrl && !jdUrl.trim()) || analyzeMutation.isPending
+            }
             className="w-full rounded-lg bg-brass px-3 py-2.5 text-sm font-medium text-white hover:bg-brass-hover disabled:opacity-50 transition-colors"
           >
             {analyzeMutation.isPending ? "Analyzing..." : "Analyze Job Posting"}
@@ -214,7 +218,9 @@ export function JDSetupForm() {
       <div className="space-y-3">
         <div className="rounded-lg bg-[#f7f7f8] dark:bg-[#2b2b2b] border border-muted px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate dark:text-[#8e8e8e] w-14">Company</span>
+            <span className="text-xs font-semibold text-slate dark:text-[#8e8e8e] w-14">
+              Company
+            </span>
             <input
               value={company}
               onChange={(e) => setCompany(e.target.value)}
@@ -231,13 +237,17 @@ export function JDSetupForm() {
           </div>
           {sourceUrl && (
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate dark:text-[#8e8e8e] w-14">Source</span>
+              <span className="text-xs font-semibold text-slate dark:text-[#8e8e8e] w-14">
+                Source
+              </span>
               <span className="text-xs text-slate dark:text-[#8e8e8e] truncate">{sourceUrl}</span>
             </div>
           )}
         </div>
         <div>
-          <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">Tailoring Intensity</div>
+          <div className="text-xs font-semibold text-slate dark:text-[#8e8e8e] mb-1.5">
+            Tailoring Intensity
+          </div>
           <div className="flex gap-1">
             {["polish", "refine", "rewrite"].map((m) => (
               <button

@@ -7,6 +7,7 @@ The system uses PostgreSQL 16, Redis 7, FastAPI with SQLAlchemy async (asyncpg),
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Store API keys once per provider, not per model
 - Discover available models at runtime from provider APIs
 - Let users switch models between any chat message
@@ -14,6 +15,7 @@ The system uses PostgreSQL 16, Redis 7, FastAPI with SQLAlchemy async (asyncpg),
 - Show model-change indicators as styled dividers in the chat stream
 
 **Non-Goals:**
+
 - Per-message parameter overrides (temperature stays global for now)
 - Auto-detection of provider type from API key
 - Model usage analytics or cost tracking
@@ -32,6 +34,7 @@ Remove `model`, `temperature`, `top_p`, `max_tokens`, `is_default` from the tabl
 Add `list_models()` method to each adapter. New endpoint `GET /api/providers/{id}/models` calls the provider's native list-models API and returns results. Cache in Redis with 15-minute TTL.
 
 Provider-specific approach:
+
 - **OpenAI / Custom (DeepSeek, Groq, Together)**: `GET {base_url}/v1/models` with Bearer auth. Client-side filter to exclude non-chat models (dall-e*, whisper*, tts*, text-embedding*, ft:*).
 - **Anthropic**: `GET https://api.anthropic.com/v1/models` with x-api-key + anthropic-version headers. No filtering needed — all returned models are chat-capable.
 - **Ollama**: `GET {base_url}/api/tags` with no auth. Returns locally pulled models. No filtering needed.
@@ -63,6 +66,7 @@ When the user changes the model and sends a message, the frontend inserts a styl
 **Why not store dividers as messages?** They're not content — they're presentation. Deriving them from message metadata keeps the DB clean and avoids special message types.
 
 **Design:**
+
 ```
 ┌─────────────────────────────────────────────┐
 │  ─── Model changed to claude-sonnet-4 ───   │
@@ -96,6 +100,7 @@ Selection sends `{ llm_provider_id, model }` to the backend.
 Cache key: `models:{provider_id}`. TTL: 900s (15 min).
 
 Invalidation triggers:
+
 - Provider API key updated → delete cache key
 - Provider deleted → delete cache key (key is auto-deleted with provider)
 - TTL expiry → stale data served for max 15 min, acceptable
@@ -105,6 +110,7 @@ Invalidation triggers:
 ### D8: Unavailable provider handling
 
 When `GET /api/providers/{id}/models` fails (invalid key, network error, provider down):
+
 - Return 503 with `{ "error": "provider_unavailable", "provider_id": "..." }`
 - Frontend shows the provider group as grayed-out with "Unavailable" badge
 - Other providers continue to work normally

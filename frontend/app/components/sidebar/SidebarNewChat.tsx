@@ -21,7 +21,7 @@ export function SidebarNewChat({ collapsed }: { collapsed: boolean }) {
     }
     setActiveSession(null)
     setSetupOpen(true)
-    router.push("/")
+    router.push("/dashboard")
   }
 
   if (collapsed) {

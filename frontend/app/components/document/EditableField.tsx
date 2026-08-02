@@ -68,7 +68,7 @@ export function EditableField({
   }, [value, onSave, setEditingFieldId])
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
+    (_e: React.MouseEvent) => {
       if (viewMode === "changes") return
       if (editingRef.current) {
         mousedownInsideRef.current = true

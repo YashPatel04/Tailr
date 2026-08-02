@@ -75,7 +75,7 @@ def _extract_content_ops(text: str) -> tuple[list[dict], str, str]:
     try:
         data = json.loads(cleaned)
     except json.JSONDecodeError as e:
-        raise PatchParseError(f"Failed to parse JSON: {e}")
+        raise PatchParseError(f"Failed to parse JSON: {e}") from e
     if isinstance(data, list):
         return data, "", ""
     if isinstance(data, dict) and "operations" in data:
@@ -213,7 +213,10 @@ async def chat_stream(
                     id=uuid4(),
                     session_id=session.id,
                     role="assistant",
-                    content="Generate a cover letter first before editing. Click the button in the canvas or say 'write a cover letter'.",
+                    content=(
+                        "Generate a cover letter first before editing. Click the button in the "
+                        "canvas or say 'write a cover letter'."
+                    ),
                     doc_type="cover_letter",
                     llm_provider_id=provider_id,
                     model=model_name,
@@ -333,7 +336,10 @@ async def chat_stream(
                             {"role": "assistant", "content": raw_content},
                             {
                                 "role": "user",
-                                "content": f"Your operations had errors: {str(e)}. Please fix and return only valid JSON.",
+                                "content": (
+                                    f"Your operations had errors: {str(e)}. Please fix and return "
+                                    "only valid JSON."
+                                ),
                             },
                         ],
                         stream=False,
@@ -443,7 +449,7 @@ async def chat_stream(
             try:
                 content_ops = ops_from_list(ops_list)
                 applier = ContentApplier()
-                new_content = applier.apply(content, content_ops)
+                applier.apply(content, content_ops)
             except Exception as e:
                 logger.warning("[chat] session=%s operations failed, retrying: %s", session_id, e)
                 retry_response = await adapter.chat(
@@ -452,7 +458,10 @@ async def chat_stream(
                         {"role": "assistant", "content": raw_content},
                         {
                             "role": "user",
-                            "content": f"Your operations had errors: {str(e)}. Please fix and return only valid JSON.",
+                            "content": (
+                                f"Your operations had errors: {str(e)}. Please fix and return only "
+                                "valid JSON."
+                            ),
                         },
                     ],
                     stream=False,
@@ -461,7 +470,6 @@ async def chat_stream(
                 try:
                     ops_list, explanation, reasoning = _extract_content_ops(raw_content)
                     content_ops = ops_from_list(ops_list)
-                    new_content = applier.apply(content, content_ops)
                     logger.info(
                         "[chat] session=%s retry succeeded, %d operations",
                         session_id,

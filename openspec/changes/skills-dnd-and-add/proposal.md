@@ -12,6 +12,7 @@ Skill rows (category: items) in the resume document canvas lack drag-and-drop re
 ## Capabilities
 
 ### New Capabilities
+
 - `skill-row-dnd`: Drag-and-drop reordering for skill rows within a section, plus per-section add button
 
 ### Modified Capabilities

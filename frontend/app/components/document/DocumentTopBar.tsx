@@ -48,7 +48,9 @@ export function DocumentTopBar({ changeCount = 0 }: { changeCount?: number }) {
         <div
           className={clsx(
             "flex rounded-lg border border-muted overflow-hidden transition-all duration-300 ease-in-out",
-            showViewMode ? "max-w-[200px] opacity-100" : "max-w-0 opacity-0 border-0 overflow-hidden"
+            showViewMode
+              ? "max-w-[200px] opacity-100"
+              : "max-w-0 opacity-0 border-0 overflow-hidden"
           )}
         >
           <button

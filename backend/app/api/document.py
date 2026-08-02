@@ -73,7 +73,7 @@ async def edit_document(
         try:
             new_content = applier.apply_cover_letter(content, content_ops)
         except Exception as e:
-            raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
+            raise HTTPException(status_code=422, detail={"validation_errors": str(e)}) from e
 
         new_content_dict = new_content.model_dump(mode="json")
     else:
@@ -87,7 +87,7 @@ async def edit_document(
         try:
             new_content = applier.apply(content, content_ops)
         except Exception as e:
-            raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
+            raise HTTPException(status_code=422, detail={"validation_errors": str(e)}) from e
 
         new_content_dict = new_content.model_dump(mode="json")
 

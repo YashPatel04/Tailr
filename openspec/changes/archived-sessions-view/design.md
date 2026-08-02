@@ -5,12 +5,14 @@ The app has a session archive feature (`is_archived` boolean on the `Session` mo
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Let users view archived sessions from the sidebar
 - Let users unarchive sessions (toggle `is_archived` back to `false`)
 - Keep archived sessions searchable (already works via `useSessions()`)
 - Lazy-load archived data only when requested
 
 **Non-Goals:**
+
 - Bulk unarchive or bulk archive
 - Permanent delete from archive
 - Archive search filtering (search already covers all sessions)
@@ -23,6 +25,7 @@ The app has a session archive feature (`is_archived` boolean on the `Session` mo
 **Why**: The grouped endpoint serves the main sidebar and is called frequently. Mixing archived sessions into it would add unnecessary payload to every sidebar load. A separate endpoint loaded on-demand keeps the hot path clean.
 
 **Alternatives considered**:
+
 - Extend `/api/sessions/grouped` with a 5th `archived` key — rejected because it forces archived data into every sidebar refresh
 - Reuse `/api/sessions` with a query param `?archived=true` — rejected because that endpoint is already used by search and changing its semantics is risky
 

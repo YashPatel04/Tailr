@@ -70,9 +70,7 @@ export function ModelPicker({
     ? providerModels.map((pm) => ({
         ...pm,
         models: pm.models.filter(
-          (m) =>
-            m.display_name.toLowerCase().includes(q) ||
-            m.id.toLowerCase().includes(q)
+          (m) => m.display_name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)
         ),
       }))
     : providerModels
@@ -200,13 +198,10 @@ function ModelGroup({
           <span>Unavailable</span>
         </div>
       ) : pm.models.length === 0 ? (
-        <div className="px-3 py-2 text-xs text-slate dark:text-[#8e8e8e]">
-          No models found
-        </div>
+        <div className="px-3 py-2 text-xs text-slate dark:text-[#8e8e8e]">No models found</div>
       ) : (
         pm.models.map((m) => {
-          const isSelected =
-            selectedProviderId === pm.providerId && selectedModel === m.id
+          const isSelected = selectedProviderId === pm.providerId && selectedModel === m.id
           return (
             <button
               key={`${pm.providerId}-${m.id}`}

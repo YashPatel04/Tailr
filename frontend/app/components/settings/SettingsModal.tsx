@@ -6,12 +6,18 @@ import { X, Moon, Sun } from "lucide-react"
 import { clsx } from "clsx"
 import { createPortal } from "react-dom"
 import { useTheme } from "@/components/theme/ThemeProvider"
-import { useCurrentUser, useProviders, useMasterResume, useUserPreferences, useUpdatePreferences } from "@/hooks/queries"
+import {
+  useCurrentUser,
+  useProviders,
+  useMasterResume,
+  useUserPreferences,
+  useUpdatePreferences,
+} from "@/hooks/queries"
 import { useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 import { toast } from "@/components/ui/Toaster"
 import { ModelPicker } from "@/components/chat/ModelPicker"
-import type { ResumeContent } from "@/app/types"
+import type { ResumeContent } from "@/types"
 
 /* ── Store ── */
 interface SettingsModalState {
@@ -271,9 +277,7 @@ function ProvidersTab() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
           <div className="relative w-full max-w-md rounded-2xl bg-paper dark:bg-[#212121] p-6 shadow-2xl border border-muted">
-            <h2 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-4">
-              Add API Key
-            </h2>
+            <h2 className="text-lg font-semibold text-ink dark:text-[#ececec] mb-4">Add API Key</h2>
             <div className="space-y-3">
               <input
                 value={name}
@@ -433,9 +437,6 @@ function ResumePreview({ content }: { content: ResumeContent }) {
             {p.network}: {p.username}
           </div>
         ))}
-        {content.basics.summary && (
-          <p className="mt-2 text-ink/80 max-w-xl mx-auto">{content.basics.summary}</p>
-        )}
       </div>
 
       {content.sections.map((section) => (

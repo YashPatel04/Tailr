@@ -7,6 +7,7 @@ The `editQueue.ts` has a critical bug: no session ID on queued edits means switc
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Fix drag-and-drop with optimistic updates at all levels (section, entry, bullet)
 - Implement undo/redo with command history and keyboard shortcuts
 - Fix all non-functional buttons (Add Section/Subsection/Bullet, undo, redo)
@@ -23,6 +24,7 @@ The `editQueue.ts` has a critical bug: no session ID on queued edits means switc
 - Apply modern scrollbar styling globally
 
 **Non-Goals:**
+
 - Full CRDT-based collaboration
 - Rich text formatting beyond current bold/italic/underline/link
 - Mobile responsive design
@@ -35,16 +37,18 @@ The `editQueue.ts` has a critical bug: no session ID on queued edits means switc
 **Chosen:** Add a history stack (`past`/`future` arrays) to `editQueue.ts`. Each queued operation batch gets wrapped as a reversible command (stores forward op + inverse op). On undo, send the inverse op via PATCH. On redo, replay the forward op. Keyboard shortcuts: Ctrl+Z / Ctrl+Shift+Z handled via a global `useEffect` keydown listener.
 
 **Alternatives considered:**
-- *Snapshot-based undo (store full document before/after).* Simpler to implement but memory-intensive for large documents.
-- *Full command pattern in individual components.* Would require refactoring every renderer. Centralized in editQueue keeps scope manageable.
+
+- _Snapshot-based undo (store full document before/after)._ Simpler to implement but memory-intensive for large documents.
+- _Full command pattern in individual components._ Would require refactoring every renderer. Centralized in editQueue keeps scope manageable.
 
 ### D2: In-place editing via contenteditable overlay
 
 **Chosen:** Replace the current input/textarea swap with a hidden text measurement element that matches font/size/weight, then position an absolutely-positioned input/textarea over the text display. When focused, the displayed text becomes invisible (opacity-0) and the input takes its exact space. On blur/Enter, save and restore display.
 
 **Alternatives considered:**
-- *contenteditable div.* Browser behavior varies wildly across platforms; cursor positioning and formatting are notoriously buggy.
-- *Full textarea replacement (current approach).* UX is poor — clicking doesn't feel like editing where you read.
+
+- _contenteditable div._ Browser behavior varies wildly across platforms; cursor positioning and formatting are notoriously buggy.
+- _Full textarea replacement (current approach)._ UX is poor — clicking doesn't feel like editing where you read.
 
 ### D3: Save state indicator via editQueue lifecycle hooks
 
@@ -71,6 +75,7 @@ The `editQueue.ts` has a critical bug: no session ID on queued edits means switc
 ### D8: Diff view wiring
 
 **Chosen:** The `DiffView` context provider and `useDiff` hook are already implemented and functional. The missing piece is that `DiffActions`, `DiffMark`, and `ApplyToMasterButton` are dead code. Wire them into `DocumentCanvas` when `viewMode === "diff"`:
+
 - `ChangesSummary` already shows counts
 - `DiffMark` wraps each changed node with colored left-border indicators
 - `DiffActions` provides Accept/Reject controls

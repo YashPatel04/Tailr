@@ -30,11 +30,6 @@ function renderWithProviders(ui: React.ReactElement) {
 describe("DocumentCanvas", () => {
   it("renders empty state when no active session", () => {
     renderWithProviders(<DocumentCanvas />)
-    expect(screen.getByText("Get Started")).toBeDefined()
-  })
-
-  it("shows upload button in empty state", () => {
-    renderWithProviders(<DocumentCanvas />)
-    expect(screen.getByText("Upload your master resume")).toBeDefined()
+    expect(screen.getByText(/No document content yet/)).toBeDefined()
   })
 })

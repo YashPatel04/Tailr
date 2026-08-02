@@ -3,6 +3,7 @@
 The resume builder's LLM cowork feature is a proposal-based tailoring system: the user creates a session with company/role/JD, the LLM researches the company and generates structured content operations, and the user accepts or declines. This works for the edit flow but doesn't support the research/advice phase that users naturally want before committing to resume changes.
 
 **Current architecture:**
+
 - `POST /api/sessions` creates a session with 6 required fields (company, role, JD, mode, provider, notes)
 - `POST /api/sessions/{id}/chat` is the SSE endpoint that runs: research → prompt assembly → LLM call → ops parsing → diff → proposal event
 - `SessionSetupForm.tsx` is the frontend form that auto-fires the first chat message on creation
@@ -11,6 +12,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 - System prompt in `prompts.py` always generates structured operations — no conversational mode exists
 
 **Key constraints:**
+
 - Backend uses SQLAlchemy async with asyncpg, FastAPI, SSE for streaming
 - Frontend uses Next.js 15 App Router, Zustand for state, React Query for data
 - Chat rail is always visible (280-520px), not collapsible
@@ -19,6 +21,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Let users research and ask questions before committing to resume edits (Plan Mode)
 - Reduce setup friction from 6 fields to 1 primary input (JD)
 - Make the chat rail collapsible to give canvas full attention
@@ -27,6 +30,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 - Allow mode and tailoring level switching mid-chat
 
 **Non-Goals:**
+
 - Skills system (deferred to future change)
 - Separate LLM provider per mode (same provider for both modes)
 - Streaming LLM responses in Plan Mode (non-streaming is acceptable for v1)
@@ -42,6 +46,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** A separate endpoint would duplicate the SSE streaming infrastructure, research caching, and message persistence logic. Mode is a property of the conversation turn, not the session — the same session supports both modes.
 
 **Alternatives considered:**
+
 - Separate `/api/sessions/{id}/plan` endpoint — rejected: duplicates 80% of the chat endpoint code
 - Mode stored on session model — rejected: prevents mid-chat switching without a separate endpoint
 
@@ -52,6 +57,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** Separating analysis from creation gives the user a chance to review and correct extracted fields before committing. The analyze endpoint is lightweight (no session, no research, no document copying) and can be called repeatedly if the user edits the JD.
 
 **Alternatives considered:**
+
 - Extract on session creation — rejected: user can't review/correct before committing
 - Frontend-only extraction (regex) — rejected: unreliable for varied JD formats
 
@@ -62,6 +68,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** Consistent interaction pattern. The sidebar collapse is already proven and the user knows how it works. The resize handle disappears when collapsed (canvas gets full width).
 
 **Alternatives considered:**
+
 - Floating chat overlay (Notion-style) — rejected: breaks the three-column layout model
 - Chat as a drawer that slides over canvas — rejected: loses the side-by-side view
 
@@ -72,6 +79,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** Keeping them in the chat stream maintains chronological context. The user sees "Research → Think → Proposal" as a natural sequence. Making them expandable avoids cluttering the chat with long research summaries.
 
 **Alternatives considered:**
+
 - Separate "Research" panel outside chat — rejected: breaks the conversational flow
 - Always-expanded — rejected: too much vertical space for repeated research blocks
 
@@ -82,6 +90,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** Claude-style inline proposals keep the user in the conversation flow. The reply-to-refine loop avoids the "decline → dead end" pattern. Storing rejected proposals in history gives the user a record of what was tried.
 
 **Alternatives considered:**
+
 - Modal overlay — rejected: breaks flow, user can't see canvas behind it
 - Separate "Proposal" tab — rejected: adds navigation complexity
 
@@ -92,6 +101,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** Mode is a conversation-level concern, not a session-level one. The user might switch modes multiple times in a single session. Persisting it on the session would require a PATCH request on every toggle. Keeping it local makes switching instant.
 
 **Alternatives considered:**
+
 - Persist mode on session model — rejected: adds latency to mode switches, unnecessary persistence
 - URL query param — rejected: breaks when navigating between sessions
 
@@ -102,6 +112,7 @@ The resume builder's LLM cowork feature is a proposal-based tailoring system: th
 **Rationale:** This is the simplest approach — the LLM already processes system messages. The notification gives the LLM explicit context about the change. No need for a separate API endpoint or prompt template.
 
 **Alternatives considered:**
+
 - Restart the conversation with a new system prompt — rejected: loses context
 - Silent mode change (no notification) — rejected: LLM might not adjust behavior
 

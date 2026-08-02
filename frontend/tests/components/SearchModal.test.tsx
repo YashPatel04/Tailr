@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { http, HttpResponse } from "msw"
 import { server } from "../msw/server"
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+}))
+
 let mockOpen = vi.fn()
 let mockClose = vi.fn()
 
@@ -24,7 +28,7 @@ describe("SearchModal", () => {
     server.use(
       http.get("http://localhost:8000/api/sessions", () => HttpResponse.json([])),
       http.get("http://localhost:8000/api/companies", () => HttpResponse.json([])),
-      http.get("http://localhost:8000/api/tags", () => HttpResponse.json([])),
+      http.get("http://localhost:8000/api/tags", () => HttpResponse.json([]))
     )
   })
 

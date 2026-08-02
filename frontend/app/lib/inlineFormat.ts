@@ -46,7 +46,10 @@ export function getActiveFormats(spans: Span[], position: number): InlineFormat[
   for (const span of spans) {
     if (position >= span.start && position < span.end) {
       for (const f of span.formats) {
-        if ((["bold", "italic", "underline"] as string[]).includes(f) && !active.includes(f as InlineFormat)) {
+        if (
+          (["bold", "italic", "underline"] as string[]).includes(f) &&
+          !active.includes(f as InlineFormat)
+        ) {
           active.push(f as InlineFormat)
         }
       }

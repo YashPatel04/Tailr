@@ -92,7 +92,8 @@ def downgrade() -> None:
     op.add_column("llm_providers", sa.Column("model", sa.String(128), nullable=True))
 
     op.execute(
-        "UPDATE llm_providers SET is_default = false, max_tokens = 4096, top_p = 1.0, temperature = 0.7, model = 'gpt-4o'"
+        "UPDATE llm_providers SET is_default = false, max_tokens = 4096, top_p = 1.0, "
+        "temperature = 0.7, model = 'gpt-4o'"
     )
 
     # Drop chat_messages columns

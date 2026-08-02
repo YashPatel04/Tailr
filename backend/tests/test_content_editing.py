@@ -1,4 +1,4 @@
-"""Tests for the ContentOp types, ContentApplier, and ContentDiffer."""
+"""Tests for the ContentOp types and ContentApplier."""
 
 from __future__ import annotations
 
@@ -21,7 +21,6 @@ from app.services.editing.content_ops import (
     AddSectionOp,
     AskOp,
     ContentApplier,
-    ContentDiffer,
     DeleteBulletOp,
     DeleteEntryOp,
     DeleteSectionOp,
@@ -43,7 +42,6 @@ def _make_sample_content() -> ResumeContent:
             email="jane@example.com",
             phone="555-1234",
             location="NYC",
-            summary="A great engineer.",
         ),
         sections=[
             Section(
@@ -120,9 +118,9 @@ class TestContentOpModels:
         assert op.op == "ask"
 
     def test_update_basics_field_op(self):
-        op = UpdateBasicsFieldOp(field="summary", value="Updated summary")
+        op = UpdateBasicsFieldOp(field="location", value="San Francisco")
         assert op.op == "update_basics_field"
-        assert op.field == "summary"
+        assert op.field == "location"
 
 
 class TestContentApplier:
@@ -150,7 +148,7 @@ class TestContentApplier:
                 section_label="Experience",
                 entry_index=0,
                 bullet_index=0,
-                text="New text with spans",
+                text="Built microservices with FastAPI",
                 spans=[Span(start=0, end=3, formats=[FormatKind.BOLD])],
             )
         ]
@@ -165,7 +163,7 @@ class TestContentApplier:
                 section_label="Experience",
                 entry_index=0,
                 bullet_index=0,
-                text="New text",
+                text="Built microservices with FastAPI",
                 spans=[{"start": 0, "end": 3, "formats": ["bold"]}],
             )
         ]
@@ -362,9 +360,9 @@ class TestContentApplier:
 
     def test_update_basics_field(self):
         content = _make_sample_content()
-        ops = [UpdateBasicsFieldOp(field="summary", value="Updated summary text")]
+        ops = [UpdateBasicsFieldOp(field="location", value="San Francisco")]
         result = self.applier.apply(content, ops)
-        assert result.basics.summary == "Updated summary text"
+        assert result.basics.location == "San Francisco"
 
     def test_batch_ops(self):
         content = _make_sample_content()
@@ -412,10 +410,10 @@ class TestContentApplier:
     def test_validation_fails_on_invalid_spans(self):
         content = _make_sample_content()
         ops = [
-            UpdateBulletOp(
+            AddBulletOp(
                 section_label="Experience",
                 entry_index=0,
-                bullet_index=0,
+                after_index=0,
                 text="short",
                 spans=[Span(start=0, end=999)],
             )
@@ -461,144 +459,6 @@ class TestContentApplier:
         ops = [UpdateBasicsFieldOp(field="location", value="San Francisco")]
         result = self.applier.apply(content, ops)
         assert result.basics.location == "San Francisco"
-
-
-class TestContentDiffer:
-    def setup_method(self):
-        self.differ = ContentDiffer()
-
-    def test_diff_modified_bullet(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(
-            old,
-            [
-                UpdateBulletOp(
-                    section_label="Experience",
-                    entry_index=0,
-                    bullet_index=0,
-                    text="Modified bullet",
-                )
-            ],
-        )
-        result = self.differ.diff(old, new)
-        changes = result["changes"]
-        text_changes = [c for c in changes if c["path"].endswith(".text")]
-        assert len(text_changes) == 1
-        assert text_changes[0]["kind"] == "modified"
-        assert text_changes[0]["new"] == "Modified bullet"
-
-    def test_diff_new_section(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(old, [AddSectionOp(after_index=2, label="Projects")])
-        result = self.differ.diff(old, new)
-        added = [c for c in result["changes"] if c["kind"] == "added"]
-        assert len(added) == 1
-        assert "Projects" in added[0]["path"]
-
-    def test_diff_deleted_entry(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(old, [DeleteEntryOp(section_label="Experience", entry_index=1)])
-        result = self.differ.diff(old, new)
-        removed = [c for c in result["changes"] if c["kind"] == "removed"]
-        assert len(removed) == 1
-        assert "entries[1]" in removed[0]["path"]
-
-    def test_diff_modified_field(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(
-            old,
-            [
-                UpdateFieldOp(
-                    section_label="Experience",
-                    entry_index=0,
-                    field="dates",
-                    value="2020–Present",
-                )
-            ],
-        )
-        result = self.differ.diff(old, new)
-        field_changes = [c for c in result["changes"] if c.get("path", "").endswith(".dates")]
-        assert len(field_changes) == 1
-        assert field_changes[0]["kind"] == "modified"
-
-    def test_diff_modified_basics_field(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(old, [UpdateBasicsFieldOp(field="summary", value="New summary")])
-        result = self.differ.diff(old, new)
-        basics_changes = [c for c in result["changes"] if c["path"].startswith("basics.")]
-        assert len(basics_changes) == 1
-        assert basics_changes[0]["new"] == "New summary"
-
-    def test_diff_no_changes(self):
-        old = _make_sample_content()
-        new = _make_sample_content()
-        result = self.differ.diff(old, new)
-        assert result["changes"] == []
-
-    def test_diff_new_bullet(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(
-            old,
-            [
-                AddBulletOp(
-                    section_label="Experience",
-                    entry_index=0,
-                    after_index=1,
-                    text="New bullet",
-                )
-            ],
-        )
-        result = self.differ.diff(old, new)
-        added = [c for c in result["changes"] if c["kind"] == "added"]
-        assert len(added) == 1
-
-    def test_diff_deleted_bullet(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(
-            old,
-            [
-                DeleteBulletOp(
-                    section_label="Experience",
-                    entry_index=0,
-                    bullet_index=0,
-                )
-            ],
-        )
-        result = self.differ.diff(old, new)
-        removed = [c for c in result["changes"] if c["kind"] == "removed"]
-        assert len(removed) == 1
-
-    def test_diff_skill_row_modified(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(
-            old,
-            [
-                UpdateSkillRowOp(
-                    section_label="Skills",
-                    skill_row_index=0,
-                    items="Python, Rust, Go",
-                )
-            ],
-        )
-        result = self.differ.diff(old, new)
-        assert len(result["changes"]) == 1
-
-    def test_diff_removed_section(self):
-        old = _make_sample_content()
-        applier = ContentApplier()
-        new = applier.apply(old, [DeleteSectionOp(section_label="Education")])
-        result = self.differ.diff(old, new)
-        removed = [c for c in result["changes"] if c["kind"] == "removed"]
-        assert len(removed) >= 1
-        assert any("Education" in c["path"] for c in removed)
 
 
 # ---------------------------------------------------------------------------
@@ -789,41 +649,6 @@ def test_batch_ops(sample_content):
     assert result.sections[0].entries[0].bullets[0].text == "Modified"
     assert result.sections[2].label == "CERTIFICATIONS"
     assert len(result.sections[0].entries[0].bullets) == 3
-
-
-def test_diff_modified_bullet(sample_content):
-    """Diff detects a modified bullet"""
-    applier = ContentApplier()
-    differ = ContentDiffer()
-    op = UpdateBulletOp(
-        section_label="EXPERIENCE", entry_index=0, bullet_index=0, text="Changed text"
-    )
-    new_content = applier.apply(sample_content, [op])
-    diff = differ.diff(sample_content, new_content)
-    changes = diff.get("changes", [])
-    assert len(changes) > 0
-
-
-def test_diff_added_section(sample_content):
-    """Diff detects a new section"""
-    applier = ContentApplier()
-    differ = ContentDiffer()
-    op = AddSectionOp(after_index=1, label="CERTIFICATIONS")
-    new_content = applier.apply(sample_content, [op])
-    diff = differ.diff(sample_content, new_content)
-    changes = diff.get("changes", [])
-    assert len(changes) > 0
-
-
-def test_diff_deleted_entry(sample_content):
-    """Diff detects a deleted entry"""
-    applier = ContentApplier()
-    differ = ContentDiffer()
-    op = DeleteEntryOp(section_label="EDUCATION", entry_index=0)
-    new_content = applier.apply(sample_content, [op])
-    diff = differ.diff(sample_content, new_content)
-    changes = diff.get("changes", [])
-    assert len(changes) > 0
 
 
 def test_ask_op():
