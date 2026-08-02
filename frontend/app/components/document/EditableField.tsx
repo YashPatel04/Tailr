@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import { useSessionStore } from "@/stores/sessionStore"
 import { placeCaretAtPoint, placeCaretAtEnd } from "@/lib/textSelection"
 
@@ -19,39 +19,49 @@ export function EditableField({
   const [editing, setEditing] = useState(false)
   const containerRef = useRef<HTMLElement>(null)
   const fieldId = useRef(`field-${Math.random().toString(36).slice(2, 9)}`)
-  const clickPosRef = useRef<{ x: number; y: number } | null>(null)
+  const editingRef = useRef(false)
+  const mousedownInsideRef = useRef(false)
   const initialValueRef = useRef(value)
+  const pendingCaretRef = useRef<{ x: number; y: number } | null>(null)
 
   const viewMode = useSessionStore((s) => s.viewMode)
   const setEditingFieldId = useSessionStore((s) => s.setEditingFieldId)
 
+  useLayoutEffect(() => {
+    if (!editing) return
+    const el = containerRef.current
+    if (!el) return
+    el.focus()
+    const pos = pendingCaretRef.current
+    pendingCaretRef.current = null
+    if (pos) {
+      if (!placeCaretAtPoint(el, pos.x, pos.y)) {
+        placeCaretAtEnd(el)
+      }
+    } else {
+      placeCaretAtEnd(el)
+    }
+  }, [editing])
+
   const enterEditing = useCallback(
     (x?: number, y?: number) => {
       initialValueRef.current = value
+      pendingCaretRef.current = x !== undefined && y !== undefined ? { x, y } : null
       setEditing(true)
+      editingRef.current = true
       setEditingFieldId(fieldId.current)
-      requestAnimationFrame(() => {
-        const el = containerRef.current
-        if (!el) return
-        el.focus()
-        if (x !== undefined && y !== undefined) {
-          const placed = placeCaretAtPoint(el, x, y)
-          if (!placed) {
-            placeCaretAtEnd(el)
-          }
-        } else {
-          placeCaretAtEnd(el)
-        }
-      })
     },
     [value, setEditingFieldId]
   )
 
   const commit = useCallback(() => {
+    if (!editingRef.current) return
     const el = containerRef.current
     const newValue = el?.textContent ?? value
+    editingRef.current = false
     setEditing(false)
     setEditingFieldId(null)
+    pendingCaretRef.current = null
     if (newValue !== initialValueRef.current) {
       onSave(newValue.trim())
     }
@@ -60,22 +70,23 @@ export function EditableField({
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (viewMode === "changes") return
-      if (editing) return
-      clickPosRef.current = { x: e.clientX, y: e.clientY }
+      if (editingRef.current) {
+        mousedownInsideRef.current = true
+        return
+      }
+      mousedownInsideRef.current = true
     },
-    [viewMode, editing]
+    [viewMode]
   )
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (viewMode === "changes") return
-      if (editing) return
+      if (editingRef.current) return
       e.stopPropagation()
-      const pos = clickPosRef.current
-      clickPosRef.current = null
-      enterEditing(pos?.x ?? e.clientX, pos?.y ?? e.clientY)
+      enterEditing(e.clientX, e.clientY)
     },
-    [viewMode, editing, enterEditing]
+    [viewMode, enterEditing]
   )
 
   const handleDoubleClick = useCallback(
@@ -91,42 +102,45 @@ export function EditableField({
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault()
-        if (editing) {
+        if (editingRef.current) {
           const el = containerRef.current
           if (el) el.textContent = initialValueRef.current
           commit()
         }
+        return
       }
-      if (e.key === "Enter" && editing) {
+      if (e.key === "Enter" && editingRef.current) {
         e.preventDefault()
         commit()
       }
     },
-    [editing, commit]
+    [commit]
   )
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
-      if (!editing) return
+      if (!editingRef.current) return
       if (containerRef.current?.contains(e.relatedTarget as Node)) return
       commit()
     },
-    [editing, commit]
+    [commit]
   )
 
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent) => {
-      if (!editing) return
-      e.preventDefault()
-      const text = e.clipboardData.getData("text/plain")
-      document.execCommand("insertText", false, text)
-    },
-    [editing]
-  )
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    if (!editingRef.current) return
+    e.preventDefault()
+    const text = e.clipboardData.getData("text/plain")
+    document.execCommand("insertText", false, text)
+  }, [])
 
   useEffect(() => {
-    if (!editing) return
-    const handleClickOutside = (e: MouseEvent) => {
+    if (!editingRef.current) return
+    const handleDocumentMouseDown = (e: MouseEvent) => {
+      if (!editingRef.current) return
+      if (mousedownInsideRef.current) {
+        mousedownInsideRef.current = false
+        return
+      }
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node) &&
@@ -135,13 +149,11 @@ export function EditableField({
         commit()
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleDocumentMouseDown)
+    return () => document.removeEventListener("mousedown", handleDocumentMouseDown)
   }, [editing, commit])
 
-  const stateClass = editing
-    ? "caret-brass"
-    : "hover:bg-brass/5"
+  const stateClass = editing ? "caret-brass" : "hover:bg-brass/5"
 
   const draggable = !editing
 

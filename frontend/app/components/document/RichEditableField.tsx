@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import type { Span } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
 import { getSelectionOffsets, placeCaretAtPoint, placeCaretAtEnd } from "@/lib/textSelection"
@@ -32,55 +32,64 @@ export function RichEditableField({
   const [draftSpans, setDraftSpans] = useState<Span[]>(spans)
   const containerRef = useRef<HTMLElement>(null)
   const rteId = useRef(`rte-${nextRteId++}`)
-  const clickPosRef = useRef<{ x: number; y: number } | null>(null)
+  const editingRef = useRef(false)
+  const mousedownInsideRef = useRef(false)
+  const pendingCaretRef = useRef<{ x: number; y: number } | null>(null)
 
   const viewMode = useSessionStore((s) => s.viewMode)
   const setEditingFieldId = useSessionStore((s) => s.setEditingFieldId)
 
+  useLayoutEffect(() => {
+    if (!editing) return
+    const el = containerRef.current
+    if (!el) return
+    el.focus()
+    registerFormatTarget(rteId.current, { toggleFormat, addLink })
+    const pos = pendingCaretRef.current
+    pendingCaretRef.current = null
+    if (pos) {
+      if (!placeCaretAtPoint(el, pos.x, pos.y)) {
+        placeCaretAtEnd(el)
+      }
+    } else {
+      placeCaretAtEnd(el)
+    }
+  }, [editing])
+
   const enterEditing = useCallback(
     (x?: number, y?: number) => {
+      pendingCaretRef.current = x !== undefined && y !== undefined ? { x, y } : null
       setEditing(true)
+      editingRef.current = true
       setEditingFieldId(rteId.current)
-      requestAnimationFrame(() => {
-        containerRef.current?.focus()
-        registerFormatTarget(rteId.current, { toggleFormat, addLink })
-        if (x !== undefined && y !== undefined) {
-          const placed = placeCaretAtPoint(containerRef.current!, x, y)
-          if (!placed) {
-            placeCaretAtEnd(containerRef.current!)
-          }
-        } else {
-          placeCaretAtEnd(containerRef.current!)
-        }
-      })
     },
     [setEditingFieldId]
   )
 
   const commit = useCallback(() => {
+    if (!editingRef.current) return
     const newValue = containerRef.current?.textContent ?? draft
+    editingRef.current = false
     setEditing(false)
     setEditingFieldId(null)
     unregisterFormatTarget(rteId.current)
+    pendingCaretRef.current = null
     if (newValue !== value || JSON.stringify(draftSpans) !== JSON.stringify(spans)) {
       onSave(newValue, draftSpans)
     }
   }, [draft, draftSpans, value, spans, onSave, setEditingFieldId])
 
-  const toggleFormat = useCallback(
-    (format: "bold" | "italic" | "underline") => {
-      if (!editing) return
-      const sel = window.getSelection()
-      if (!sel || sel.rangeCount === 0 || !containerRef.current?.contains(sel.anchorNode)) return
-      const offsets = getSelectionOffsets(containerRef.current)
-      if (!offsets || offsets.start === offsets.end) return
-      setDraftSpans((prev) => toggleInlineFormat(prev, offsets.start, offsets.end, format))
-    },
-    [editing]
-  )
+  const toggleFormat = useCallback((format: "bold" | "italic" | "underline") => {
+    if (!editingRef.current) return
+    const sel = window.getSelection()
+    if (!sel || sel.rangeCount === 0 || !containerRef.current?.contains(sel.anchorNode)) return
+    const offsets = getSelectionOffsets(containerRef.current)
+    if (!offsets || offsets.start === offsets.end) return
+    setDraftSpans((prev) => toggleInlineFormat(prev, offsets.start, offsets.end, format))
+  }, [])
 
   const addLink = useCallback(() => {
-    if (!editing) return
+    if (!editingRef.current) return
     const sel = window.getSelection()
     if (!sel || sel.rangeCount === 0 || !containerRef.current?.contains(sel.anchorNode)) return
     const offsets = getSelectionOffsets(containerRef.current)
@@ -89,27 +98,24 @@ export function RichEditableField({
     if (!url) return
     setDraftSpans((prev) => setLinkUrl(prev, offsets.start, offsets.end, url))
     containerRef.current?.focus()
-  }, [editing])
+  }, [])
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (viewMode === "changes") return
-      if (editing) return
-      clickPosRef.current = { x: e.clientX, y: e.clientY }
+      mousedownInsideRef.current = true
     },
-    [viewMode, editing]
+    [viewMode]
   )
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       if (viewMode === "changes") return
-      if (editing) return
+      if (editingRef.current) return
       e.stopPropagation()
-      const pos = clickPosRef.current
-      clickPosRef.current = null
-      enterEditing(pos?.x ?? e.clientX, pos?.y ?? e.clientY)
+      enterEditing(e.clientX, e.clientY)
     },
-    [viewMode, editing, enterEditing]
+    [viewMode, enterEditing]
   )
 
   const handleDoubleClick = useCallback(
@@ -125,17 +131,19 @@ export function RichEditableField({
     (e: React.KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault()
-        if (editing) {
+        if (editingRef.current) {
           containerRef.current!.textContent = value
           setDraftSpans(structuredClone(spans))
           commit()
         }
+        return
       }
-      if (e.key === "Enter" && editing && !e.shiftKey && !isBullet) {
+      if (e.key === "Enter" && editingRef.current && !e.shiftKey && !isBullet) {
         e.preventDefault()
         commit()
+        return
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === "a" && editing) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "a" && editingRef.current) {
         e.preventDefault()
         const range = document.createRange()
         range.selectNodeContents(containerRef.current!)
@@ -160,28 +168,25 @@ export function RichEditableField({
         addLink()
       }
     },
-    [editing, value, spans, isBullet, commit, toggleFormat, addLink]
+    [value, spans, isBullet, commit, toggleFormat, addLink]
   )
 
   const handleBlur = useCallback(
     (e: React.FocusEvent) => {
-      if (!editing) return
+      if (!editingRef.current) return
       if (containerRef.current?.contains(e.relatedTarget as Node)) return
       if ((e.relatedTarget as HTMLElement)?.closest("[data-inline-toolbar]")) return
       commit()
     },
-    [editing, commit]
+    [commit]
   )
 
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent) => {
-      if (!editing) return
-      e.preventDefault()
-      const text = e.clipboardData.getData("text/plain")
-      document.execCommand("insertText", false, text)
-    },
-    [editing]
-  )
+  const handlePaste = useCallback((e: React.ClipboardEvent) => {
+    if (!editingRef.current) return
+    e.preventDefault()
+    const text = e.clipboardData.getData("text/plain")
+    document.execCommand("insertText", false, text)
+  }, [])
 
   useEffect(() => {
     if (!editing) {
@@ -191,8 +196,13 @@ export function RichEditableField({
   }, [value, spans, editing])
 
   useEffect(() => {
-    if (!editing) return
-    const handleClickOutside = (e: MouseEvent) => {
+    if (!editingRef.current) return
+    const handleDocumentMouseDown = (e: MouseEvent) => {
+      if (!editingRef.current) return
+      if (mousedownInsideRef.current) {
+        mousedownInsideRef.current = false
+        return
+      }
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node) &&
@@ -201,8 +211,8 @@ export function RichEditableField({
         commit()
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleDocumentMouseDown)
+    return () => document.removeEventListener("mousedown", handleDocumentMouseDown)
   }, [editing, commit])
 
   const autoEnteredRef = useRef(false)
@@ -215,42 +225,8 @@ export function RichEditableField({
   }, [value, placeholder, editing, enterEditing])
 
   const isEmpty = !value || !value.trim()
-  const isLink = spans.some((s) => s.link_url)
 
-  const renderFormatted = () => {
-    if (!spans.length && !value) return value
-    if (isLink) {
-      return (
-        <span className="text-brass hover:underline cursor-pointer">
-          {value}
-        </span>
-      )
-    }
-    if (!spans.length) return value
-    return (
-      <span>
-        {Array.from(value).map((char, i) => {
-          const activeFormats = spans
-            .filter((s) => i >= s.start && i < s.end)
-            .flatMap((s) => s.formats)
-          const cls: string[] = []
-          if (activeFormats.includes("bold")) cls.push("font-bold")
-          if (activeFormats.includes("italic")) cls.push("italic")
-          if (activeFormats.includes("underline")) cls.push("underline")
-          return (
-            <span key={i} className={cls.length > 0 ? cls.join(" ") : undefined}>
-              {char}
-            </span>
-          )
-        })}
-      </span>
-    )
-  }
-
-  const stateClass = editing
-    ? "caret-brass"
-    : "hover:bg-brass/5"
-
+  const stateClass = editing ? "caret-brass" : "hover:bg-brass/5"
   const draggable = !editing
 
   return (
@@ -266,7 +242,11 @@ export function RichEditableField({
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
-      onInput={() => setDraft(containerRef.current?.textContent ?? "")}
+      onInput={() => {
+        if (editingRef.current) {
+          setDraft(containerRef.current?.textContent ?? "")
+        }
+      }}
       onPaste={handlePaste}
       data-drag-disabled={!draggable}
     >
@@ -274,10 +254,8 @@ export function RichEditableField({
         <span className="text-brass italic cursor-pointer hover:bg-brass/10 rounded px-1 -mx-1 transition-colors">
           + {placeholder}
         </span>
-      ) : editing ? (
-        draft || value
       ) : (
-        renderFormatted()
+        value
       )}
     </Tag>
   )
