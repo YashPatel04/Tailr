@@ -274,6 +274,8 @@ export function RichEditableField({
         <span className="text-brass italic cursor-pointer hover:bg-brass/10 rounded px-1 -mx-1 transition-colors">
           + {placeholder}
         </span>
+      ) : editing ? (
+        draft || value
       ) : (
         renderFormatted()
       )}

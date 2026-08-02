@@ -2,10 +2,10 @@ import type { ResumeContent, UserPreferences, ModelInfo } from "@/types"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 
-export function useCurrentUser(opts?: { enabled?: boolean }) {
+export function useCurrentUser(opts?: { enabled?: boolean; noAuthRedirect?: boolean }) {
   return useQuery({
     queryKey: ["user", "me"],
-    queryFn: () => apiRequest<any>("GET", "/api/users/me"),
+    queryFn: () => apiRequest<any>("GET", "/api/users/me", undefined, { noAuthRedirect: opts?.noAuthRedirect }),
     retry: false,
     enabled: opts?.enabled ?? true,
   })

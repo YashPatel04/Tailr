@@ -183,9 +183,10 @@ function EntryRendererNew({
       <div className="flex items-baseline justify-between">
         <span className={clsx("font-semibold text-ink dark:text-[#ececec]", fieldHighlight(isInChangesView ? titleDiff : undefined))}>
           {isInChangesView ? (
-            entry.title
+            <span key="static">{entry.title}</span>
           ) : (
             <RichEditableField
+              key="editable"
               value={entry.title}
               spans={[]}
               onSave={(v) => {
@@ -199,9 +200,10 @@ function EntryRendererNew({
           {entry.dates ? (
             <span className={clsx("text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4", fieldHighlight(isInChangesView ? datesDiff : undefined))}>
               {isInChangesView ? (
-                entry.dates
+                <span key="static">{entry.dates}</span>
               ) : (
                 <RichEditableField
+                  key="editable"
                   value={entry.dates}
                   spans={[]}
                   placeholder="Date"
@@ -248,9 +250,10 @@ function EntryRendererNew({
             entry.role != null ? (
               <span className={fieldHighlight(isInChangesView ? roleDiff : undefined)}>
                 {isInChangesView ? (
-                  entry.role
+                  <span key="static">{entry.role}</span>
                 ) : (
                   <RichEditableField
+                    key="editable"
                     value={entry.role}
                     spans={[]}
                     placeholder="Role"
@@ -264,9 +267,10 @@ function EntryRendererNew({
             ) : (
               <span className={fieldHighlight(isInChangesView ? orgDiff : undefined)}>
                 {isInChangesView ? (
-                  entry.organization!
+                  <span key="static">{entry.organization!}</span>
                 ) : (
                   <RichEditableField
+                    key="editable"
                     value={entry.organization!}
                     spans={[]}
                     placeholder="Info"
@@ -292,9 +296,10 @@ function EntryRendererNew({
           {entry.location != null ? (
             <span className={fieldHighlight(isInChangesView ? locationDiff : undefined)}>
               {isInChangesView ? (
-                entry.location
+                <span key="static">{entry.location}</span>
               ) : (
                 <RichEditableField
+                  key="editable"
                   value={entry.location}
                   spans={[]}
                   placeholder="Location"

@@ -19,21 +19,16 @@ const geistMono = Geist_Mono({
 
 export default function RootPage() {
   const router = useRouter()
-  const hasAuthCookie = typeof document !== "undefined" &&
-    (document.cookie.includes("access_token") || document.cookie.includes("refresh_token"))
-
-  const { data: user, isLoading } = useCurrentUser({ enabled: hasAuthCookie })
-  const { data: sessions, isLoading: sessionsLoading } = useSessions({ enabled: hasAuthCookie })
+  const { data: user, isLoading } = useCurrentUser({ noAuthRedirect: true })
+  const { data: sessions, isLoading: sessionsLoading } = useSessions({ enabled: !!user })
 
   useEffect(() => {
-    if (hasAuthCookie && !isLoading && user && !sessionsLoading) {
-      if (sessions && sessions.length > 0) {
-        router.replace(`/session/${sessions[0].id}`)
-      }
+    if (!isLoading && user && !sessionsLoading && sessions && sessions.length > 0) {
+      router.replace(`/session/${sessions[0].id}`)
     }
-  }, [hasAuthCookie, isLoading, user, sessions, sessionsLoading, router])
+  }, [isLoading, user, sessions, sessionsLoading, router])
 
-  if (hasAuthCookie && (isLoading || (user && sessionsLoading))) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#0a0a0a]">
         <Spinner size="lg" />

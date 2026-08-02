@@ -58,7 +58,7 @@ export async function apiRequest<T>(
   method: string,
   path: string,
   body?: unknown,
-  opts?: RequestInit & { rawResponse?: boolean }
+  opts?: RequestInit & { rawResponse?: boolean; noAuthRedirect?: boolean }
 ): Promise<T> {
   await ensureCsrfToken()
 
@@ -87,6 +87,9 @@ export async function apiRequest<T>(
   let res = await doFetch()
 
   if (res.status === 401) {
+    if (opts?.noAuthRedirect) {
+      throw new Error("Not authenticated")
+    }
     await refreshAccessToken()
     res = await doFetch()
   }

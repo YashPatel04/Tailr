@@ -6,7 +6,7 @@ import { useCurrentUser } from "@/hooks/queries"
 import { Spinner } from "@/components/ui/Spinner"
 
 export default function LoginPage() {
-  const { data: user, isLoading } = useCurrentUser()
+  const { data: user, isLoading } = useCurrentUser({ noAuthRedirect: true })
   const router = useRouter()
 
   useEffect(() => {
@@ -15,7 +15,15 @@ export default function LoginPage() {
     }
   }, [isLoading, user, router])
 
-  if (isLoading || user) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="md" />
+      </div>
+    )
+  }
+
+  if (user) {
     return (
       <div className="flex items-center justify-center py-12">
         <Spinner size="md" />

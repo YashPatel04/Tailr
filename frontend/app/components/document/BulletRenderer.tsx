@@ -169,11 +169,11 @@ export function BulletRenderer({
       {isInChangesView && bulletDiff?.kind === "modified" &&
         bulletDiff.old !== undefined &&
         bulletDiff.new !== undefined ? (
-        <span>{renderWordDiff(bulletDiff.old, bulletDiff.new)}</span>
+        <span key="diff">{renderWordDiff(bulletDiff.old, bulletDiff.new)}</span>
       ) : showEditable && !isInChangesView ? (
-        <RichEditableField value={text} spans={spans} onSave={handleSave} tag="span" />
+        <RichEditableField key="editable" value={text} spans={spans} onSave={handleSave} tag="span" />
       ) : (
-        <FormattedText text={text} spans={spans} />
+        <FormattedText key="static" text={text} spans={spans} />
       )}
       {showEditable && !isInChangesView && <DeleteButton onClick={handleDelete} />}
     </li>
