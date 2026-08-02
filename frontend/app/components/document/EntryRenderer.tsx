@@ -9,8 +9,7 @@ import { BulletRenderer } from "./BulletRenderer"
 import { SortableBullet } from "./SortableBullet"
 import { DeleteButton } from "./DeleteButton"
 import { AddFieldButton } from "./AddFieldButton"
-import { useDiff } from "@/components/diff/DiffView"
-import { diffBorderClass, diffGutterClass, diffGutter } from "@/lib/wordDiff"
+import { useFieldChanges, useFieldChangesAny } from "@/components/diff/DiffContext"
 import { clsx } from "clsx"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -25,13 +24,14 @@ function reorder(length: number, from: number, to: number): number[] {
 interface EntryRendererProps {
   node?: any
   entry?: Entry
+  sectionId?: string
   sectionLabel?: string
   entryIndex?: number
 }
 
-export function EntryRenderer({ node, entry, sectionLabel, entryIndex }: EntryRendererProps) {
+export function EntryRenderer({ node, entry, sectionId, sectionLabel, entryIndex }: EntryRendererProps) {
   if (entry) {
-    return <EntryRendererNew entry={entry} sectionLabel={sectionLabel} entryIndex={entryIndex} />
+    return <EntryRendererNew entry={entry} sectionId={sectionId} sectionLabel={sectionLabel} entryIndex={entryIndex} />
   }
   if (node) {
     return <EntryRendererLegacy node={node} />
@@ -41,16 +41,56 @@ export function EntryRenderer({ node, entry, sectionLabel, entryIndex }: EntryRe
 
 function EntryRendererNew({
   entry,
+  sectionId,
   sectionLabel,
   entryIndex,
 }: {
   entry: Entry
+  sectionId?: string
   sectionLabel?: string
   entryIndex?: number
 }) {
-  const diffState = useDiff(entry.id)
+  const entryDiff = useFieldChanges(entry.id)
+  const titleDiff = useFieldChangesAny(
+    sectionId ? `s:${sectionId}:e:${entry.id}:f:title` : "",
+    entry.id
+  )
+  const roleDiff = useFieldChanges(sectionId ? `s:${sectionId}:e:${entry.id}:f:role` : "")
+  const orgDiff = useFieldChanges(sectionId ? `s:${sectionId}:e:${entry.id}:f:organization` : "")
+  const datesDiff = useFieldChanges(sectionId ? `s:${sectionId}:e:${entry.id}:f:dates` : "")
+  const locationDiff = useFieldChanges(sectionId ? `s:${sectionId}:e:${entry.id}:f:location` : "")
   const queryClient = useQueryClient()
   const viewMode = useSessionStore((s) => s.viewMode)
+
+  const diffBorder = (kind: string | undefined) =>
+    kind === "added"
+      ? "border-l-[3px] border-[#137333] dark:border-[#81c995]"
+      : kind === "removed"
+        ? "border-l-[3px] border-[#c5221f] dark:border-[#f28b82]"
+        : kind === "modified"
+          ? "border-l-[3px] border-[#e37400] dark:border-[#fdd663]"
+          : ""
+
+  const diffGutterColor = (kind: string | undefined) =>
+    kind === "added"
+      ? "text-[#137333] dark:text-[#81c995]"
+      : kind === "removed"
+        ? "text-[#c5221f] dark:text-[#f28b82]"
+        : kind === "modified"
+          ? "text-[#e37400] dark:text-[#fdd663]"
+          : ""
+
+  const diffGutterChar = (kind: string | undefined) =>
+    kind === "added" ? "+" : kind === "removed" ? "\u2013" : kind === "modified" ? "~" : ""
+
+  const fieldHighlight = (diff: { kind?: string } | undefined) =>
+    diff?.kind === "modified"
+      ? "bg-[#fef7e0] dark:bg-[#e37400]/20 rounded px-1 -mx-1"
+      : diff?.kind === "added"
+        ? "bg-[#e6f4ea] dark:bg-[#137333]/20 rounded px-1 -mx-1"
+        : ""
+
+  const isInChangesView = viewMode === "changes"
 
   const updateCache = (updater: (entry: any) => void) => {
     if (sectionLabel === undefined || entryIndex === undefined) return
@@ -79,7 +119,7 @@ function EntryRendererNew({
     })
   }
 
-  const editable = sectionLabel !== undefined && entryIndex !== undefined && viewMode !== "diff"
+  const editable = sectionLabel !== undefined && entryIndex !== undefined && viewMode !== "changes"
   const firstUrlKey = entry.urls ? Object.keys(entry.urls).find(k => k !== "") : undefined
   const roleOrInfo = entry.role != null ? entry.role : entry.organization != null ? entry.organization : null
   const [editingUrl, setEditingUrl] = useState(false)
@@ -128,43 +168,51 @@ function EntryRendererNew({
   }, [editingUrl])
 
   return (
-    <div className={clsx("mb-3 group relative", diffBorderClass(diffState.kind))}>
-      {diffState.kind && (
+    <div className={clsx("mb-3 group relative overflow-hidden", diffBorder(entryDiff?.kind))}>
+      {entryDiff?.kind && (
         <span
           className={clsx(
             "absolute -left-2.5 top-0 text-xs font-bold font-mono",
-            diffGutterClass(diffState.kind)
+            diffGutterColor(entryDiff.kind)
           )}
         >
-          {diffGutter(diffState.kind)}
+          {diffGutterChar(entryDiff.kind)}
         </span>
       )}
       {/* Row 1: Title + Date + Delete */}
       <div className="flex items-baseline justify-between">
-        <span className="font-semibold text-ink dark:text-[#ececec]">
-          <RichEditableField
-            value={entry.title}
-            spans={[]}
-            onSave={(v) => {
-              updateCache((e) => { e.title = v })
-              queueFieldEdit("title", v)
-            }}
-          />
+        <span className={clsx("font-semibold text-ink dark:text-[#ececec]", fieldHighlight(isInChangesView ? titleDiff : undefined))}>
+          {isInChangesView ? (
+            entry.title
+          ) : (
+            <RichEditableField
+              value={entry.title}
+              spans={[]}
+              onSave={(v) => {
+                updateCache((e) => { e.title = v })
+                queueFieldEdit("title", v)
+              }}
+            />
+          )}
         </span>
         <div className="flex items-center gap-1">
           {entry.dates ? (
-            <span className="text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4">
-              <RichEditableField
-                value={entry.dates}
-                spans={[]}
-                placeholder="Date"
-                onSave={(v) => {
-                  updateCache((e) => { e.dates = v })
-                  queueFieldEdit("dates", v)
-                }}
-              />
+            <span className={clsx("text-sm text-slate dark:text-[#8e8e8e] italic flex-shrink-0 ml-4", fieldHighlight(isInChangesView ? datesDiff : undefined))}>
+              {isInChangesView ? (
+                entry.dates
+              ) : (
+                <RichEditableField
+                  value={entry.dates}
+                  spans={[]}
+                  placeholder="Date"
+                  onSave={(v) => {
+                    updateCache((e) => { e.dates = v })
+                    queueFieldEdit("dates", v)
+                  }}
+                />
+              )}
             </span>
-          ) : editable ? (
+          ) : editable && !isInChangesView ? (
             <AddFieldButton
               label="Date"
               onClick={() => {
@@ -173,7 +221,7 @@ function EntryRendererNew({
               }}
             />
           ) : null}
-          {editable && (
+          {editable && !isInChangesView && (
             <DeleteButton
               onClick={() => {
                 queueEdit({ op: "delete_entry", section_label: sectionLabel!, entry_index: entryIndex! })
@@ -198,27 +246,39 @@ function EntryRendererNew({
         <div className="flex items-center gap-2">
           {roleOrInfo != null ? (
             entry.role != null ? (
-              <RichEditableField
-                value={entry.role}
-                spans={[]}
-                placeholder="Role"
-                onSave={(v) => {
-                  updateCache((e) => { e.role = v })
-                  queueFieldEdit("role", v)
-                }}
-              />
+              <span className={fieldHighlight(isInChangesView ? roleDiff : undefined)}>
+                {isInChangesView ? (
+                  entry.role
+                ) : (
+                  <RichEditableField
+                    value={entry.role}
+                    spans={[]}
+                    placeholder="Role"
+                    onSave={(v) => {
+                      updateCache((e) => { e.role = v })
+                      queueFieldEdit("role", v)
+                    }}
+                  />
+                )}
+              </span>
             ) : (
-              <RichEditableField
-                value={entry.organization!}
-                spans={[]}
-                placeholder="Info"
-                onSave={(v) => {
-                  updateCache((e) => { e.organization = v })
-                  queueFieldEdit("organization", v)
-                }}
-              />
+              <span className={fieldHighlight(isInChangesView ? orgDiff : undefined)}>
+                {isInChangesView ? (
+                  entry.organization!
+                ) : (
+                  <RichEditableField
+                    value={entry.organization!}
+                    spans={[]}
+                    placeholder="Info"
+                    onSave={(v) => {
+                      updateCache((e) => { e.organization = v })
+                      queueFieldEdit("organization", v)
+                    }}
+                  />
+                )}
+              </span>
             )
-          ) : editable ? (
+          ) : editable && !isInChangesView ? (
             <AddFieldButton
               label="Role"
               onClick={() => {
@@ -230,16 +290,22 @@ function EntryRendererNew({
         </div>
         <div className="flex items-center gap-2 text-xs">
           {entry.location != null ? (
-            <RichEditableField
-              value={entry.location}
-              spans={[]}
-              placeholder="Location"
-              onSave={(v) => {
-                updateCache((e) => { e.location = v })
-                queueFieldEdit("location", v)
-              }}
-            />
-          ) : editable ? (
+            <span className={fieldHighlight(isInChangesView ? locationDiff : undefined)}>
+              {isInChangesView ? (
+                entry.location
+              ) : (
+                <RichEditableField
+                  value={entry.location}
+                  spans={[]}
+                  placeholder="Location"
+                  onSave={(v) => {
+                    updateCache((e) => { e.location = v })
+                    queueFieldEdit("location", v)
+                  }}
+                />
+              )}
+            </span>
+          ) : editable && !isInChangesView ? (
             <AddFieldButton
               label="Location"
               onClick={() => {
@@ -340,7 +406,7 @@ function EntryRendererNew({
           ))}
         </ul>
       )}
-      {sectionLabel && entryIndex !== undefined && viewMode !== "diff" && (
+      {sectionLabel && entryIndex !== undefined && viewMode !== "changes" && (
         <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => {
@@ -369,20 +435,10 @@ function EntryRendererNew({
 }
 
 function EntryRendererLegacy({ node }: { node: any }) {
-  const diffState = useDiff(node.id)
+  const entryDiff = useFieldChanges(`e:${node.id}`)
 
   return (
-    <div className={clsx("mb-3 relative", diffBorderClass(diffState.kind))}>
-      {diffState.kind && (
-        <span
-          className={clsx(
-            "absolute -left-2.5 top-0 text-xs font-bold font-mono",
-            diffGutterClass(diffState.kind)
-          )}
-        >
-          {diffGutter(diffState.kind)}
-        </span>
-      )}
+    <div className="mb-3 relative">
       <div className="flex items-baseline justify-between">
         <span className="font-semibold text-ink dark:text-[#ececec]">{node.title}</span>
         {node.dates && (

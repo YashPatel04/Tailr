@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/Toaster"
 import { clsx } from "clsx"
 import { DocumentTabs } from "./DocumentTabs"
 
-export function DocumentTopBar() {
+export function DocumentTopBar({ changeCount = 0 }: { changeCount?: number }) {
   const { activeSessionId, activeDocType, viewMode, setViewMode } = useSessionStore()
   const [exportOpen, setExportOpen] = useState(false)
 
@@ -52,15 +52,20 @@ export function DocumentTopBar() {
           )}
         >
           <button
-            onClick={() => setViewMode("diff")}
+            onClick={() => setViewMode("changes")}
             className={clsx(
-              "px-3 py-1.5 text-xs font-medium transition-colors",
-              viewMode === "diff"
+              "px-3 py-1.5 text-xs font-medium transition-colors relative",
+              viewMode === "changes"
                 ? "bg-[#1a73e8] dark:bg-[#8ab4f8] text-white dark:text-[#202124]"
                 : "text-slate dark:text-[#8e8e8e] hover:bg-[#f4f4f4] dark:hover:bg-[#3c4043]"
             )}
           >
             Changes
+            {changeCount > 0 && (
+              <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold bg-brass text-white">
+                {changeCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setViewMode("final")}

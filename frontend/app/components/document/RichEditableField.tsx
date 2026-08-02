@@ -93,7 +93,7 @@ export function RichEditableField({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       if (editing) return
       clickPosRef.current = { x: e.clientX, y: e.clientY }
     },
@@ -102,7 +102,7 @@ export function RichEditableField({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       if (editing) return
       e.stopPropagation()
       const pos = clickPosRef.current
@@ -114,7 +114,7 @@ export function RichEditableField({
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       e.stopPropagation()
       enterEditing(e.clientX, e.clientY)
     },

@@ -2,12 +2,14 @@
 /* Extends the base resume-tailor system with landing-specific overrides */
 
 :root {
-  /* — Landing palette overrides — */
-  --landing-bg: #ffffff;
-  --landing-bg-subtle: #f8f8f8;
-  --landing-ink: #0d0d0d;
-  --landing-slate: #6b7280;
-  --landing-border: #e5e5e5;
+  /* — Landing palette (dark) — */
+  --landing-bg: #0a0a0a;
+  --landing-bg-subtle: #111111;
+  --landing-bg-surface: #141414;
+  --landing-ink: #e8e8e8;
+  --landing-slate: #777;
+  --landing-border: rgba(255, 255, 255, 0.08);
+  --landing-border-strong: rgba(255, 255, 255, 0.12);
   --landing-accent: #10a37f;
   --landing-accent-hover: #0d8c6d;
   --landing-green: #10a37f;
@@ -30,7 +32,7 @@
   --landing-radius-lg: 20px;
 
   /* — Landing shadows — */
-  --landing-shadow-window: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --landing-shadow-window: 0 24px 80px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
 
   /* — Landing spacing — */
   --landing-section-gap: clamp(6rem, 10vw, 10rem);

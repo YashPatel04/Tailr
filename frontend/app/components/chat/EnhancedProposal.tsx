@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { FileText, Target, BarChart3, Check, X, ArrowRight } from "lucide-react"
 
 export function EnhancedProposal() {
-  const { pendingProposal, setPendingProposal, setViewMode, setLatestDiff, activeSessionId } = useSessionStore()
+  const { pendingProposal, setPendingProposal, setViewMode, clearSnapshot, activeSessionId } = useSessionStore()
   const storeSendMessage = useSessionStore((s) => s.sendMessage)
   const queryClient = useQueryClient()
   const sendMessage = useCallback(
@@ -27,7 +27,7 @@ export function EnhancedProposal() {
       await apiRequest("POST", `/api/sessions/${activeSessionId}/proposal/accept`, pendingProposal.operations)
       setStatus("accepted")
       setPendingProposal(null)
-      setLatestDiff(null)
+      clearSnapshot()
       setViewMode("final")
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
       queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "document"] })
@@ -141,14 +141,12 @@ export function EnhancedProposal() {
           >
             Decline
           </button>
-          {pendingProposal.diff && (
-            <button
-              onClick={() => setViewMode("diff")}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-brass text-brass hover:bg-brass/5 transition-colors"
-            >
-              View Diff
-            </button>
-          )}
+          <button
+            onClick={() => setViewMode("changes")}
+            className="px-3 py-1.5 text-xs font-medium rounded-lg border border-brass text-brass hover:bg-brass/5 transition-colors"
+          >
+            View Changes
+          </button>
         </div>
 
         <div className="pt-1">

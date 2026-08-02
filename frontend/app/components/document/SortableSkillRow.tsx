@@ -22,7 +22,7 @@ export function SortableSkillRow({
   const editingFieldId = useSessionStore((s) => s.editingFieldId)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
-    disabled: viewMode === "diff" || editingFieldId !== null,
+    disabled: viewMode === "changes" || editingFieldId !== null,
   })
 
   return (
@@ -32,7 +32,7 @@ export function SortableSkillRow({
       className={`transition-transform duration-200 ease-in-out ${isDragging ? "opacity-50 z-10" : ""}`}
     >
       <div className="flex items-start gap-1 group">
-        {viewMode !== "diff" && editingFieldId === null && (
+        {viewMode !== "changes" && editingFieldId === null && (
           <button
             {...attributes}
             {...listeners}

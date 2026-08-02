@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import type { QueryClient } from "@tanstack/react-query"
-import type { SessionDocument } from "@/types"
+import type { ResumeContent, SessionDocument } from "@/types"
 import type { SaveStatus } from "@/lib/editQueue"
 import { getApiBaseUrl } from "@/lib/env"
 import { getCsrfToken } from "@/lib/api"
@@ -10,7 +10,6 @@ import { toast } from "@/components/ui/Toaster"
 export interface PendingProposal {
   message: string
   operations: any[]
-  diff: any
   patch_summary: string
   explanation?: string
   reasoning?: string
@@ -19,12 +18,12 @@ export interface PendingProposal {
 interface SessionState {
   activeSessionId: string | null
   activeDocType: "resume" | "cover_letter"
-  viewMode: "diff" | "final"
+  viewMode: "changes" | "final"
   setupOpen: boolean
   isStreaming: boolean
   streamingDocType: "resume" | "cover_letter" | null
   latestDocument: SessionDocument | null
-  latestDiff: any | null
+  snapshot: ResumeContent | null
   pendingProposal: PendingProposal | null
   progressPhase: string
   progressMessage: string
@@ -36,11 +35,12 @@ interface SessionState {
   selectedModel: string | null
   setActiveSession: (id: string | null) => void
   setDocType: (type: "resume" | "cover_letter") => void
-  setViewMode: (mode: "diff" | "final") => void
+  setViewMode: (mode: "changes" | "final") => void
   setSetupOpen: (open: boolean) => void
   setStreaming: (streaming: boolean) => void
   setLatestDocument: (doc: SessionDocument | null) => void
-  setLatestDiff: (diff: any | null) => void
+  setSnapshot: (content: ResumeContent) => void
+  clearSnapshot: () => void
   setPendingProposal: (proposal: PendingProposal | null) => void
   clearProposal: () => void
   setProgress: (phase: string, message: string) => void
@@ -62,7 +62,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   isStreaming: false,
   streamingDocType: null,
   latestDocument: null,
-  latestDiff: null,
+  snapshot: null,
   pendingProposal: null,
   progressPhase: "",
   progressMessage: "",
@@ -76,7 +76,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({
       activeSessionId: id,
       pendingProposal: null,
-      latestDiff: null,
+      snapshot: null,
       viewMode: "final",
       progressPhase: "",
       progressMessage: "",
@@ -86,7 +86,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setSetupOpen: (open) => set({ setupOpen: open }),
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setLatestDocument: (doc) => set({ latestDocument: doc }),
-  setLatestDiff: (diff) => set({ latestDiff: diff }),
+  setSnapshot: (content) => set({ snapshot: content }),
+  clearSnapshot: () => set({ snapshot: null }),
   setPendingProposal: (proposal) => set({ pendingProposal: proposal }),
   clearProposal: () => set({ pendingProposal: null }),
   setProgress: (phase, message) => set({ progressPhase: phase, progressMessage: message }),
@@ -185,15 +186,18 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                   queryClient.invalidateQueries({ queryKey })
                   break
                 }
-                set({ viewMode: "diff" })
-                if (data.diff) {
-                  set({ latestDiff: data.diff })
+                {
+                  const docQueryKey = ["sessions", sessionId, "document", docType]
+                  const currentDoc = queryClient.getQueryData<any>(docQueryKey)
+                  if (currentDoc?.content && !get().snapshot) {
+                    set({ snapshot: currentDoc.content })
+                  }
                 }
                 set({
+                  viewMode: "changes",
                   pendingProposal: {
                     message: data.message || "Proposed changes ready for review",
                     operations: data.operations || [],
-                    diff: data.diff,
                     patch_summary: data.patch_summary || "",
                     explanation: data.explanation || "",
                     reasoning: data.reasoning || "",
@@ -204,9 +208,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 break
               case "done":
                 set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
-                if (data.diff) {
-                  set({ latestDiff: data.diff })
-                }
                 if (data.document_id) {
                   set({ latestDocument: { id: data.document_id } as any })
                 }

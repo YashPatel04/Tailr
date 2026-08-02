@@ -1,12 +1,13 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
+import { useCallback, useState, useEffect, useMemo } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ResumeContent } from "@/types"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useSessionDocument, useSession } from "@/hooks/queries"
+import { useSessionDocument, useSession, useMasterResume } from "@/hooks/queries"
 import { queueEdit, undo, redo, clearHistory } from "@/lib/editQueue"
 import { apiRequest } from "@/lib/api"
+import { computeFieldDiffs } from "@/lib/fieldDiff"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { DocumentEmptyState } from "./DocumentEmptyState"
@@ -15,33 +16,32 @@ import { DocumentTopBar } from "./DocumentTopBar"
 import { SectionRenderer } from "./SectionRenderer"
 import { SortableSection } from "./SortableSection"
 import { ResumeHeader } from "./ResumeHeader"
-import { DiffView } from "@/components/diff/DiffView"
-import { DiffActions } from "@/components/diff/DiffActions"
+import { DiffProvider } from "@/components/diff/DiffContext"
+import { DiffOverlay } from "@/components/diff/DiffOverlay"
 import { toast } from "@/components/ui/Toaster"
 import { InlineFormatToolbar } from "./InlineFormatToolbar"
 import { CoverLetterCanvas } from "./CoverLetterCanvas"
 
 export function DocumentCanvas() {
-  const { activeSessionId, activeDocType, viewMode, latestDiff } = useSessionStore()
+  const { activeSessionId, activeDocType, viewMode, snapshot, setSnapshot } = useSessionStore()
   const { data: doc } = useSessionDocument(activeSessionId!, activeDocType)
   const { data: session } = useSession(activeSessionId!)
+  const { data: master } = useMasterResume()
   const queryClient = useQueryClient()
+
+  const content = doc?.content as ResumeContent | undefined
+  const masterContent = master?.content_json as ResumeContent | undefined
+
+  const changes = useMemo(
+    () => (viewMode === "changes" ? computeFieldDiffs(masterContent, content) : new Map()),
+    [viewMode, masterContent, content]
+  )
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       const { active, over } = event
       if (!over || active.id === over.id) return
-
-  if (!activeSessionId) {
-    return (
-      <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121] scrollbar-thin">
-        <DocumentEmptyState />
-      </div>
-    )
-  }
-
-  const content = doc?.content as ResumeContent | undefined
       if (!content) return
 
       const oldIndex = content.sections.findIndex((s) => s.id === active.id)
@@ -63,7 +63,7 @@ export function DocumentCanvas() {
       }
       queueEdit({ op: "move_section", from_index: oldIndex, to_index: newIndex })
     },
-    [doc, viewMode, queryClient]
+    [content, viewMode, queryClient]
   )
 
   useEffect(() => {
@@ -90,7 +90,6 @@ export function DocumentCanvas() {
 
   const handleBottomInsert = async (action: string) => {
     if (!activeSessionId) return
-    const content = doc?.content as ResumeContent | undefined
     const sectionCount = content?.sections?.length || 0
 
     try {
@@ -145,7 +144,6 @@ export function DocumentCanvas() {
     }
   }
 
-  const content = doc?.content as ResumeContent | undefined
   const documentModel = doc?.documentModel
   const coverLetterContent = session?.cover_letter_document?.content
   const isCoverLetterView = activeDocType === "cover_letter"
@@ -178,13 +176,11 @@ export function DocumentCanvas() {
     innerContent = <CoverLetterCanvas content={coverLetterContent} />
   } else {
     innerContent = hasContent ? (
-      viewMode === "diff" && latestDiff ? (
-        <div>
-          <DiffActions />
-          <DiffView diff={latestDiff} content={content} document={documentModel}>
-            {content ? renderNewChildren() : renderLegacyChildren()}
-          </DiffView>
-        </div>
+      viewMode === "changes" ? (
+        <DiffProvider changes={changes}>
+          <DiffOverlay changeCount={changes.size} />
+          {content ? renderNewChildren() : renderLegacyChildren()}
+        </DiffProvider>
       ) : content ? (
         renderNewChildren()
       ) : (
@@ -200,11 +196,11 @@ export function DocumentCanvas() {
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-canvas dark:bg-[#212121] scrollbar-thin">
       <InlineFormatToolbar />
-      <div className="mx-auto min-h-full" style={{ maxWidth: "960px" }}>
+      <div className="mx-auto min-h-full overflow-hidden" style={{ maxWidth: "960px" }}>
         <div className="py-10 px-8 group/page">
-          <DocumentTopBar />
-          <div className="relative mt-10">{innerContent}</div>
-          {!isCoverLetterView && hasContent && viewMode !== "diff" && <BottomInsert onInsert={handleBottomInsert} />}
+          <DocumentTopBar changeCount={changes.size} />
+          <div className="relative mt-10 overflow-hidden">{innerContent}</div>
+          {!isCoverLetterView && hasContent && viewMode !== "changes" && <BottomInsert onInsert={handleBottomInsert} />}
         </div>
       </div>
     </div>

@@ -1,12 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
 import type { Basics } from "@/types"
 import { queueEdit } from "@/lib/editQueue"
 import { useSessionStore } from "@/stores/sessionStore"
-import { useDiffChanges } from "@/components/diff/DiffView"
-import { diffBorderClass, diffGutterClass, diffGutter, renderDiffText } from "@/lib/wordDiff"
-import type { DiffState } from "@/components/diff/DiffView"
+import { useFieldChanges } from "@/components/diff/DiffContext"
 
 function LinkableField({
   value,
@@ -72,60 +70,56 @@ function LinkableField({
 
 export function ResumeHeader({ basics }: { basics: Basics }) {
   const viewMode = useSessionStore((s) => s.viewMode)
-  const allDiffs = useDiffChanges("basics")
-
-  const fieldDiffMap = useMemo(() => {
-    const map = new Map<string, DiffState>()
-    allDiffs.forEach((d) => {
-      if (!d.path) return
-      const field = d.path.replace(/^basics\./, "")
-      if (field && !map.has(field)) map.set(field, d)
-    })
-    return map
-  }, [allDiffs])
+  const nameDiff = useFieldChanges("basics:name")
+  const locationDiff = useFieldChanges("basics:location")
+  const phoneDiff = useFieldChanges("basics:phone")
+  const emailDiff = useFieldChanges("basics:email")
 
   const queueBasisEdit = (field: string, value: string) => {
     queueEdit({ op: "update_basics_field", field, value })
   }
 
-  const getFieldDiff = (field: string): DiffState | undefined => {
-    if (viewMode !== "diff") return undefined
-    return fieldDiffMap.get(field)
-  }
+  const isDiff = viewMode === "changes"
 
-  const nameDiff = getFieldDiff("name")
-  const locationDiff = getFieldDiff("location")
-  const phoneDiff = getFieldDiff("phone")
-  const emailDiff = getFieldDiff("email")
+  const diffBorder = (kind: string | undefined) =>
+    kind === "added"
+      ? "border-l-[3px] border-[#137333] dark:border-[#81c995]"
+      : kind === "removed"
+        ? "border-l-[3px] border-[#c5221f] dark:border-[#f28b82]"
+        : kind === "modified"
+          ? "border-l-[3px] border-[#e37400] dark:border-[#fdd663]"
+          : ""
+
+  const diffGutterColor = (kind: string | undefined) =>
+    kind === "added"
+      ? "text-[#137333] dark:text-[#81c995]"
+      : kind === "removed"
+        ? "text-[#c5221f] dark:text-[#f28b82]"
+        : kind === "modified"
+          ? "text-[#e37400] dark:text-[#fdd663]"
+          : ""
+
+  const diffGutterChar = (kind: string | undefined) =>
+    kind === "added" ? "+" : kind === "removed" ? "\u2013" : kind === "modified" ? "~" : ""
 
   return (
     <header className="mb-8 text-center">
-      <h1 className={diffBorderClass(nameDiff?.kind || null)}>
-        {viewMode === "diff" && nameDiff?.kind && (
-          <span className={`text-xs font-bold font-mono mr-1 ${diffGutterClass(nameDiff.kind)}`}>
-            {diffGutter(nameDiff.kind)}
+      <h1 className={diffBorder(nameDiff?.kind)}>
+        {isDiff && nameDiff?.kind && (
+          <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(nameDiff.kind)}`}>
+            {diffGutterChar(nameDiff.kind)}
           </span>
         )}
         <span className="text-3xl font-bold text-ink dark:text-[#ececec] mb-2 inline-block">
           <LinkableField value={basics.name} onSave={(v) => queueBasisEdit("name", v)} />
         </span>
-        {viewMode === "diff" &&
-          nameDiff?.kind === "modified" &&
-          nameDiff.oldVal !== undefined &&
-          nameDiff.newVal !== undefined && (
-            <span className="text-xs ml-2">
-              {renderDiffText(nameDiff.kind, basics.name, nameDiff.oldVal, nameDiff.newVal)}
-            </span>
-          )}
       </h1>
       <div className="text-sm text-slate dark:text-[#8e8e8e] space-y-1">
         {basics.location !== undefined && (
-          <p className={diffBorderClass(locationDiff?.kind || null)}>
-            {viewMode === "diff" && locationDiff?.kind && (
-              <span
-                className={`text-xs font-bold font-mono mr-1 ${diffGutterClass(locationDiff.kind)}`}
-              >
-                {diffGutter(locationDiff.kind)}
+          <p className={diffBorder(locationDiff?.kind)}>
+            {isDiff && locationDiff?.kind && (
+              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(locationDiff.kind)}`}>
+                {diffGutterChar(locationDiff.kind)}
               </span>
             )}
             <LinkableField
@@ -134,24 +128,20 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
             />
           </p>
         )}
-        <p className="space-x-2">
-          <span className={diffBorderClass(phoneDiff?.kind || null)}>
-            {viewMode === "diff" && phoneDiff?.kind && (
-              <span
-                className={`text-xs font-bold font-mono mr-1 ${diffGutterClass(phoneDiff.kind)}`}
-              >
-                {diffGutter(phoneDiff.kind)}
+        <p className="flex flex-wrap items-center justify-center gap-x-1 gap-y-0.5 overflow-hidden">
+          <span className={diffBorder(phoneDiff?.kind)}>
+            {isDiff && phoneDiff?.kind && (
+              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(phoneDiff.kind)}`}>
+                {diffGutterChar(phoneDiff.kind)}
               </span>
             )}
             <LinkableField value={basics.phone || ""} onSave={(v) => queueBasisEdit("phone", v)} />
           </span>
           <span>|</span>
-          <span className={diffBorderClass(emailDiff?.kind || null)}>
-            {viewMode === "diff" && emailDiff?.kind && (
-              <span
-                className={`text-xs font-bold font-mono mr-1 ${diffGutterClass(emailDiff.kind)}`}
-              >
-                {diffGutter(emailDiff.kind)}
+          <span className={diffBorder(emailDiff?.kind)}>
+            {isDiff && emailDiff?.kind && (
+              <span className={`text-xs font-bold font-mono mr-1 ${diffGutterColor(emailDiff.kind)}`}>
+                {diffGutterChar(emailDiff.kind)}
               </span>
             )}
             <LinkableField
@@ -163,35 +153,28 @@ export function ResumeHeader({ basics }: { basics: Basics }) {
           {basics.profiles?.map((p, i) => (
             <span key={p.url || i}>
               <span>|</span>
-              <LinkableField
-                value={p.username || p.network || ""}
-                onSave={(v) => {
-                  queueEdit({
-                    op: "update_basics_field",
-                    field: "profiles",
-                    value: JSON.stringify(
-                      basics.profiles.map((pr, j) => (j === i ? { ...pr, username: v } : pr))
-                    ),
-                  })
+              <a
+                href={p.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                onDoubleClick={(e) => {
+                  e.preventDefault()
+                  const newUsername = window.prompt("Username:", p.username || "")
+                  if (newUsername !== null) {
+                    queueEdit({
+                      op: "update_basics_field",
+                      field: "profiles",
+                      value: JSON.stringify(
+                        basics.profiles.map((pr, j) => (j === i ? { ...pr, username: newUsername } : pr))
+                      ),
+                    })
+                  }
                 }}
-              />
-              {p.url && (
-                <span className="text-slate/50 dark:text-[#666] ml-1">
-                  (<LinkableField
-                    value={p.url}
-                    onSave={(v) => {
-                      queueEdit({
-                        op: "update_basics_field",
-                        field: "profiles",
-                        value: JSON.stringify(
-                          basics.profiles.map((pr, j) => (j === i ? { ...pr, url: v } : pr))
-                        ),
-                      })
-                    }}
-                    isUrl
-                  />)
-                </span>
-              )}
+                title={`${p.network}: ${p.username} (${p.url})`}
+              >
+                {p.username || p.network}
+              </a>
             </span>
           ))}
         </p>

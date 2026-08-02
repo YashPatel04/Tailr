@@ -13,8 +13,7 @@ import { BulletRenderer } from "./BulletRenderer"
 import { DeleteButton } from "./DeleteButton"
 import { FormattedText } from "./FormattedText"
 import { OpaqueNodeRenderer } from "./OpaqueNodeRenderer"
-import { useDiff } from "@/components/diff/DiffView"
-import { diffBorderClass, diffGutterClass, diffGutter } from "@/lib/wordDiff"
+import { useFieldChanges } from "@/components/diff/DiffContext"
 import { clsx } from "clsx"
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
@@ -26,14 +25,34 @@ interface SectionRendererProps {
 }
 
 export function SectionRenderer({ node, section, sectionIndex }: SectionRendererProps) {
-  const contextDiff = useDiff(section ? section.id : node?.id)
-  const effectiveDiff = contextDiff
+  const sectionDiff = useFieldChanges(section?.id ?? "")
   const queryClient = useQueryClient()
   const viewMode = useSessionStore((s) => s.viewMode)
 
+  const diffBorder = (kind: string | undefined) =>
+    kind === "added"
+      ? "border-l-[3px] border-[#137333] dark:border-[#81c995]"
+      : kind === "removed"
+        ? "border-l-[3px] border-[#c5221f] dark:border-[#f28b82]"
+        : kind === "modified"
+          ? "border-l-[3px] border-[#e37400] dark:border-[#fdd663]"
+          : ""
+
+  const diffGutterColor = (kind: string | undefined) =>
+    kind === "added"
+      ? "text-[#137333] dark:text-[#81c995]"
+      : kind === "removed"
+        ? "text-[#c5221f] dark:text-[#f28b82]"
+        : kind === "modified"
+          ? "text-[#e37400] dark:text-[#fdd663]"
+          : ""
+
+  const diffGutterChar = (kind: string | undefined) =>
+    kind === "added" ? "+" : kind === "removed" ? "\u2013" : kind === "modified" ? "~" : ""
+
   const handleEntryDragEnd = useCallback(
     (event: DragEndEvent) => {
-      if (viewMode === "diff" || !section) return
+      if (viewMode === "changes" || !section) return
       const { active, over } = event
       if (!over || active.id === over.id) return
 
@@ -69,7 +88,7 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
 
   const handleSkillRowDragEnd = useCallback(
     (event: DragEndEvent) => {
-      if (viewMode === "diff" || !section) return
+      if (viewMode === "changes" || !section) return
       const { active, over } = event
       if (!over || active.id === over.id) return
 
@@ -160,21 +179,21 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
 
   if (section) {
     return (
-      <section className={clsx("mb-4 group/section relative", diffBorderClass(effectiveDiff.kind))}>
-        {effectiveDiff.kind && (
+      <section className={clsx("mb-4 group/section relative", diffBorder(sectionDiff?.kind))}>
+        {sectionDiff?.kind && (
           <span
             className={clsx(
               "absolute left-0 top-0 text-xs font-bold font-mono",
-              diffGutterClass(effectiveDiff.kind)
+              diffGutterColor(sectionDiff.kind)
             )}
           >
-            {diffGutter(effectiveDiff.kind)}
+            {diffGutterChar(sectionDiff.kind)}
           </span>
         )}
         {section.label && (
           <h2 className="text-2xl font-semibold text-ink dark:text-[#ececec] border-b border-muted pb-1 mb-3 flex items-center justify-between">
             <EditableField value={section.label} tag="span" onSave={updateSectionLabel} />
-            {viewMode !== "diff" && sectionIndex !== undefined && (
+            {viewMode !== "changes" && sectionIndex !== undefined && (
               <DeleteButton onClick={() => deleteSection()} />
             )}
           </h2>
@@ -189,6 +208,7 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
                 <SortableEntry
                   key={entry.id}
                   entry={entry}
+                  sectionId={section.id}
                   sectionLabel={section.label}
                   entryIndex={i}
                 />
@@ -214,7 +234,7 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
             </SortableContext>
           </DndContext>
         )}
-        {viewMode !== "diff" && section.skill_rows && section.skill_rows.length > 0 && (
+        {viewMode !== "changes" && section.skill_rows && section.skill_rows.length > 0 && (
           <button
             onClick={addSkillRow}
             className="opacity-0 group-hover/section:opacity-100 text-xs text-slate dark:text-[#8e8e8e] hover:text-brass dark:hover:text-brass px-1 py-0.5 rounded hover:bg-brass/10 transition-all"
@@ -233,15 +253,15 @@ export function SectionRenderer({ node, section, sectionIndex }: SectionRenderer
   }
 
   return (
-    <section className={clsx("mb-4 relative", diffBorderClass(effectiveDiff.kind))}>
-      {effectiveDiff.kind && (
+    <section className={clsx("mb-4 relative", diffBorder(sectionDiff?.kind))}>
+      {sectionDiff?.kind && (
         <span
           className={clsx(
             "absolute left-0 top-0 text-xs font-bold font-mono",
-            diffGutterClass(effectiveDiff.kind)
+            diffGutterColor(sectionDiff.kind)
           )}
         >
-          {diffGutter(effectiveDiff.kind)}
+          {diffGutterChar(sectionDiff.kind)}
         </span>
       )}
       {node.type === "section" && node.label && (

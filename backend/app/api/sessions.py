@@ -637,6 +637,27 @@ async def get_master_resume(current_user: CurrentUser, db: AsyncSession = Depend
     }
 
 
+class MasterResumeContentUpdate(BaseModel):
+    content_json: dict
+
+
+@master_router.patch("/content")
+async def update_master_resume_content(
+    body: MasterResumeContentUpdate,
+    current_user: CurrentUser,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(MasterResume).where(MasterResume.user_id == current_user.id))
+    master = result.scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=404, detail="No master resume found")
+
+    master.content_json = body.content_json
+    await db.commit()
+
+    return {"id": str(master.id), "updated": True}
+
+
 @master_router.put("")
 async def replace_master_resume(
     current_user: CurrentUser,

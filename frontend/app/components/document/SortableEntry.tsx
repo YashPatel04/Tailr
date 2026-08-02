@@ -9,10 +9,12 @@ import type { Entry } from "@/types"
 
 export function SortableEntry({
   entry,
+  sectionId,
   sectionLabel,
   entryIndex,
 }: {
   entry: Entry
+  sectionId: string
   sectionLabel: string
   entryIndex: number
 }) {
@@ -20,7 +22,7 @@ export function SortableEntry({
   const editingFieldId = useSessionStore((s) => s.editingFieldId)
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: entry.id,
-    disabled: viewMode === "diff" || editingFieldId !== null,
+    disabled: viewMode === "changes" || editingFieldId !== null,
   })
 
   return (
@@ -30,7 +32,7 @@ export function SortableEntry({
       className={`transition-transform duration-200 ease-in-out ${isDragging ? "opacity-50 z-10" : ""}`}
     >
       <div className="flex items-start gap-1 group">
-        {viewMode !== "diff" && editingFieldId === null && (
+        {viewMode !== "changes" && editingFieldId === null && (
           <button
             {...attributes}
             {...listeners}
@@ -40,7 +42,7 @@ export function SortableEntry({
           </button>
         )}
         <div className="flex-1">
-          <EntryRenderer entry={entry} sectionLabel={sectionLabel} entryIndex={entryIndex} />
+          <EntryRenderer entry={entry} sectionId={sectionId} sectionLabel={sectionLabel} entryIndex={entryIndex} />
         </div>
       </div>
     </div>

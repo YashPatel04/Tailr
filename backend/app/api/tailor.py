@@ -14,7 +14,7 @@ from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import ChatMessage, LLMProvider, Patch, Session, SessionDocument
 from app.models.resume_schema import CoverLetterContent, ResumeContent
-from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
+from app.services.editing.content_ops import ContentApplier, ops_from_list
 from app.services.llm.factory import get_adapter
 from app.services.llm.prompts import (
     build_cover_letter_edit_prompt,
@@ -472,15 +472,11 @@ async def chat_stream(
                     yield await _emit("error", {"message": f"Operations retry failed: {str(e)}"})
                     return
 
-            differ = ContentDiffer()
-            diff = differ.diff(content, new_content)
-
             ops_for_storage = [
                 op if isinstance(op, dict) else op.model_dump() for op in content_ops
             ]
 
             session.pending_operations_json = {"ops": ops_list, "content_ops": ops_for_storage}
-            session.pending_diff_json = diff
             await db.commit()
 
             op_count = len(ops_list)
@@ -491,7 +487,7 @@ async def chat_stream(
                     "message": explanation
                     or f"I'd like to make {op_count} changes to your resume. Review them below.",
                     "operations": ops_list,
-                    "diff": diff,
+                    "diff": None,
                     "patch_summary": f"{op_count} changes proposed",
                     "explanation": explanation,
                     "reasoning": reasoning,

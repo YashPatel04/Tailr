@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/Toaster"
 import { useQueryClient } from "@tanstack/react-query"
 
 export function ProposalMessage() {
-  const { pendingProposal, setPendingProposal, setViewMode, setLatestDiff, activeSessionId } = useSessionStore()
+  const { pendingProposal, setPendingProposal, setViewMode, clearSnapshot, activeSessionId } = useSessionStore()
   const queryClient = useQueryClient()
 
   if (!pendingProposal) return null
@@ -17,7 +17,7 @@ export function ProposalMessage() {
       await apiRequest("POST", `/api/sessions/${activeSessionId}/proposal/accept`, pendingProposal.operations)
       setViewMode("final")
       setPendingProposal(null)
-      setLatestDiff(null)
+      clearSnapshot()
       queryClient.invalidateQueries({ queryKey: ["sessions"] })
       queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "document"] })
       queryClient.invalidateQueries({ queryKey: ["sessions", activeSessionId, "messages"] })

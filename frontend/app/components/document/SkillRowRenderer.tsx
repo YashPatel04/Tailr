@@ -103,7 +103,7 @@ export function SkillRowRenderer({
           <span className="font-semibold">{row.category}:</span> {row.items}
         </>
       )}
-      {editable && viewMode !== "diff" && <DeleteButton onClick={handleDelete} />}
+      {editable && viewMode !== "changes" && <DeleteButton onClick={handleDelete} />}
     </div>
   )
 }

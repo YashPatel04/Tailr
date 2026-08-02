@@ -2,11 +2,12 @@ import type { ResumeContent, UserPreferences, ModelInfo } from "@/types"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiRequest } from "@/lib/api"
 
-export function useCurrentUser() {
+export function useCurrentUser(opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["user", "me"],
     queryFn: () => apiRequest<any>("GET", "/api/users/me"),
     retry: false,
+    enabled: opts?.enabled ?? true,
   })
 }
 
@@ -83,10 +84,11 @@ export function useMasterResume() {
   })
 }
 
-export function useSessions() {
+export function useSessions(opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["sessions"],
     queryFn: () => apiRequest<any[]>("GET", "/api/sessions"),
+    enabled: opts?.enabled ?? true,
   })
 }
 

@@ -59,7 +59,7 @@ export function EditableField({
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       if (editing) return
       clickPosRef.current = { x: e.clientX, y: e.clientY }
     },
@@ -68,7 +68,7 @@ export function EditableField({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       if (editing) return
       e.stopPropagation()
       const pos = clickPosRef.current
@@ -80,7 +80,7 @@ export function EditableField({
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (viewMode === "diff") return
+      if (viewMode === "changes") return
       e.stopPropagation()
       enterEditing(e.clientX, e.clientY)
     },

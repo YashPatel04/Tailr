@@ -17,7 +17,7 @@ from app.api.deps import CurrentUser
 from app.db import get_db
 from app.models.models import Patch, Session, SessionDocument
 from app.models.resume_schema import CoverLetterContent, ResumeContent
-from app.services.editing.content_ops import ContentApplier, ContentDiffer, ops_from_list
+from app.services.editing.content_ops import ContentApplier, ops_from_list
 
 router = APIRouter(prefix="/api/sessions", tags=["document-editing"])
 
@@ -30,7 +30,6 @@ class UserEditRequest(BaseModel):
 class UserEditResponse(BaseModel):
     document_id: str
     version: int
-    diff: dict
     warnings: list[dict]
 
 
@@ -76,7 +75,6 @@ async def edit_document(
         except Exception as e:
             raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
 
-        diff = {}
         new_content_dict = new_content.model_dump(mode="json")
     else:
         content_dict = current_doc.content_json or {
@@ -91,8 +89,6 @@ async def edit_document(
         except Exception as e:
             raise HTTPException(status_code=422, detail={"validation_errors": str(e)})
 
-        differ = ContentDiffer()
-        diff = differ.diff(content, new_content)
         new_content_dict = new_content.model_dump(mode="json")
 
     new_doc = SessionDocument(
@@ -122,6 +118,5 @@ async def edit_document(
     return {
         "document_id": str(new_doc.id),
         "version": new_doc.version,
-        "diff": diff,
         "warnings": warnings,
     }

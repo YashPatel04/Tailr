@@ -171,6 +171,14 @@ export interface DiffChangeSet {
   }[]
 }
 
+export type DiffKind = "added" | "removed" | "modified"
+
+export interface DiffChange {
+  kind: DiffKind
+  old?: string
+  new?: string
+}
+
 export interface Span {
   start: number
   end: number
