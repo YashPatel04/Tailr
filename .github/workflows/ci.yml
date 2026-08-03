@@ -42,6 +42,7 @@ jobs:
         with:
           node-version: 22
       - run: cd frontend && npm ci
+      - run: cd frontend && npm install --include=optional --no-save
       - run: cd frontend && npm run lint
       - run: cd frontend && npx prettier --check .
       - run: cd frontend && npm test
