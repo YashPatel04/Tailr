@@ -32,7 +32,7 @@ jobs:
       - run: cd backend && poetry install
       - run: cd backend && poetry run ruff check .
       - run: cd backend && poetry run ruff format --check .
-      - run: cd backend && DATABASE_URL=postgresql+asyncpg://resume_builder:resume_builder@localhost:5432/resume_builder_test poetry run pytest
+      - run: cd backend && DATABASE_URL=postgresql+asyncpg://resume_builder:resume_builder@0.0.0.0:5432/resume_builder_test poetry run pytest
 
   frontend:
     runs-on: ubuntu-latest
