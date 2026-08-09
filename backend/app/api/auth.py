@@ -143,7 +143,7 @@ async def github_login():
     url = (
         "https://github.com/login/oauth/authorize"
         f"?client_id={settings.GITHUB_CLIENT_ID}"
-        f"&redirect_uri={settings.FRONTEND_ORIGIN}/api/auth/github/callback"
+        f"&redirect_uri={settings.BACKEND_URL}/api/auth/github/callback"
         f"&state={state}"
         "&scope=user:email"
     )
@@ -245,7 +245,7 @@ async def google_login():
     url = (
         "https://accounts.google.com/o/oauth2/v2/auth"
         f"?client_id={settings.GOOGLE_CLIENT_ID}"
-        f"&redirect_uri={settings.FRONTEND_ORIGIN}/api/auth/google/callback"
+        f"&redirect_uri={settings.BACKEND_URL}/api/auth/google/callback"
         f"&response_type=code"
         "&scope=openid+email+profile"
         f"&state={state}"
@@ -273,7 +273,7 @@ async def google_callback(
                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "code": code,
                 "grant_type": "authorization_code",
-                "redirect_uri": f"{settings.FRONTEND_ORIGIN}/api/auth/google/callback",
+                "redirect_uri": f"{settings.BACKEND_URL}/api/auth/google/callback",
             },
         )
         token_data = token_res.json()

@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     LATEX_WORK_DIR: str = "/work"
     SECRET_KEY: str
     FRONTEND_ORIGIN: str = "http://localhost:3000"
+    BACKEND_URL: str = "http://localhost:8000"
     GITHUB_CLIENT_ID: str = ""
     GITHUB_CLIENT_SECRET: str = ""
     GOOGLE_CLIENT_ID: str = ""
