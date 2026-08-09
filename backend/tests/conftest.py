@@ -1,4 +1,5 @@
 import asyncio
+import os
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -10,12 +11,16 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.db import Base, get_db
 from app.main import app
 
-TEST_DATABASE_URL = "postgresql+asyncpg://resume_builder:resume_builder@db:5432/resume_builder_test"
-ADMIN_DATABASE_URL = "postgresql+asyncpg://resume_builder:resume_builder@db:5432/postgres"
+_database_url = os.environ.get(
+    "DATABASE_URL",
+    "postgresql+asyncpg://resume_builder:resume_builder@db:5432/resume_builder",
+)
+_admin_database_url = _database_url.rsplit("/", 1)[0] + "/postgres"
+_test_database_url = _database_url.rsplit("/", 1)[0] + "/resume_builder_test"
 
 
 async def _ensure_test_database() -> None:
-    admin_engine = create_async_engine(ADMIN_DATABASE_URL, echo=False)
+    admin_engine = create_async_engine(_admin_database_url, echo=False)
     async with admin_engine.connect() as conn:
         exists = await conn.scalar(
             text("SELECT 1 FROM pg_database WHERE datname = 'resume_builder_test'")
@@ -28,7 +33,7 @@ async def _ensure_test_database() -> None:
 
 asyncio.run(_ensure_test_database())
 
-engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+engine = create_async_engine(_test_database_url, echo=False)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
