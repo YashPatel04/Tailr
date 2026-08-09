@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from urllib.parse import urlparse
+
 from app.api.deps import CurrentUser
 from app.config import settings
 from app.db import get_db
@@ -25,7 +27,13 @@ ACCESS_TOKEN_MAX_AGE = 900
 REFRESH_TOKEN_MAX_AGE = 604800
 
 
+def _cookie_domain() -> str | None:
+    host = urlparse(settings.BACKEND_URL).hostname
+    return host if host and host not in ("localhost", "127.0.0.1") else None
+
+
 def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str):
+    domain = _cookie_domain()
     response.set_cookie(
         "access_token",
         access_token,
@@ -34,6 +42,7 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         samesite="lax",
         path="/",
         max_age=ACCESS_TOKEN_MAX_AGE,
+        domain=domain,
     )
     response.set_cookie(
         "refresh_token",
@@ -43,12 +52,14 @@ def set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: s
         samesite="lax",
         path="/api/auth/refresh",
         max_age=REFRESH_TOKEN_MAX_AGE,
+        domain=domain,
     )
 
 
 def clear_auth_cookies(response: JSONResponse):
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("refresh_token", path="/api/auth/refresh")
+    domain = _cookie_domain()
+    response.delete_cookie("access_token", path="/", domain=domain)
+    response.delete_cookie("refresh_token", path="/api/auth/refresh", domain=domain)
 
 
 # --- Refresh ---
@@ -148,7 +159,7 @@ async def github_login():
         "&scope=user:email"
     )
     response = RedirectResponse(url)
-    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax")
+    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax", domain=_cookie_domain())
     return response
 
 
@@ -251,7 +262,7 @@ async def google_login():
         f"&state={state}"
     )
     response = RedirectResponse(url)
-    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax")
+    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax", domain=_cookie_domain())
     return response
 
 

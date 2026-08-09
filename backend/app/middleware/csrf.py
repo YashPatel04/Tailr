@@ -1,10 +1,18 @@
 import secrets
+from urllib.parse import urlparse
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from app.config import settings
+
 EXEMPT_PATHS = ["/api/auth/", "/api/health"]
+
+
+def _cookie_domain() -> str | None:
+    host = urlparse(settings.BACKEND_URL).hostname
+    return host if host and host not in ("localhost", "127.0.0.1") else None
 
 
 class CsrfMiddleware(BaseHTTPMiddleware):
@@ -12,7 +20,7 @@ class CsrfMiddleware(BaseHTTPMiddleware):
         if request.method in ("GET", "HEAD", "OPTIONS"):
             response = await call_next(request)
             csrf = request.cookies.get("csrf_token") or secrets.token_urlsafe(32)
-            response.set_cookie("csrf_token", csrf, httponly=False, samesite="lax")
+            response.set_cookie("csrf_token", csrf, httponly=False, samesite="lax", domain=_cookie_domain())
             response.headers["X-CSRF-Token"] = csrf
             return response
 
