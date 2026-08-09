@@ -1,0 +1,320 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper text-ink antialiased;
+}
+
+/* ── Dark mode ── */
+.dark body {
+  @apply bg-[#1e1e1e] text-[#ececec];
+}
+
+.dark .bg-paper {
+  background-color: #1e1e1e;
+}
+
+.dark .bg-paper\/50 {
+  background-color: rgba(30, 30, 30, 0.5);
+}
+
+.dark .text-ink {
+  color: #ececec;
+}
+
+.dark .hover\:text-ink:hover {
+  color: #ececec;
+}
+
+.dark .text-slate {
+  color: #8e8e8e;
+}
+
+/* ── Dark mode: canvas matches sidebar tone, slightly darker ── */
+.dark .bg-canvas {
+  background-color: #212121;
+}
+
+/* ── Dark mode: subtle borders ── */
+.dark .border-muted {
+  border-color: rgba(142, 142, 142, 0.1);
+}
+
+/* ── Dark mode: inputs ── */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #2b2b2b;
+  color: #ececec;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: rgba(142, 142, 142, 0.5);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #10a37f;
+}
+
+/* ── Dark mode: border-slate/20 (legacy) ── */
+.dark .border-slate\/20 {
+  border-color: rgba(142, 142, 142, 0.1);
+}
+
+/* ── Dark mode: bg-slate/5, bg-slate/10 ── */
+.dark .bg-slate\/5 {
+  background-color: rgba(142, 142, 142, 0.06);
+}
+
+.dark .bg-slate\/10 {
+  background-color: rgba(142, 142, 142, 0.1);
+}
+
+.dark .hover\:bg-slate\/5:hover {
+  background-color: rgba(142, 142, 142, 0.1);
+}
+
+.dark .hover\:bg-slate\/10:hover {
+  background-color: rgba(142, 142, 142, 0.15);
+}
+
+.dark .hover\:bg-slate\/20:hover {
+  background-color: rgba(142, 142, 142, 0.2);
+}
+
+/* ── Hide textarea scroll buttons ── */
+.chat-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.chat-textarea {
+  scrollbar-width: none;
+}
+
+/* ── Resize handle ── */
+.resize-handle {
+  width: 6px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.resize-handle:hover,
+.resize-handle.active {
+  background-color: #10a37f;
+}
+
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: -4px;
+  right: -4px;
+}
+
+@layer utilities {
+  .animate-diff-in {
+    animation: diff-in 200ms ease-out;
+  }
+
+  @keyframes diff-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes peek-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(142, 142, 142, 0.3) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(142, 142, 142, 0.3);
+    border-radius: 3px;
+  }
+}
+
+/* ── Paper card ── */
+.paper {
+  background: #ffffff;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .paper {
+  background: #2a2a2a;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* ── Global scrollbar defaults ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(142, 142, 142, 0.3) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(142, 142, 142, 0.3);
+  border-radius: 3px;
+}
+
+/* ── Markdown in chat messages ── */
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3 {
+  font-weight: 600;
+  margin-top: 0.75em;
+  margin-bottom: 0.25em;
+}
+
+.prose-chat h1:first-child,
+.prose-chat h2:first-child,
+.prose-chat h3:first-child {
+  margin-top: 0;
+}
+
+.prose-chat h1 {
+  font-size: 1.125rem;
+}
+
+.prose-chat h2 {
+  font-size: 1rem;
+}
+
+.prose-chat h3 {
+  font-size: 0.9375rem;
+}
+
+.prose-chat p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-chat p:first-child {
+  margin-top: 0;
+}
+
+.prose-chat p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-chat ul,
+.prose-chat ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 1.25em;
+}
+
+.prose-chat ul {
+  list-style-type: disc;
+}
+
+.prose-chat ol {
+  list-style-type: decimal;
+}
+
+.prose-chat li {
+  margin-top: 0.125em;
+  margin-bottom: 0.125em;
+}
+
+.prose-chat strong {
+  font-weight: 600;
+}
+
+.prose-chat code {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 0.125em 0.25em;
+  font-size: 0.85em;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.dark .prose-chat code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.prose-chat pre {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  overflow-x: auto;
+  border-radius: 6px;
+  padding: 0.75em;
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.dark .prose-chat pre {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.prose-chat pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85em;
+}
+
+.prose-chat blockquote {
+  border-left: 3px solid rgba(0, 0, 0, 0.15);
+  padding-left: 0.75em;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-style: italic;
+}
+
+.dark .prose-chat blockquote {
+  border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+.prose-chat a {
+  color: #10a37f;
+  text-decoration: underline;
+}
+
+.prose-chat a:hover {
+  opacity: 0.8;
+}
+
+.prose-chat hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0.75em 0;
+}
+
+.dark .prose-chat hr {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,131 @@
+{
+  "generated": "2026-08-01T00:00:00Z",
+  "sections": [
+    {
+      "id": "mockups",
+      "label": "Mockups",
+      "groups": [
+        {
+          "slug": "landing-page",
+          "files": [
+            {
+              "label": "Landing Page (Cinematic)",
+              "path": "mockups/landing-page/index.html"
+            }
+          ]
+        },
+        {
+          "slug": "tailr-logos",
+          "files": [
+            {
+              "label": "Logo Concepts (6 directions)",
+              "path": "mockups/tailr-logos/concepts.html"
+            },
+            {
+              "label": "Redline Refinements",
+              "path": "mockups/tailr-logos/refined.html"
+            },
+            {
+              "label": "Design Brief (for Claude)",
+              "path": "mockups/tailr-logos/design-brief.md"
+            }
+          ]
+        },
+        {
+          "slug": "llm-cowork-redesign",
+          "files": [
+            {
+              "label": "LLM Cowork Redesign",
+              "path": "mockups/llm-cowork-redesign/index.html"
+            }
+          ]
+        },
+        {
+          "slug": "inline-editing",
+          "files": [
+            {
+              "label": "Inline Editing",
+              "path": "mockups/inline-editing/inline-editing.html"
+            },
+            {
+              "label": "Interaction Spec",
+              "path": "mockups/inline-editing/interaction-spec.html"
+            }
+          ]
+        },
+        {
+          "slug": "canvas-toolbar",
+          "files": [
+            {
+              "label": "Canvas Toolbar",
+              "path": "mockups/canvas-toolbar/index.html"
+            }
+          ]
+        },
+        {
+          "slug": "canvas-topbar",
+          "files": [
+            {
+              "label": "Canvas Top Bar",
+              "path": "mockups/canvas-topbar/index.html"
+            }
+          ]
+        },
+        {
+          "slug": "chat-rail-collapsed",
+          "files": [
+            {
+              "label": "Collapsed Chat Rail",
+              "path": "mockups/chat-rail-collapsed/collapsed-rail.html"
+            }
+          ]
+        },
+        {
+          "slug": "diff-view-reinvention",
+          "files": [
+            {
+              "label": "Diff View Reinvention",
+              "path": "mockups/diff-view-reinvention/diff-view.html"
+            }
+          ]
+        },
+        {
+          "slug": "toolbar-bezel",
+          "files": [
+            {
+              "label": "Toolbar Bezel",
+              "path": "mockups/toolbar-bezel/index.html"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "design-systems",
+      "label": "Design Systems",
+      "groups": [
+        {
+          "slug": "resume-tailor",
+          "files": [
+            {
+              "label": "README",
+              "path": "design-systems/resume-tailor/README.md"
+            },
+            {
+              "label": "SKILL",
+              "path": "design-systems/resume-tailor/SKILL.md"
+            },
+            {
+              "label": "Colors & Type",
+              "path": "design-systems/resume-tailor/tokens/colors_and_type.css"
+            },
+            {
+              "label": "Landing Tokens",
+              "path": "design-systems/resume-tailor/tokens/landing.css"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

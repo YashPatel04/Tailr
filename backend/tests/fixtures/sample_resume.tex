@@ -1,0 +1,86 @@
+\documentclass[letterpaper,10pt]{article}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[margin=0.2in]{geometry}
+\usepackage{titlesec}
+
+% Section formatting: smaller, bold, underline
+\titleformat{\section}{\normalsize\bfseries}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{8pt plus 2pt minus 2pt}{4pt}
+
+% Compact lists
+\setlist[itemize]{leftmargin=*, itemsep=3pt, topsep=2pt}
+
+\hypersetup{
+    colorlinks=true,
+    urlcolor=blue,
+    pdfnewwindow=true   
+}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+     {\LARGE \textbf{YASH PATEL}} \\[4pt]
+    United States \textit{(Open to relocation)} \\[4pt] 386-986-8201 $|$ 
+    \href{mailto:ypatel2@stetson.edu}{ypatel2@stetson.edu} $|$ 
+    \href{https://yashbpatel.vercel.app}{yashbpatel.vercel.app} $|$ 
+    \href{https://github.com/YashPatel04}{github.com/YashPatel04} $|$ 
+    \href{https://linkedin.com/in/yashpatel2004}{linkedin.com/in/yashpatel2004}
+\end{center}
+\section*{EDUCATION}
+\textbf{Stetson University, DeLand, FL} \hfill \textbf{\textit{Expected Graduation: Dec 2026}} \\
+\textit{Bachelor of Science, Computer Science (\textbf{Dean's List})} \hfill GPA: 3.79 \\
+\textbf{Relevant Coursework:} Calculus I, II \& III, Software Development I \& II, Computer Networks, Object-Oriented Design, Web Development, Database Systems, Algorithm Analysis, Machine Learning, Operating Systems, Artificial Intelligence
+\section*{TECHNICAL SKILLS}
+\textbf{Programming Languages:} Python, TypeScript, Java, C++, HTML, CSS, TailwindCSS \\
+\textbf{Frameworks \& Libs:} React, Next.js, Node.js, Express, Django, OpenCV, LangChain, LangGraph, TensorFlow, PyTorch\\
+\textbf{Cloud \& DevOps:} AWS (VPC, EC2, S3, RDS), GCP, Docker, Kubernetes, SQL, MongoDB, Linux, NGINX, Redis, PostgreSQL \\
+\textbf{Tools \& Practices:} PM2, Git, SDLC, AI-DLC, Agile, Postman, Testing(L0-L3), CI/CD, n8n, RESTful APIs, Microservices
+\section*{EXPERIENCE}
+\noindent
+\noindent
+\noindent
+\textbf{TrendAI} \hfill \textbf{June 2026 -- August 2026} \\
+\textit{Software Engineering Intern \hfill Austin, TX} 
+\begin{itemize}[itemsep=-2pt]
+    \item Engineered and shipped a migration of \textbf{network firewall} query infrastructure to an internal database for \textbf{Vision One}, TrendAI's flagship customer facing security platform, \textbf{reducing average query latency by ~78\%} (\textbf{6s}) across \textbf{20+ countries.}
+    \item Developed a \textbf{90\% endpoint coverage} \textbf{L2 API test suite} for a backend microservice and integrated it into GitHub Actions for automated deployment validation.
+    \item Built \textbf{Grafana dashboards} to monitor Intrusion Prevention System (IPS) logs in production, improving visibility into system health and accelerating incident detection and response for the cloud security team.
+\end{itemize}
+\textbf{Stetson University} \hfill \textbf{August 2025 -- December 2025}\\
+\textit{Software Engineer Intern (Capstone Proj.)}
+\hfill \textit{DeLand, FL} 
+\begin{itemize}[itemsep=-2pt]
+    \item Collaborated with a \textbf{8-member} cross-disciplinary team to design and deploy a cloud-native virtualized campus network using AWS EC2 and Docker,  \textbf{simulating 50+ concurrent cyberattack scenarios} to test network resilience.
+    \item Deployed Suricata IDS/IPS with \textbf{45K+ active detection rules} and integrated Cowrie \textbf{honeypots} across distributed systems, improving threat visibility and enabling automated correlation of intrusion events.
+    \item Fine-tuned RAG-based LLM agents with vector stores (ChromaDB) and web scraping, \textbf{cutting false positives by 40\%} and enhancing reliability in AI-driven incident detection.
+\end{itemize}
+\textbf{SignStream - Digital Signage Solution} \hfill \textbf{Dec 2024 -- Present} \\
+\textit{Founder \& Developer} \hfill \href{https://signstreamus.com}{\textit{signstreamus.com}}
+\begin{itemize}[itemsep=-2pt]
+    \item Independently designed and deployed a cloud-based \textbf{digital signage SaaS platform} serving \textbf{5 retail clients}, enabling remote content scheduling and achieving \textbf{99\% uptime} with real-time dynamic updates.
+    \item Engineered secure and fault-tolerant media streaming with Socket.io and edge caching on Single Board Computers (\textbf{SBC}), deploying backend services on AWS EC2 with firewall rules, SSL encryption, and rate-limited APIs, serving \textbf{500 + daily ad impressions.}
+\end{itemize}
+\section*{RESEARCH}
+\textbf{Prompt Optimization for LLMs via Squirrel Search Algorithm} \hfill \textbf{Oct 2025 -- Jan 2026} \\
+\textit{Lead Author \& Researcher} \hfill \textbf{\textit{Published at ACM Southeast Conference (ACMSE'26, Troy, AL)}} $|$ \href{https://doi.org/10.1145/3746467.3801519}{\textit{Paper}}
+\begin{itemize}[itemsep=-2pt]
+\item Developed a novel gradient-free SSA implementation for automated prompt optimization, achieving \textbf{57\% improvements} in sentiment classification across multiple LLMs (3.8B--20B parameters) with convergence within \textbf{10--30 iterations}.
+\end{itemize}
+\textbf{FACETS: Multi-Dimensional LLM Benchmarking Framework} \hfill \textbf{Jan 2026 -- May 2026}\\
+\textit{Lead Author \& Researcher} \hfill \textbf{\textit{Stetson University Senior Research, Advisor: Dr. Basar Koc}} $|$ \href{https://yashbpatel.vercel.app/assets/facets_paper-Bnfz5TxH.pdf}{\textit{Paper}}
+\begin{itemize}[itemsep=-2pt]
+\item Designed FACETS, a modular benchmarking framework evaluating \textbf{13 LLMs} across \textbf{6 software engineering tasks} and \textbf{9 quality dimensions}, revealing a \textbf{24.77-point performance spread} (64.56\%--89.33\%) and a substansial gap between code fluency and semantic understanding.
+\end{itemize}
+\textbf{Automated Attendance via Face Recognition} \hfill \textbf{Dec 2025 -- Present} \\
+\textit{Author \& Researcher} \hfill \textit{Stetson University}
+\begin{itemize}[itemsep=-2pt]
+\item Researched and combined multiple datasets using Python to train an \textbf{image segmentation model}; fine-tuned a \textbf{DETR (Detection Transformer)} achieving \textbf{90\% accuracy}, enabling real-time face identification for automated classroom attendance workflows.
+\end{itemize}
+\section*{PROJECTS}
+\textbf{CliquePay $|$ \textit{Django, React, AWS, MySQL} $|$} \href{https://github.com/CSCI-321-Project/CliquePay}{GitHub Repo} \hfill \textbf{Jan 2025 -- May 2025}
+\begin{itemize}[itemsep=-2pt]
+    \item Led a team of \textbf{3 developers} to architect and deploy a React + Django full-stack finance app; implemented scalable \textbf{REST APIs}, integrated AWS Cognito authentication, optimized SQL queries via Django ORM to \textbf{reduce database latency by 40\%}, and built \textbf{real-time group chats} using WebSockets, deployed on AWS with Docker and coordinated via \textbf{Agile sprints} for on-schedule delivery.
+\end{itemize}
+\end{document}

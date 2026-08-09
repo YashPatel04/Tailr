@@ -1,0 +1,55 @@
+\documentclass[letterpaper,10pt]{article}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage[margin=0.2in]{geometry}
+\usepackage{titlesec}
+\titleformat{\section}{\normalsize\bfseries}{}{0em}{}[\titlerule]
+\titlespacing*{\section}{0pt}{8pt plus 2pt minus 2pt}{4pt}
+\setlist[itemize]{leftmargin=*, itemsep=4pt, topsep=2pt}
+\hypersetup{colorlinks=true, urlcolor=blue, pdfnewwindow=true}
+\pagestyle{empty}
+\begin{document}
+\begin{center}
+    {\LARGE \textbf{ {{- content.basics.name | tex_escape -}} }} \\[4pt]
+{%- if content.basics.location %}
+    {{ content.basics.location | tex_escape }} \\[4pt]
+{%- endif %}
+{%- set contact_parts = [] -%}
+{%- if content.basics.phone -%}
+    {{- contact_parts.append(content.basics.phone | tex_escape) or "" -}}
+{%- endif -%}
+{%- if content.basics.email -%}
+    {%- set email_escaped = content.basics.email | tex_escape -%}
+    {{- contact_parts.append('\href{mailto:' + content.basics.email + '}{' + email_escaped + '}') or "" -}}
+{%- endif -%}
+{%- for profile in content.basics.profiles -%}
+    {%- set profile_name_escaped = (profile.username or profile.network) | tex_escape -%}
+    {{- contact_parts.append('\href{' + profile.url + '}{' + profile_name_escaped + '}') or "" -}}
+{%- endfor -%}
+{%- if contact_parts %}
+    {{ contact_parts | join(' $|$ ') }} \\[4pt]
+{%- endif %}
+\end{center}
+{% for section in content.sections %}
+\section*{ {{- section.label | tex_escape -}} }
+{%- for entry in section.entries %}
+\textbf{ {{- entry.title | tex_escape -}} } \hfill \textbf{ {{- entry.dates | tex_escape or '' -}} } \\
+{%- if entry.role or entry.location or entry.urls %}
+{%- if entry.role %}\textit{ {{- entry.role | tex_escape -}} }{%- endif %}{%- if entry.role and (entry.location or entry.urls) %} \hfill {%- endif %}{%- if entry.location %}\textit{ {{- entry.location | tex_escape -}} }{%- endif %}{%- if entry.urls %}{%- if entry.location %} $|$ {%- endif %}{%- for url, mask in entry.urls.items() if url %}\href{ {{- url -}} }{ {{- (mask or url) | tex_escape -}} }{%- if not loop.last %} {%- endif %}{%- endfor %}{%- endif %}{%- if section.label | upper == 'EDUCATION' %} \\{%- endif %}
+{%- endif %}
+{%- if entry.organization %}
+{{ entry.organization | tex_escape }} \\
+{%- endif %}
+{%- if entry.bullets %}
+\begin{itemize}[itemsep=-2pt]
+{%- for bullet in entry.bullets %}
+    \item {{ bullet.text | span_format(bullet.spans) }}
+{%- endfor %}
+\end{itemize}
+{%- endif %}
+{%- endfor %}
+    {%- for sk in section.skill_rows %}
+    \textbf{ {{- sk.category | tex_escape -}} :} {{ sk.items | tex_escape }}{%- if not loop.last %} \\{%- endif %}
+    {%- endfor %}
+    {%- endfor %}
+\end{document}

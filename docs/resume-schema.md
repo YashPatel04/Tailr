@@ -1,0 +1,242 @@
+# Resume Schema -- Data Model Reference
+
+The `ResumeContent` model is the single source of truth for a resume. It's a Pydantic model that lives independent of any output format (LaTeX, HTML, etc.). Every part of the app -- the chat LLM, the canvas editor, the renderer -- reads and writes this same data structure.
+
+---
+
+## Models
+
+### Basics
+
+The header of the resume.
+
+| Field      | Type            | Required | Description                    |
+| ---------- | --------------- | -------- | ------------------------------ |
+| `name`     | `str`           | Yes      | Full name                      |
+| `email`    | `str \| None`   | No       | Email address                  |
+| `phone`    | `str \| None`   | No       | Phone number                   |
+| `location` | `str \| None`   | No       | City/state (e.g. "Austin, TX") |
+| `profiles` | `list[Profile]` | No       | Social/professional links      |
+
+Each `Profile` has `network` (e.g. "GitHub"), `username`, and `url`.
+
+### Section
+
+A named group of entries or skill rows. Sections have a `label` (e.g. "EXPERIENCE", "EDUCATION", "SKILLS") and appear in order.
+
+| Field        | Type             | Description                                      |
+| ------------ | ---------------- | ------------------------------------------------ |
+| `id`         | `str` (UUID4)    | Stable identifier, generated automatically       |
+| `label`      | `str`            | Display name of the section                      |
+| `entries`    | `list[Entry]`    | Ordered list of experience/education items       |
+| `skill_rows` | `list[SkillRow]` | Alternative to entries; used for skills sections |
+| `metadata`   | `dict`           | Arbitrary key-value pairs for extensibility      |
+
+A section uses either `entries` or `skill_rows` -- typically not both at once.
+
+### Entry
+
+A single item inside a section: a job, a degree, a project.
+
+| Field          | Type             | Required | Description                                                     |
+| -------------- | ---------------- | -------- | --------------------------------------------------------------- |
+| `id`           | `str` (UUID4)    | Auto     | Stable identifier                                               |
+| `title`        | `str`            | Yes      | Main heading -- typically the company or institution name       |
+| `role`         | `str \| None`    | No       | Subtitle / position context (typically the job title or degree) |
+| `organization` | `str \| None`    | No       | Company or school name                                          |
+| `dates`        | `str \| None`    | No       | Date range (e.g. "June 2026 - Aug 2026")                        |
+| `location`     | `str \| None`    | No       | Place (e.g. "Austin, TX")                                       |
+| `urls`         | `dict[str, str]` | No       | Map of URL → display text (empty dict = no links)               |
+| `bullets`      | `list[Bullet]`   | No       | Descriptive bullet points                                       |
+| `metadata`     | `dict`           | No       | Extensibility                                                   |
+
+The importer maps `\href{url}{text}` commands to `urls[url] = text`, where the display text becomes the value; a URL with no text mask maps to itself.
+
+### Bullet
+
+A single bullet point with text and optional formatting spans.
+
+| Field   | Type          | Description                                   |
+| ------- | ------------- | --------------------------------------------- |
+| `id`    | `str` (UUID4) | Stable identifier                             |
+| `text`  | `str`         | The bullet text content                       |
+| `spans` | `list[Span]`  | Formatting annotations for ranges of the text |
+
+### Span
+
+Inline formatting applied to a substring of `Bullet.text`. A validator on `Bullet` enforces `start >= 0`, `end <= len(text)`, and `start < end` for every span.
+
+| Field      | Type               | Description                                                      |
+| ---------- | ------------------ | ---------------------------------------------------------------- |
+| `start`    | `int`              | Character offset where formatting begins                         |
+| `end`      | `int`              | Character offset where formatting ends                           |
+| `formats`  | `list[FormatKind]` | Any combination of `"bold"`, `"italic"`, `"underline"`, `"code"` |
+| `link_url` | `str \| None`      | Optional hyperlink for the span                                  |
+
+### SkillRow
+
+A single row in a skills section: a category label and a comma-separated list.
+
+| Field      | Type          | Description                                              |
+| ---------- | ------------- | -------------------------------------------------------- |
+| `id`       | `str` (UUID4) | Stable identifier                                        |
+| `category` | `str`         | Label before the colon (e.g. "Languages")                |
+| `items`    | `str`         | Comma-separated skills (e.g. "Python, TypeScript, Rust") |
+
+### ResumeContent
+
+The top-level model. Everything else nests under it.
+
+| Field      | Type            | Required | Description                                                     |
+| ---------- | --------------- | -------- | --------------------------------------------------------------- |
+| `basics`   | `Basics`        | Yes      | Name, contact, profiles                                         |
+| `sections` | `list[Section]` | No       | Ordered resume sections                                         |
+| `metadata` | `dict`          | No       | Top-level extensibility (import source, template version, etc.) |
+
+### CoverLetterContent
+
+The structured body of a cover letter, stored in a `session_documents` row with `doc_type = "cover_letter"`.
+
+| Field        | Type                         | Description                                |
+| ------------ | ---------------------------- | ------------------------------------------ |
+| `type`       | `str`                        | Always `"cover_letter"`                    |
+| `salutation` | `str`                        | Greeting line (e.g. "Dear Hiring Manager") |
+| `paragraphs` | `list[CoverLetterParagraph]` | Body paragraphs, each `{ id, text }`       |
+| `closing`    | `str`                        | Sign-off (e.g. "Sincerely, Jane Doe")      |
+
+`from_legacy_text(text)` migrates the legacy `{ text, type }` shape: it splits on blank lines, treats a first line starting with "Dear"/"To" as the salutation, and a final line starting with a sign-off keyword ("thank", "regards", "sincerely", "best", "warmly", "respectfully") as the closing. The frontend `CoverLetterCanvas` similarly normalizes a legacy `{ text, type }` payload, falling back to a single paragraph when `paragraphs` is empty.
+
+---
+
+## Concrete Example
+
+```
+ResumeContent (snake_case JSONB)
+├── basics: { name, email, phone, location, profiles[] }
+├── sections[]: { id, label, entries[], skill_rows[] }
+│   └── entries[]: { id, title, role, organization, dates, location, urls{}, bullets[], metadata }
+│       └── bullets[]: { id, text, spans[{ start, end, formats[], link_url }] }
+└── metadata: {}
+```
+
+```json
+{
+  "basics": {
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "phone": "512-555-0123",
+    "location": "Austin, TX",
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "janedoe",
+        "url": "https://github.com/janedoe"
+      },
+      {
+        "network": "LinkedIn",
+        "username": "jane-doe",
+        "url": "https://linkedin.com/in/jane-doe"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "id": "a1b2c3d4-...",
+      "label": "EXPERIENCE",
+      "entries": [
+        {
+          "id": "e1f2g3h4-...",
+          "title": "TrendAI",
+          "role": "Software Engineering Intern",
+          "organization": null,
+          "dates": "June 2026 – August 2026",
+          "location": "Austin, TX",
+          "urls": {},
+          "bullets": [
+            {
+              "id": "b1b2b3b4-...",
+              "text": "Engineered and shipped a python migration tool",
+              "spans": [
+                {
+                  "start": 0,
+                  "end": 13,
+                  "formats": ["bold"],
+                  "link_url": null
+                },
+                {
+                  "start": 18,
+                  "end": 24,
+                  "formats": ["italic"],
+                  "link_url": null
+                }
+              ]
+            },
+            {
+              "id": "b5b6b7b8-...",
+              "text": "Reduced API latency by 40% through caching layer",
+              "spans": []
+            }
+          ],
+          "metadata": {}
+        }
+      ],
+      "skill_rows": [],
+      "metadata": {}
+    },
+    {
+      "id": "s1s2s3s4-...",
+      "label": "TECHNICAL SKILLS",
+      "entries": [],
+      "skill_rows": [
+        {
+          "id": "sk1sk2sk3-...",
+          "category": "Languages",
+          "items": "Python, TypeScript, Go, Rust"
+        },
+        {
+          "id": "sk4sk5sk6-...",
+          "category": "Frameworks",
+          "items": "React, Django, FastAPI"
+        },
+        {
+          "id": "sk7sk8sk9-...",
+          "category": "Tools",
+          "items": "Docker, Kubernetes, Terraform"
+        }
+      ],
+      "metadata": {}
+    },
+    {
+      "id": "s5s6s7s8-...",
+      "label": "EDUCATION",
+      "entries": [
+        {
+          "id": "e9e0e1e2-...",
+          "title": "B.S. Computer Science",
+          "role": null,
+          "organization": "University of Texas at Austin",
+          "dates": "2024 – 2026",
+          "location": "Austin, TX",
+          "urls": {},
+          "bullets": [],
+          "metadata": {}
+        }
+      ],
+      "skill_rows": [],
+      "metadata": {}
+    }
+  ],
+  "metadata": {
+    "import_source": "manual",
+    "template_version": "1.0"
+  }
+}
+```
+
+---
+
+## Identifiers and Validation
+
+- Every `Section`, `Entry`, `Bullet`, and `SkillRow` gets a **UUID4 `id`** on creation. IDs persist through edits -- updating a field does not change the id. The LLM extraction prompt omits `id`s entirely and lets the model defaults generate them.
+- **Pydantic validation** runs whenever a `ResumeContent` is built from data (on import and before export). Invalid span offsets raise clear `ValueError`s, and unknown format kinds are rejected because `formats` is typed as `list[FormatKind]`.
+- The `metadata` dicts on `ResumeContent`, `Section`, and `Entry` are free-form storage for template hints, import tracking, or future extensions.

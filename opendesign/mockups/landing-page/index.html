@@ -1,0 +1,1844 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tailr — Tailor your resume to every job</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="../../design-systems/resume-tailor/tokens/landing.css"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: auto;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        font-family: var(--landing-font);
+        background: var(--landing-bg);
+        color: var(--landing-ink);
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* ─── NAV ─── */
+      .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 2.5rem;
+        height: 56px;
+        background: rgba(10, 10, 10, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid transparent;
+        transition: border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .nav.scrolled {
+        border-bottom-color: var(--landing-border);
+      }
+      .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+      }
+      .nav-logo {
+        font-size: 1.0625rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .nav-logo-mark {
+        font-size: 1.125rem;
+        line-height: 1;
+      }
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+      .nav-links a {
+        font-size: 0.8125rem;
+        color: var(--landing-slate);
+        transition: color 0.2s;
+        font-weight: 450;
+      }
+      .nav-links a:hover {
+        color: var(--landing-ink);
+      }
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      .nav-signin {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--landing-ink);
+        padding: 0.5rem 1rem;
+        border-radius: var(--landing-radius-sm);
+        transition: background 0.2s;
+      }
+      .nav-signin:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .btn {
+        font-family: var(--landing-font);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        padding: 0.5rem 1.25rem;
+        border-radius: var(--landing-radius-sm);
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: #fff;
+        color: #0a0a0a;
+      }
+      .btn-primary:hover {
+        background: #e0e0e0;
+        transform: translateY(-1px);
+      }
+      .btn-accent {
+        background: var(--landing-accent);
+        color: #fff;
+        font-size: 0.9375rem;
+        padding: 0.75rem 2rem;
+        border-radius: var(--landing-radius-md);
+      }
+      .btn-accent:hover {
+        background: var(--landing-accent-hover);
+        transform: translateY(-1px);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--landing-ink);
+        font-size: 0.9375rem;
+        padding: 0.75rem 2rem;
+        border: 1px solid var(--landing-border-strong);
+        border-radius: var(--landing-radius-md);
+      }
+      .btn-ghost:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+
+      /* ─── PINNED SECTION FRAMEWORK ─── */
+      .pin-section {
+        position: relative;
+        overflow: hidden;
+      }
+      .pin-section .pin-spacer {
+        position: relative;
+        z-index: 1;
+      }
+      .pin-section .pin-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      /* ─── SECTION 1: HERO ─── */
+      .hero-section {
+        height: 200vh;
+      }
+      .hero-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2.5rem;
+        overflow: hidden;
+      }
+      .hero-content {
+        flex: 1 1 50%;
+        min-width: 0;
+        will-change: transform, opacity;
+      }
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: var(--landing-accent);
+        margin-bottom: 1.5rem;
+        font-family: var(--landing-font-mono);
+        letter-spacing: -0.01em;
+      }
+      .hero-eyebrow-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--landing-accent);
+        animation: blink 2s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .hero-title {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        margin-bottom: 1.5rem;
+        color: var(--landing-ink);
+      }
+      .hero-title em {
+        font-style: normal;
+        color: var(--landing-accent);
+      }
+      .hero-sub {
+        font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+        color: var(--landing-slate);
+        line-height: 1.6;
+        max-width: 460px;
+        margin-bottom: 2.5rem;
+      }
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .hero-window-wrap {
+        flex: 1 1 50%;
+        min-width: 0;
+        will-change: transform, opacity;
+      }
+      .hero-window {
+        background: var(--landing-bg-surface);
+        border: 1px solid var(--landing-border);
+        border-radius: var(--landing-radius-lg);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          0 2px 8px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .hero-window-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--landing-border);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .hero-window-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .hero-window-dot:nth-child(1) {
+        background: #ff5f57;
+      }
+      .hero-window-dot:nth-child(2) {
+        background: #febc2e;
+      }
+      .hero-window-dot:nth-child(3) {
+        background: #28c840;
+      }
+      .hero-window-title {
+        flex: 1;
+        text-align: center;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+      }
+      .hero-window-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: 360px;
+      }
+      .hw-col {
+        padding: 2rem 1.5rem;
+      }
+      .hw-col:first-child {
+        border-right: 1px solid var(--landing-border);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .hw-col-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: var(--landing-font-mono);
+        margin-bottom: 1.25rem;
+      }
+      .hw-line {
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        color: var(--landing-slate);
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+      }
+      .hw-line.faded {
+        text-decoration: line-through;
+        opacity: 0.3;
+      }
+      .hw-line.highlighted {
+        color: var(--landing-accent);
+        opacity: 1;
+        padding-left: 0.75rem;
+        border-left: 2px solid var(--landing-accent);
+      }
+      .hw-line .kw {
+        font-weight: 600;
+        color: var(--landing-accent);
+      }
+      .hw-score-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--landing-border);
+      }
+      .hw-score-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+      }
+      .hw-score-val {
+        font-family: var(--landing-font-mono);
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--landing-accent);
+        letter-spacing: -0.02em;
+      }
+
+      /* ─── SECTION 2: THE PROBLEM ─── */
+      .problem-section {
+        height: 300vh;
+      }
+      .problem-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 0 2rem;
+      }
+      .problem-inner {
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+        position: relative;
+        height: 10rem;
+      }
+      .problem-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        font-size: clamp(1.75rem, 4vw, 3rem);
+        font-weight: 500;
+        line-height: 1.25;
+        letter-spacing: -0.025em;
+        opacity: 0;
+        will-change: transform, opacity;
+        transition: none;
+      }
+      .problem-line .accent {
+        color: var(--landing-accent);
+        position: relative;
+      }
+      .problem-line .accent::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0%;
+        height: 3px;
+        background: var(--landing-accent);
+        border-radius: 2px;
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .problem-line.active .accent::after {
+        width: 100%;
+      }
+      .problem-counter {
+        margin-top: 3rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+      .problem-counter-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .problem-counter-dot.active {
+        background: var(--landing-accent);
+        width: 24px;
+        border-radius: 4px;
+      }
+
+      /* ─── SECTION 3: HOW IT WORKS ─── */
+      .how-section {
+        height: 350vh;
+      }
+      .how-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+      }
+      .how-inner {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2.5rem;
+        position: relative;
+      }
+      .how-heading {
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-weight: 500;
+        letter-spacing: -0.025em;
+        margin-bottom: 0;
+        line-height: 1.15;
+        opacity: 0;
+        transform: translateY(20px);
+        will-change: transform, opacity;
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .how-heading.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .how-panels {
+        position: relative;
+        height: 60vh;
+        margin-top: 3rem;
+      }
+      .how-panel {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+        opacity: 0;
+        transform: translateX(60px);
+        will-change: transform, opacity;
+        pointer-events: none;
+      }
+      .how-panel.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+        transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .how-panel.exit-left {
+        opacity: 0;
+        transform: translateX(-60px);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .how-panel-text {
+      }
+      .how-panel-num {
+        font-family: var(--landing-font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--landing-accent);
+        margin-bottom: 1rem;
+        letter-spacing: 0.02em;
+        opacity: 0.8;
+      }
+      .how-panel-title {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        margin-bottom: 1rem;
+        line-height: 1.15;
+      }
+      .how-panel-desc {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.65;
+        max-width: 400px;
+      }
+      .how-panel-mockup {
+        background: var(--landing-bg-surface);
+        border: 1px solid var(--landing-border);
+        border-radius: var(--landing-radius-lg);
+        padding: 2rem;
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .how-mockup-label {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: var(--landing-font-mono);
+        margin-bottom: 1.25rem;
+      }
+      .how-mockup-upload {
+        border: 2px dashed var(--landing-border-strong);
+        border-radius: var(--landing-radius-md);
+        padding: 2.5rem 2rem;
+        text-align: center;
+        transition: border-color 0.3s;
+      }
+      .how-mockup-upload-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 1rem;
+        border-radius: var(--landing-radius-sm);
+        background: var(--landing-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+      }
+      .how-mockup-upload-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        color: var(--landing-ink);
+      }
+      .how-mockup-upload-sub {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .how-mockup-jd {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .how-mockup-jd-header {
+        font-size: 0.8125rem;
+        font-weight: 500;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--landing-border);
+        color: var(--landing-ink);
+      }
+      .how-mockup-jd-line {
+        height: 10px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .how-mockup-jd-line:nth-child(2) {
+        width: 100%;
+      }
+      .how-mockup-jd-line:nth-child(3) {
+        width: 85%;
+      }
+      .how-mockup-jd-line:nth-child(4) {
+        width: 92%;
+      }
+      .how-mockup-jd-line:nth-child(5) {
+        width: 60%;
+      }
+      .how-mockup-jd-line:nth-child(6) {
+        width: 78%;
+      }
+      .how-mockup-jd-kw {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+        margin-top: 0.75rem;
+      }
+      .how-mockup-jd-kw span {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(16, 163, 127, 0.15);
+        color: var(--landing-accent);
+      }
+      .how-mockup-review {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .how-mockup-review-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--landing-border-strong);
+      }
+      .how-mockup-review-tab {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border-radius: var(--landing-radius-sm);
+        color: var(--landing-slate);
+      }
+      .how-mockup-review-tab.active {
+        background: var(--landing-accent);
+        color: white;
+      }
+      .how-mockup-review-line {
+        font-size: 0.8125rem;
+        line-height: 1.6;
+        padding-left: 0.75rem;
+        border-left: 2px solid transparent;
+        color: var(--landing-slate);
+      }
+      .how-mockup-review-line.added {
+        border-left-color: var(--landing-accent);
+        color: var(--landing-accent);
+      }
+      .how-mockup-review-line.removed {
+        border-left-color: #ef4444;
+        text-decoration: line-through;
+        opacity: 0.35;
+      }
+      .how-progress-bar {
+        position: absolute;
+        bottom: 2rem;
+        left: 2.5rem;
+        right: 2.5rem;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 1px;
+      }
+      .how-progress-fill {
+        height: 100%;
+        background: var(--landing-accent);
+        border-radius: 1px;
+        width: 0%;
+        transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .how-progress-dots {
+        position: absolute;
+        bottom: calc(2rem + 12px);
+        left: 2.5rem;
+        display: flex;
+        gap: 2rem;
+      }
+      .how-progress-dot {
+        font-family: var(--landing-font-mono);
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.2);
+        transition: color 0.4s;
+      }
+      .how-progress-dot.active {
+        color: var(--landing-accent);
+      }
+
+      /* ─── SECTION 4: THE DIFF ─── */
+      .diff-section {
+        height: 300vh;
+      }
+      .diff-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .diff-inner {
+        max-width: 1100px;
+        width: 100%;
+        padding: 0 2.5rem;
+      }
+      .diff-heading {
+        font-size: clamp(1.5rem, 3vw, 2.25rem);
+        font-weight: 500;
+        letter-spacing: -0.025em;
+        margin-bottom: 3rem;
+        line-height: 1.15;
+        max-width: 600px;
+      }
+      .diff-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--landing-border);
+        border-radius: var(--landing-radius-lg);
+        overflow: hidden;
+        background: var(--landing-bg-surface);
+      }
+      .diff-col {
+        padding: 2rem 1.75rem;
+        min-height: 340px;
+      }
+      .diff-col:first-child {
+        border-right: 1px solid var(--landing-border);
+      }
+      .diff-col-header {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(255, 255, 255, 0.4);
+        font-family: var(--landing-font-mono);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .diff-col-badge {
+        font-size: 0.6875rem;
+        font-weight: 500;
+        text-transform: none;
+        letter-spacing: 0;
+        font-family: var(--landing-font);
+        color: var(--landing-accent);
+        padding: 0.125rem 0.5rem;
+        background: rgba(16, 163, 127, 0.15);
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.6s;
+      }
+      .diff-col-badge.visible {
+        opacity: 1;
+      }
+      .diff-line {
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        margin-bottom: 0.625rem;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        color: var(--landing-ink);
+      }
+      .diff-line.dimmed {
+        opacity: 0.2;
+      }
+      .diff-line.highlighted {
+        padding-left: 0.75rem;
+        border-left: 2px solid var(--landing-accent);
+        color: var(--landing-accent);
+        opacity: 1;
+      }
+      .diff-line .kw {
+        font-weight: 600;
+        color: var(--landing-accent);
+      }
+      .diff-score {
+        margin-top: 2.5rem;
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+      }
+      .diff-score-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+      }
+      .diff-score-val {
+        font-family: var(--landing-font-mono);
+        font-size: 3rem;
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        color: rgba(255, 255, 255, 0.15);
+        transition: color 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .diff-score-val.improved {
+        color: var(--landing-accent);
+      }
+      .diff-note {
+        margin-top: 2rem;
+        font-size: 0.8125rem;
+        color: rgba(255, 255, 255, 0.45);
+        max-width: 460px;
+        line-height: 1.6;
+      }
+
+      /* ─── SECTION 5: OPEN SOURCE ─── */
+      .oss-section {
+        padding: clamp(6rem, 10vw, 10rem) 2.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .oss-eyebrow {
+        font-family: var(--landing-font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--landing-accent);
+        margin-bottom: 1rem;
+        letter-spacing: 0.02em;
+      }
+      .oss-heading {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.25rem;
+        line-height: 1.1;
+      }
+      .oss-sub {
+        font-size: 1.0625rem;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.6;
+        max-width: 520px;
+        margin-bottom: 3.5rem;
+      }
+      .oss-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 3.5rem;
+      }
+      .oss-card {
+        padding: 2rem 1.75rem;
+        border: 1px solid var(--landing-border-strong);
+        border-radius: var(--landing-radius-md);
+        transition: border-color 0.3s;
+      }
+      .oss-card:hover {
+        border-color: var(--landing-accent);
+      }
+      .oss-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(16, 163, 127, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        color: var(--landing-accent);
+        font-size: 1rem;
+      }
+      .oss-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.01em;
+      }
+      .oss-card-desc {
+        font-size: 0.8125rem;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.6;
+      }
+      .oss-code {
+        background: #111;
+        border-radius: var(--landing-radius-md);
+        padding: 1.5rem 1.75rem;
+        overflow-x: auto;
+        position: relative;
+      }
+      .oss-code-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .oss-code-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .oss-code-dot:nth-child(1) {
+        background: #ff5f57;
+      }
+      .oss-code-dot:nth-child(2) {
+        background: #febc2e;
+      }
+      .oss-code-dot:nth-child(3) {
+        background: #28c840;
+      }
+      .oss-code-title {
+        font-family: var(--landing-font-mono);
+        font-size: 0.6875rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 0.5rem;
+      }
+      .oss-code pre {
+        font-family: var(--landing-font-mono);
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        color: #c9d1d9;
+        margin: 0;
+      }
+      .oss-code .comment {
+        color: #555;
+      }
+      .oss-code .cmd {
+        color: var(--landing-accent);
+      }
+      .oss-code .flag {
+        color: #8b949e;
+      }
+
+      /* ─── SECTION 6: EXPORT ─── */
+      .export-section {
+        height: 250vh;
+      }
+      .export-sticky {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      .export-inner {
+        max-width: 1000px;
+        width: 100%;
+        padding: 0 2.5rem;
+        text-align: center;
+      }
+      .export-heading {
+        font-size: clamp(1.75rem, 4vw, 3rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        margin-bottom: 1rem;
+        line-height: 1.15;
+      }
+      .export-sub {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 3rem;
+      }
+      .export-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+      }
+      .export-tile {
+        padding: 2.5rem 1.5rem;
+        border: 1px solid var(--landing-border-strong);
+        border-radius: var(--landing-radius-md);
+        text-align: center;
+        opacity: 0;
+        transform: translateY(30px);
+        will-change: transform, opacity;
+      }
+      .export-tile.revealed {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .export-tile-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 1.25rem;
+        border-radius: var(--landing-radius-sm);
+        background: var(--landing-bg-surface);
+        border: 1px solid var(--landing-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--landing-font-mono);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: var(--landing-accent);
+        transition: all 0.3s;
+      }
+      .export-tile:hover .export-tile-icon {
+        background: rgba(16, 163, 127, 0.12);
+        border-color: var(--landing-accent);
+      }
+      .export-tile-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.375rem;
+        letter-spacing: -0.01em;
+      }
+      .export-tile-desc {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.45);
+        line-height: 1.5;
+      }
+
+      /* ─── SECTION 7: CTA ─── */
+      .cta-section {
+        padding: clamp(8rem, 12vw, 12rem) 2rem;
+        text-align: center;
+      }
+      .cta-label {
+        font-family: var(--landing-font-mono);
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--landing-accent);
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.02em;
+      }
+      .cta-heading {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+      }
+      .cta-sub {
+        font-size: 1.0625rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 2.5rem;
+      }
+      .cta-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      /* ─── FOOTER ─── */
+      .footer {
+        padding: 2rem 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--landing-slate);
+        border-top: 1px solid var(--landing-border-strong);
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .footer-links {
+        display: flex;
+        gap: 1.5rem;
+        list-style: none;
+      }
+      .footer-links a {
+        color: var(--landing-slate);
+        transition: color 0.2s;
+      }
+      .footer-links a:hover {
+        color: var(--landing-ink);
+      }
+
+      /* ─── RESPONSIVE ─── */
+      @media (max-width: 768px) {
+        .nav {
+          padding: 0 1.25rem;
+        }
+        .nav-links {
+          display: none;
+        }
+        .hero-sticky {
+          flex-direction: column;
+          gap: 2.5rem;
+          padding-top: 5rem;
+        }
+        .hero-content {
+          flex: none;
+          width: 100%;
+        }
+        .hero-window-wrap {
+          flex: none;
+          width: 100%;
+        }
+        .hero-title {
+          font-size: clamp(2rem, 8vw, 3rem);
+        }
+        .hero-window-body {
+          grid-template-columns: 1fr;
+        }
+        .hero-window-body .hw-col:first-child {
+          border-right: none;
+          border-bottom: 1px solid var(--landing-border);
+        }
+        .how-panel {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+        .how-panel-mockup {
+          display: none;
+        }
+        .diff-panel {
+          grid-template-columns: 1fr;
+        }
+        .diff-col:first-child {
+          border-right: none;
+          border-bottom: 1px solid var(--landing-border);
+        }
+        .oss-grid {
+          grid-template-columns: 1fr;
+        }
+        .export-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .footer {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
+        .how-inner,
+        .diff-inner,
+        .export-inner {
+          padding: 0 1.25rem;
+        }
+        .oss-section {
+          padding-left: 1.25rem;
+          padding-right: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ─── NAV ─── -->
+    <nav class="nav" id="nav">
+      <div class="nav-left">
+        <a href="/" class="nav-logo">
+          <span class="nav-logo-mark">📄</span>
+          Tailr
+        </a>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#open-source">Open Source</a></li>
+          <li><a href="#">Docs</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="nav-right">
+        <a href="/login" class="nav-signin">Sign In</a>
+        <a href="/register" class="btn btn-primary">Get Started</a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ═══════════════════════════════════════
+     SECTION 1 — HERO
+     ═══════════════════════════════════════ -->
+      <section class="hero-section" id="hero">
+        <div class="hero-sticky">
+          <div class="hero-content" id="heroContent">
+            <div class="hero-eyebrow">
+              <span class="hero-eyebrow-dot"></span>
+              open-source resume tailoring
+            </div>
+            <h1 class="hero-title">
+              Tailor your resume<br />to <em>every</em> job.
+            </h1>
+            <p class="hero-sub">
+              One master resume. One job description. AI-powered tailoring that
+              preserves your formatting and shows every change.
+            </p>
+            <div class="hero-actions">
+              <a href="/register" class="btn btn-accent">Get Started Free</a>
+              <a href="#open-source" class="btn btn-ghost">Self-Host It</a>
+            </div>
+          </div>
+
+          <!-- App window that slides in on scroll -->
+          <div class="hero-window-wrap" id="heroWindow">
+            <div class="hero-window">
+              <div class="hero-window-bar">
+                <span class="hero-window-dot"></span>
+                <span class="hero-window-dot"></span>
+                <span class="hero-window-dot"></span>
+                <span class="hero-window-title"
+                  >Tailr — Google SWE Internship</span
+                >
+              </div>
+              <div class="hero-window-body">
+                <div class="hw-col">
+                  <div class="hw-col-label">Original</div>
+                  <div class="hw-line">
+                    Led team of engineers to build and deploy services
+                  </div>
+                  <div class="hw-line">
+                    Worked on improving system performance
+                  </div>
+                  <div class="hw-line">
+                    Used Python and SQL for data processing
+                  </div>
+                  <div class="hw-line">
+                    Helped with code reviews and mentoring
+                  </div>
+                  <div class="hw-line">Participated in on-call rotation</div>
+                </div>
+                <div class="hw-col">
+                  <div class="hw-col-label">Tailored</div>
+                  <div class="hw-line highlighted">
+                    Led team of <span class="kw">5 engineers</span> to design
+                    and deploy <span class="kw">12 microservices</span> on
+                    <span class="kw">Kubernetes</span>
+                  </div>
+                  <div class="hw-line highlighted">
+                    Reduced P99 latency by <span class="kw">40%</span> across 3
+                    production services
+                  </div>
+                  <div class="hw-line highlighted">
+                    Built ETL pipelines processing
+                    <span class="kw">2M+ records/day</span> using Python and
+                    PostgreSQL
+                  </div>
+                  <div class="hw-line highlighted">
+                    Mentored <span class="kw">4 junior engineers</span> and led
+                    weekly architecture reviews
+                  </div>
+                  <div class="hw-line highlighted">
+                    Maintained <span class="kw">99.9% uptime SLA</span> across 8
+                    production services
+                  </div>
+                  <div class="hw-score-row">
+                    <span class="hw-score-label">ATS Match</span>
+                    <span class="hw-score-val">94%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 2 — THE PROBLEM
+     ═══════════════════════════════════════ -->
+      <section class="problem-section" id="problem">
+        <div class="problem-sticky">
+          <div class="problem-inner">
+            <div class="problem-line" id="problemLine0">
+              Generic resumes<br />don't land
+              <span class="accent">interviews</span>.
+            </div>
+            <div class="problem-line" id="problemLine1">
+              Tailoring by hand<br />takes
+              <span class="accent">hours per application</span>.
+            </div>
+            <div class="problem-line" id="problemLine2">
+              ATS filters reject<br /><span class="accent">75% of resumes</span>
+              before a human sees them.
+            </div>
+          </div>
+          <div class="problem-counter" id="problemCounter">
+            <div class="problem-counter-dot" data-idx="0"></div>
+            <div class="problem-counter-dot" data-idx="1"></div>
+            <div class="problem-counter-dot" data-idx="2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 3 — HOW IT WORKS
+     ═══════════════════════════════════════ -->
+      <section class="how-section" id="features">
+        <div class="how-sticky">
+          <div class="how-inner">
+            <h2 class="how-heading" id="howHeading">
+              Three steps. No forms. No fluff.
+            </h2>
+
+            <div class="how-panels" id="howPanels">
+              <!-- Panel 1: Upload -->
+              <div class="how-panel" id="howPanel0">
+                <div class="how-panel-text">
+                  <div class="how-panel-num">01</div>
+                  <div class="how-panel-title">Upload your resume</div>
+                  <div class="how-panel-desc">
+                    PDF, LaTeX, DOCX, or plain text. Tailr parses it into a
+                    structured document you can edit, section by section.
+                  </div>
+                </div>
+                <div class="how-panel-mockup">
+                  <div class="how-mockup-label">Upload</div>
+                  <div class="how-mockup-upload">
+                    <div class="how-mockup-upload-icon">↑</div>
+                    <div class="how-mockup-upload-text">
+                      Drop your resume here
+                    </div>
+                    <div class="how-mockup-upload-sub">
+                      PDF, .tex, .docx, or .txt
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel 2: Paste JD -->
+              <div class="how-panel" id="howPanel1">
+                <div class="how-panel-text">
+                  <div class="how-panel-num">02</div>
+                  <div class="how-panel-title">Paste a job description</div>
+                  <div class="how-panel-desc">
+                    Drop a link or paste the text. Tailr extracts keywords,
+                    requirements, and company context automatically.
+                  </div>
+                </div>
+                <div class="how-panel-mockup">
+                  <div class="how-mockup-label">Job Description</div>
+                  <div class="how-mockup-jd">
+                    <div class="how-mockup-jd-header">
+                      Google — Software Engineering Intern, Summer 2026
+                    </div>
+                    <div class="how-mockup-jd-line"></div>
+                    <div class="how-mockup-jd-line"></div>
+                    <div class="how-mockup-jd-line"></div>
+                    <div class="how-mockup-jd-line"></div>
+                    <div class="how-mockup-jd-line"></div>
+                    <div class="how-mockup-jd-kw">
+                      <span>Kubernetes</span>
+                      <span>microservices</span>
+                      <span>Python</span>
+                      <span>PostgreSQL</span>
+                      <span>mentorship</span>
+                      <span>SLA</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Panel 3: Review -->
+              <div class="how-panel" id="howPanel2">
+                <div class="how-panel-text">
+                  <div class="how-panel-num">03</div>
+                  <div class="how-panel-title">Review and export</div>
+                  <div class="how-panel-desc">
+                    See every change in a side-by-side diff. Accept, reject, or
+                    iterate. Export to PDF, LaTeX, DOCX, or plain text.
+                  </div>
+                </div>
+                <div class="how-panel-mockup">
+                  <div class="how-mockup-label">Review</div>
+                  <div class="how-mockup-review">
+                    <div class="how-mockup-review-bar">
+                      <div class="how-mockup-review-tab active">Changes</div>
+                      <div class="how-mockup-review-tab">Final</div>
+                    </div>
+                    <div class="how-mockup-review-line removed">
+                      Led team of engineers to build services
+                    </div>
+                    <div class="how-mockup-review-line added">
+                      Led team of 5 engineers to design and deploy 12
+                      microservices on Kubernetes
+                    </div>
+                    <div class="how-mockup-review-line removed">
+                      Worked on improving system performance
+                    </div>
+                    <div class="how-mockup-review-line added">
+                      Reduced P99 latency by 40% across 3 production services
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="how-progress-bar">
+              <div class="how-progress-fill" id="howProgressFill"></div>
+            </div>
+            <div class="how-progress-dots">
+              <span class="how-progress-dot active" data-idx="0">Upload</span>
+              <span class="how-progress-dot" data-idx="1">Job Description</span>
+              <span class="how-progress-dot" data-idx="2">Review</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 4 — THE DIFF
+     ═══════════════════════════════════════ -->
+      <section class="diff-section" id="diffSection">
+        <div class="diff-sticky">
+          <div class="diff-inner">
+            <h2 class="diff-heading">
+              See every change. Accept what works. Iterate on the rest.
+            </h2>
+            <div class="diff-panel">
+              <div class="diff-col" id="diffColOriginal">
+                <div class="diff-col-header">Original</div>
+                <div class="diff-line" data-idx="0">
+                  Led team of engineers to build and deploy services
+                </div>
+                <div class="diff-line" data-idx="1">
+                  Worked on improving system performance
+                </div>
+                <div class="diff-line" data-idx="2">
+                  Used Python and SQL for data processing
+                </div>
+                <div class="diff-line" data-idx="3">
+                  Helped with code reviews and mentoring
+                </div>
+                <div class="diff-line" data-idx="4">
+                  Participated in on-call rotation
+                </div>
+              </div>
+              <div class="diff-col" id="diffColTailored">
+                <div class="diff-col-header">
+                  Tailored
+                  <span class="diff-col-badge" id="diffBadge">+3 keywords</span>
+                </div>
+                <div class="diff-line" data-idx="0">
+                  Led team of <span class="kw">5 engineers</span> to design and
+                  deploy <span class="kw">12 microservices</span> on
+                  <span class="kw">Kubernetes</span>
+                </div>
+                <div class="diff-line" data-idx="1">
+                  Reduced P99 latency by <span class="kw">40%</span> across 3
+                  production services
+                </div>
+                <div class="diff-line" data-idx="2">
+                  Built ETL pipelines processing
+                  <span class="kw">2M+ records/day</span> using Python and
+                  PostgreSQL
+                </div>
+                <div class="diff-line" data-idx="3">
+                  Mentored <span class="kw">4 junior engineers</span> and led
+                  weekly architecture reviews
+                </div>
+                <div class="diff-line" data-idx="4">
+                  Maintained <span class="kw">99.9% uptime SLA</span> across 8
+                  production services
+                </div>
+              </div>
+            </div>
+            <div class="diff-score">
+              <span class="diff-score-label">ATS Match Rate</span>
+              <span class="diff-score-val" id="diffScoreVal">62</span>
+            </div>
+            <p class="diff-note">
+              Your resume never leaves your workspace. No AI-generated
+              experience — only better wording of what you already did.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 5 — OPEN SOURCE
+     ═══════════════════════════════════════ -->
+      <section class="oss-section" id="open-source">
+        <div class="oss-eyebrow">open source</div>
+        <h2 class="oss-heading">Own your tools.</h2>
+        <p class="oss-sub">
+          Tailr is fully open-source and self-hosted. Your data stays on your
+          infrastructure. No vendor lock-in, no usage caps, no surprises.
+        </p>
+
+        <div class="oss-grid">
+          <div class="oss-card">
+            <div class="oss-card-icon">⬡</div>
+            <div class="oss-card-title">Self-hosted</div>
+            <div class="oss-card-desc">
+              Docker Compose up and running in minutes. PostgreSQL, Redis, and
+              texlive — all containerized. No external services required.
+            </div>
+          </div>
+          <div class="oss-card">
+            <div class="oss-card-icon">λ</div>
+            <div class="oss-card-title">LaTeX-native</div>
+            <div class="oss-card-desc">
+              Full LaTeX parsing and compilation. Your formatting is preserved
+              exactly — no conversions, no approximations, no broken layouts.
+            </div>
+          </div>
+          <div class="oss-card">
+            <div class="oss-card-icon">◈</div>
+            <div class="oss-card-title">Bring your own LLM</div>
+            <div class="oss-card-desc">
+              Connect any OpenAI-compatible provider. Use GPT-4, Claude, Llama,
+              or a local model. Your API key, your choice.
+            </div>
+          </div>
+        </div>
+
+        <div class="oss-code">
+          <div class="oss-code-header">
+            <span class="oss-code-dot"></span>
+            <span class="oss-code-dot"></span>
+            <span class="oss-code-dot"></span>
+            <span class="oss-code-title">terminal</span>
+          </div>
+          <pre><span class="comment"># Clone and start</span>
+<span class="cmd">git clone</span> <span class="flag">https://github.com/tailr/tailr</span>
+<span class="cmd">cd</span> tailr && <span class="cmd">cp</span> backend/.env.example backend/.env
+<span class="cmd">docker compose</span> up --build
+
+<span class="comment"># Run migrations</span>
+<span class="cmd">docker compose exec</span> backend alembic upgrade head</pre>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 6 — EXPORT
+     ═══════════════════════════════════════ -->
+      <section class="export-section" id="export">
+        <div class="export-sticky">
+          <div class="export-inner">
+            <h2 class="export-heading">Export anywhere.</h2>
+            <p class="export-sub">
+              Your tailored resume, in whatever format you need.
+            </p>
+            <div class="export-grid" id="exportGrid">
+              <div class="export-tile" data-idx="0">
+                <div class="export-tile-icon">.tex</div>
+                <div class="export-tile-name">LaTeX</div>
+                <div class="export-tile-desc">
+                  Raw source. Full control over every macro and package.
+                </div>
+              </div>
+              <div class="export-tile" data-idx="1">
+                <div class="export-tile-icon">.pdf</div>
+                <div class="export-tile-name">PDF</div>
+                <div class="export-tile-desc">
+                  Compiled and ready to submit. Pixel-perfect output.
+                </div>
+              </div>
+              <div class="export-tile" data-idx="2">
+                <div class="export-tile-icon">.docx</div>
+                <div class="export-tile-name">Word</div>
+                <div class="export-tile-desc">
+                  For recruiters who need an editable document.
+                </div>
+              </div>
+              <div class="export-tile" data-idx="3">
+                <div class="export-tile-icon">.txt</div>
+                <div class="export-tile-name">Plain Text</div>
+                <div class="export-tile-desc">
+                  For ATS systems that strip formatting.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════════════════════════
+     SECTION 7 — CTA + FOOTER
+     ═══════════════════════════════════════ -->
+      <section class="cta-section">
+        <div class="cta-label">Ready?</div>
+        <h2 class="cta-heading">Tailor your next resume.</h2>
+        <p class="cta-sub">Start with your resume and a job description.</p>
+        <div class="cta-actions">
+          <a href="/register" class="btn btn-accent">Get Started Free</a>
+          <a href="#" class="btn btn-ghost">View on GitHub</a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Tailr &copy; 2026</span>
+        <ul class="footer-links">
+          <li><a href="#">GitHub</a></li>
+          <li><a href="#">Docs</a></li>
+          <li><a href="#">Privacy</a></li>
+        </ul>
+      </footer>
+    </main>
+
+    <!-- ═══════════════════════════════════════
+     SCROLL ENGINE
+     ═══════════════════════════════════════ -->
+    <script>
+      (function () {
+        "use strict";
+
+        var nav = document.getElementById("nav");
+        var raf = null;
+        var ticking = false;
+
+        /* ─── Utility ─── */
+        function clamp(v, min, max) {
+          return Math.max(min, Math.min(max, v));
+        }
+        function lerp(a, b, t) {
+          return a + (b - a) * t;
+        }
+        function easeOut(t) {
+          return 1 - Math.pow(1 - t, 3);
+        }
+
+        /* ─── Section registration ─── */
+        var sections = [];
+
+        function registerPin(id, onProgress) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          sections.push({ el: el, onProgress: onProgress, lastP: -1 });
+        }
+
+        /* ─── HERO ─── */
+        var heroContent = document.getElementById("heroContent");
+        var heroWindow = document.getElementById("heroWindow");
+
+        registerPin("hero", function (p) {
+          p = clamp(p, 0, 1);
+          var ep = easeOut(clamp(p / 0.7, 0, 1));
+
+          // Both content and window fade/scale out together
+          heroContent.style.opacity = 1 - ep;
+          heroContent.style.transform =
+            "scale(" + (1 - ep * 0.08) + ") translateY(" + -ep * 30 + "px)";
+
+          heroWindow.style.opacity = 1 - ep;
+          heroWindow.style.transform =
+            "scale(" + (1 - ep * 0.05) + ") translateY(" + ep * 20 + "px)";
+        });
+
+        /* ─── PROBLEM ─── */
+        var problemLines = [
+          document.getElementById("problemLine0"),
+          document.getElementById("problemLine1"),
+          document.getElementById("problemLine2"),
+        ];
+        var problemDots = document.querySelectorAll(
+          "#problemCounter .problem-counter-dot",
+        );
+
+        registerPin("problem", function (p) {
+          p = clamp(p, 0, 1);
+          var count = problemLines.length;
+
+          for (var i = 0; i < count; i++) {
+            var segStart = i / count;
+            var segEnd = (i + 1) / count;
+            var segP = clamp((p - segStart) / (segEnd - segStart), 0, 1);
+
+            var line = problemLines[i];
+            var dot = problemDots[i];
+
+            if (segP < 0.2) {
+              // Entering
+              var enterP = segP / 0.2;
+              line.style.opacity = enterP;
+              line.style.transform = "translateY(" + (1 - enterP) * 30 + "px)";
+              line.classList.toggle("active", enterP > 0.5);
+            } else if (segP < 0.8) {
+              // Holding
+              line.style.opacity = 1;
+              line.style.transform = "translateY(0)";
+              line.classList.add("active");
+            } else {
+              // Exiting
+              var exitP = (segP - 0.8) / 0.2;
+              line.style.opacity = 1 - exitP;
+              line.style.transform = "translateY(" + -exitP * 30 + "px)";
+              line.classList.remove("active");
+            }
+
+            dot.classList.toggle("active", segP > 0.1 && segP < 0.9);
+          }
+        });
+
+        /* ─── HOW IT WORKS ─── */
+        var howHeading = document.getElementById("howHeading");
+        var howPanels = [
+          document.getElementById("howPanel0"),
+          document.getElementById("howPanel1"),
+          document.getElementById("howPanel2"),
+        ];
+        var howProgressFill = document.getElementById("howProgressFill");
+        var howDots = document.querySelectorAll(".how-progress-dot");
+
+        registerPin("features", function (p) {
+          p = clamp(p, 0, 1);
+
+          // Heading appears early
+          howHeading.classList.toggle("visible", p > 0.02);
+
+          var count = howPanels.length;
+          var panelStart = 0.08;
+          var panelRange = 0.92;
+
+          for (var i = 0; i < count; i++) {
+            var segStart = panelStart + (i / count) * panelRange;
+            var segEnd = panelStart + ((i + 1) / count) * panelRange;
+            var segP = clamp((p - segStart) / (segEnd - segStart), 0, 1);
+            var isActive = segP > 0.05 && segP < 0.95;
+            var isPast = segP >= 0.95;
+
+            var panel = howPanels[i];
+
+            if (isActive) {
+              panel.classList.add("active");
+              panel.classList.remove("exit-left");
+              panel.style.opacity = "";
+              panel.style.transform = "";
+            } else if (isPast) {
+              panel.classList.remove("active");
+              panel.classList.add("exit-left");
+            } else {
+              panel.classList.remove("active", "exit-left");
+              panel.style.opacity = "0";
+              panel.style.transform = "translateX(60px)";
+            }
+
+            howDots[i].classList.toggle("active", isActive || isPast);
+          }
+
+          howProgressFill.style.width = p * 100 + "%";
+        });
+
+        /* ─── DIFF ─── */
+        var diffOriginalLines = document.querySelectorAll(
+          "#diffColOriginal .diff-line",
+        );
+        var diffTailoredLines = document.querySelectorAll(
+          "#diffColTailored .diff-line",
+        );
+        var diffScoreVal = document.getElementById("diffScoreVal");
+        var diffBadge = document.getElementById("diffBadge");
+
+        registerPin("diffSection", function (p) {
+          p = clamp(p, 0, 1);
+          var lineCount = diffOriginalLines.length;
+
+          for (var i = 0; i < lineCount; i++) {
+            var lineStart = 0.1 + (i / lineCount) * 0.6;
+            var lineEnd = lineStart + 0.12;
+            var lineP = clamp((p - lineStart) / (lineEnd - lineStart), 0, 1);
+
+            if (lineP > 0) {
+              diffOriginalLines[i].classList.add("dimmed");
+              diffTailoredLines[i].classList.add("highlighted");
+            } else {
+              diffOriginalLines[i].classList.remove("dimmed");
+              diffTailoredLines[i].classList.remove("highlighted");
+            }
+          }
+
+          // Badge appears after first 2 lines
+          diffBadge.classList.toggle("visible", p > 0.3);
+
+          // Score animates
+          var scoreP = easeOut(clamp((p - 0.6) / 0.3, 0, 1));
+          var score = Math.round(lerp(62, 94, scoreP));
+          diffScoreVal.textContent = score;
+          diffScoreVal.classList.toggle("improved", scoreP > 0.5);
+        });
+
+        /* ─── EXPORT ─── */
+        var exportTiles = document.querySelectorAll("#exportGrid .export-tile");
+
+        registerPin("export", function (p) {
+          p = clamp(p, 0, 1);
+          var count = exportTiles.length;
+
+          for (var i = 0; i < count; i++) {
+            var tileStart = 0.1 + (i / count) * 0.6;
+            var tileP = clamp((p - tileStart) / 0.2, 0, 1);
+            var ep = easeOut(tileP);
+
+            var tile = exportTiles[i];
+            if (ep > 0) {
+              tile.classList.add("revealed");
+              tile.style.opacity = ep;
+              tile.style.transform = "translateY(" + (1 - ep) * 30 + "px)";
+            } else {
+              tile.classList.remove("revealed");
+              tile.style.opacity = "0";
+              tile.style.transform = "translateY(30px)";
+            }
+          }
+        });
+
+        /* ─── OSS section (simple fade-in) ─── */
+        var ossCards = document.querySelectorAll(".oss-card");
+        var ossCode = document.querySelector(".oss-code");
+        var ossObserver = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.style.opacity = "1";
+                entry.target.style.transform = "translateY(0)";
+              }
+            });
+          },
+          { threshold: 0.2 },
+        );
+
+        ossCards.forEach(function (card, i) {
+          card.style.opacity = "0";
+          card.style.transform = "translateY(20px)";
+          card.style.transition =
+            "all 0.6s cubic-bezier(0.16, 1, 0.3, 1) " + i * 0.1 + "s";
+          ossObserver.observe(card);
+        });
+        if (ossCode) {
+          ossCode.style.opacity = "0";
+          ossCode.style.transform = "translateY(20px)";
+          ossCode.style.transition =
+            "all 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s";
+          ossObserver.observe(ossCode);
+        }
+
+        /* ─── Scroll loop ─── */
+        function onScroll() {
+          var scrollY = window.scrollY;
+          var vh = window.innerHeight;
+
+          // Nav
+          nav.classList.toggle("scrolled", scrollY > 10);
+
+          // Process pinned sections
+          for (var i = 0; i < sections.length; i++) {
+            var s = sections[i];
+            var rect = s.el.getBoundingClientRect();
+            var sectionTop = rect.top + scrollY;
+            var sectionHeight = s.el.offsetHeight;
+            var scrollDist = sectionHeight - vh;
+
+            if (scrollDist <= 0) continue;
+
+            var rawP = (scrollY - sectionTop) / scrollDist;
+            var p = clamp(rawP, 0, 1);
+
+            if (p !== s.lastP) {
+              s.lastP = p;
+              s.onProgress(p);
+            }
+          }
+        }
+
+        function requestTick() {
+          if (!ticking) {
+            ticking = true;
+            raf = requestAnimationFrame(function () {
+              onScroll();
+              ticking = false;
+            });
+          }
+        }
+
+        window.addEventListener("scroll", requestTick, { passive: true });
+        window.addEventListener("resize", requestTick, { passive: true });
+
+        // Initial call
+        onScroll();
+      })();
+    </script>
+  </body>
+</html>

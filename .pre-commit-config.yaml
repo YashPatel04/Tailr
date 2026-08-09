@@ -1,0 +1,26 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: docker compose exec -T backend poetry run ruff check --fix
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: ruff-format
+        name: ruff format
+        entry: docker compose exec -T backend poetry run ruff format
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+      - id: eslint
+        name: eslint
+        entry: docker compose exec -T frontend npm run lint
+        language: system
+        files: ^frontend/.*\.[jt]sx?$
+        pass_filenames: false
+      - id: prettier
+        name: prettier
+        entry: npx prettier --check .
+        language: system
+        pass_filenames: false

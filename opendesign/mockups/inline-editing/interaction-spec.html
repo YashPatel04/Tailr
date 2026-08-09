@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inline Editing — Interaction Spec</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --paper: #ffffff;
+        --ink: #0d0d0d;
+        --slate: #6b6e7b;
+        --brass: #10a37f;
+        --canvas: #f7f7f8;
+        --border: #e5e5e5;
+        --brass-light: #ecfdf5;
+        --red: #ef4444;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          system-ui,
+          sans-serif;
+        background: var(--canvas);
+        color: var(--ink);
+        font-size: 14px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .spec-page {
+        max-width: 960px;
+        margin: 40px auto;
+        background: var(--paper);
+        border-radius: 8px;
+        box-shadow:
+          0 1px 3px rgba(0, 0, 0, 0.04),
+          0 4px 12px rgba(0, 0, 0, 0.06);
+        padding: 48px 56px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+        color: var(--slate);
+        margin-bottom: 40px;
+      }
+
+      h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 32px 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1.5px solid var(--border);
+      }
+
+      h3 {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 20px 0 8px;
+        color: var(--slate);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      p,
+      li {
+        font-size: 14px;
+        line-height: 1.65;
+        color: #333;
+      }
+
+      ul {
+        padding-left: 20px;
+        margin: 8px 0;
+      }
+      li {
+        margin-bottom: 4px;
+      }
+
+      code {
+        font-family: "SF Mono", "Fira Code", monospace;
+        font-size: 12.5px;
+        background: #f4f4f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #c7254e;
+      }
+
+      /* ── State Diagram ── */
+      .state-diagram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 32px 0;
+        margin: 16px 0;
+        flex-wrap: wrap;
+      }
+
+      .state-box {
+        padding: 14px 24px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        min-width: 120px;
+      }
+
+      .state-box.idle {
+        background: #f4f4f5;
+        border: 2px solid var(--border);
+        color: var(--ink);
+      }
+
+      .state-box.selected {
+        background: var(--brass-light);
+        border: 2px solid var(--brass);
+        color: var(--brass);
+      }
+
+      .state-box.editing {
+        background: #ecfdf5;
+        border: 2px solid var(--brass);
+        color: var(--brass);
+      }
+
+      .state-arrow {
+        font-size: 20px;
+        color: var(--slate);
+        flex-shrink: 0;
+      }
+
+      .state-label {
+        font-size: 10px;
+        color: var(--slate);
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      .state-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* ── Visual Examples ── */
+      .example-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        margin: 16px 0;
+      }
+
+      .example-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        background: var(--paper);
+      }
+
+      .example-card h4 {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--slate);
+        margin-bottom: 12px;
+      }
+
+      .example-text {
+        font-size: 15px;
+        padding: 4px 6px;
+        border-radius: 3px;
+        line-height: 1.5;
+      }
+
+      .example-text.hover {
+        background: rgba(16, 163, 127, 0.04);
+      }
+
+      .example-text.selected {
+        box-shadow: 0 0 0 2px var(--brass);
+        background: rgba(16, 163, 127, 0.04);
+      }
+
+      .example-text.editing {
+        outline: none;
+        position: relative;
+      }
+
+      .fake-caret {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        background: var(--ink);
+        animation: blink 1s step-end infinite;
+        vertical-align: text-bottom;
+        margin: 0 -1px;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* ── Format Spec ── */
+      .format-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin: 12px 0;
+      }
+
+      .format-card {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+      }
+
+      .format-card .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--slate);
+        margin-bottom: 4px;
+      }
+
+      .format-card .value {
+        font-size: 13px;
+      }
+
+      .format-card .shortcut {
+        font-size: 11px;
+        color: var(--slate);
+        margin-top: 6px;
+      }
+
+      kbd {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #f4f4f5;
+        border: 1px solid var(--border);
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      /* ── Table ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 12px 0;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      th {
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--slate);
+      }
+
+      /* ── Color swatches ── */
+      .swatch-row {
+        display: flex;
+        gap: 12px;
+        margin: 12px 0;
+        flex-wrap: wrap;
+      }
+
+      .swatch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .swatch-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .swatch-label {
+        font-size: 12px;
+        color: var(--slate);
+      }
+
+      .swatch-label strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="spec-page">
+      <h1>Inline Text Editing — Interaction Spec</h1>
+      <p class="subtitle">
+        Design specification for replacing popup text editing with true inline
+        editing on the Resume Canvas Editor.
+      </p>
+
+      <!-- ── State Machine ── -->
+      <h2>1. State Machine</h2>
+      <p>
+        Every editable text element exists in one of three states. Transitions
+        are triggered by user interactions.
+      </p>
+
+      <div class="state-diagram">
+        <div class="state-group">
+          <div class="state-box idle">Normal</div>
+          <div class="state-label">Idle text</div>
+        </div>
+        <div class="state-arrow">→</div>
+        <div class="state-group">
+          <div class="state-box selected">Selected</div>
+          <div class="state-label">Outline shown</div>
+        </div>
+        <div class="state-arrow">→</div>
+        <div class="state-group">
+          <div class="state-box editing">Editing</div>
+          <div class="state-label">Caret active</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>From</th>
+            <th>Trigger</th>
+            <th>To</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Normal</td>
+            <td>Single click</td>
+            <td>Selected</td>
+            <td>Show brass outline, show formatting toolbar</td>
+          </tr>
+          <tr>
+            <td>Normal</td>
+            <td>Double click</td>
+            <td>Editing</td>
+            <td>Enter editing mode, select word at click point</td>
+          </tr>
+          <tr>
+            <td>Selected</td>
+            <td>Single click (same element)</td>
+            <td>Editing</td>
+            <td>Enter editing mode, place caret at click point</td>
+          </tr>
+          <tr>
+            <td>Selected</td>
+            <td>Click outside</td>
+            <td>Normal</td>
+            <td>Commit changes, exit</td>
+          </tr>
+          <tr>
+            <td>Editing</td>
+            <td>Escape</td>
+            <td>Normal</td>
+            <td>Commit changes, exit editing</td>
+          </tr>
+          <tr>
+            <td>Editing</td>
+            <td>Click outside</td>
+            <td>Normal</td>
+            <td>Commit changes, exit editing</td>
+          </tr>
+          <tr>
+            <td>Editing</td>
+            <td>Enter (non-bullet fields)</td>
+            <td>Normal</td>
+            <td>Commit changes, exit editing</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ── Visual States ── -->
+      <h2>2. Visual States</h2>
+
+      <div class="example-row">
+        <div class="example-card">
+          <h4>Normal</h4>
+          <div class="example-text">Senior Software Engineer</div>
+          <p style="font-size: 11px; color: var(--slate); margin-top: 8px">
+            No visual affordance. Text appears as rendered content. Subtle hover
+            highlight on mouseover.
+          </p>
+        </div>
+        <div class="example-card">
+          <h4>Hover</h4>
+          <div class="example-text hover">Senior Software Engineer</div>
+          <p style="font-size: 11px; color: var(--slate); margin-top: 8px">
+            2px brass outline (<code>#10a37f</code> at 4% opacity background).
+            Drag handle appears at left edge.
+          </p>
+        </div>
+        <div class="example-card">
+          <h4>Editing</h4>
+          <div class="example-text editing">
+            Senior Software Engineer<span class="fake-caret"></span>
+          </div>
+          <p style="font-size: 11px; color: var(--slate); margin-top: 8px">
+            Blinking caret at click position. Text visually identical to
+            rendered state.
+          </p>
+        </div>
+      </div>
+
+      <!-- ── Formatting ── -->
+      <h2>3. Text Formatting</h2>
+      <p>
+        Formatting is applied to text selections within an editing field.
+        Formats stack and are stored as span annotations.
+      </p>
+
+      <div class="format-grid">
+        <div class="format-card">
+          <div class="label">Bold</div>
+          <div class="value"><strong>Bold text</strong></div>
+          <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>B</kbd></div>
+        </div>
+        <div class="format-card">
+          <div class="label">Italic</div>
+          <div class="value"><em>Italic text</em></div>
+          <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>I</kbd></div>
+        </div>
+        <div class="format-card">
+          <div class="label">Underline</div>
+          <div class="value">
+            <span style="text-decoration: underline; text-underline-offset: 2px"
+              >Underlined text</span
+            >
+          </div>
+          <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>U</kbd></div>
+        </div>
+        <div class="format-card">
+          <div class="label">Link</div>
+          <div class="value">
+            <span
+              style="
+                color: var(--brass);
+                text-decoration: underline;
+                text-underline-offset: 2px;
+              "
+              >Linked text</span
+            >
+          </div>
+          <div class="shortcut"><kbd>Ctrl</kbd>+<kbd>K</kbd></div>
+        </div>
+      </div>
+
+      <!-- ── Formatting Toolbar ── -->
+      <h2>4. Formatting Toolbar</h2>
+      <p>
+        Appears above the active field when text is selected (in editing mode)
+        or when a field is selected (click state). Dark background
+        (<code>#1e1e1e</code>), rounded corners (8px), with a small
+        downward-pointing triangle.
+      </p>
+
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 1px;
+          background: #1e1e1e;
+          border-radius: 8px;
+          padding: 4px;
+          width: fit-content;
+          margin: 16px 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        "
+      >
+        <div
+          style="
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-size: 13px;
+            font-weight: 600;
+          "
+        >
+          <strong>B</strong>
+        </div>
+        <div
+          style="
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-size: 13px;
+          "
+        >
+          <em>I</em>
+        </div>
+        <div
+          style="
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-size: 13px;
+          "
+        >
+          <span style="text-decoration: underline">U</span>
+        </div>
+        <div
+          style="width: 1px; height: 20px; background: #3c3c3c; margin: 0 2px"
+        ></div>
+        <div
+          style="
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            color: #e0e0e0;
+          "
+        >
+          🔗
+        </div>
+      </div>
+
+      <!-- ── Keyboard Shortcuts ── -->
+      <h2>5. Keyboard Shortcuts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Shortcut</th>
+            <th>Action</th>
+            <th>Context</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><kbd>Click</kbd></td>
+            <td>Place caret at click position</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Double-click</kbd></td>
+            <td>Select word at click position</td>
+            <td>Any state</td>
+          </tr>
+          <tr>
+            <td><kbd>Drag</kbd></td>
+            <td>Select text range</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td>
+            <td>Undo</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
+            <td>Redo</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>A</kbd></td>
+            <td>Select all text in field</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>C</kbd></td>
+            <td>Copy</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>X</kbd></td>
+            <td>Cut</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd>+<kbd>V</kbd></td>
+            <td>Paste</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Escape</kbd></td>
+            <td>Exit editing, commit changes</td>
+            <td>Editing mode</td>
+          </tr>
+          <tr>
+            <td><kbd>Enter</kbd></td>
+            <td>Exit editing (non-bullet fields)</td>
+            <td>Editing mode</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ── Design Tokens ── -->
+      <h2>6. Design Tokens</h2>
+      <p>Matches the existing Tailr design language.</p>
+
+      <h3>Colors</h3>
+      <div class="swatch-row">
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #ffffff"></div>
+          <div class="swatch-label"><strong>Paper</strong><br />#ffffff</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #0d0d0d"></div>
+          <div class="swatch-label"><strong>Ink</strong><br />#0d0d0d</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #6b6e7b"></div>
+          <div class="swatch-label"><strong>Slate</strong><br />#6b6e7b</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #10a37f"></div>
+          <div class="swatch-label"><strong>Brass</strong><br />#10a37f</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #0d8c6d"></div>
+          <div class="swatch-label">
+            <strong>Brass Hover</strong><br />#0d8c6d
+          </div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-circle" style="background: #f7f7f8"></div>
+          <div class="swatch-label"><strong>Canvas</strong><br />#f7f7f8</div>
+        </div>
+      </div>
+
+      <h3>Typography</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Font</th>
+            <th>Size</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Name</td>
+            <td>Inter</td>
+            <td>32px</td>
+            <td>700</td>
+          </tr>
+          <tr>
+            <td>Section Label</td>
+            <td>Inter</td>
+            <td>11px</td>
+            <td>700 (uppercase, tracking 0.1em)</td>
+          </tr>
+          <tr>
+            <td>Entry Title</td>
+            <td>Inter</td>
+            <td>15px</td>
+            <td>600</td>
+          </tr>
+          <tr>
+            <td>Body / Bullets</td>
+            <td>Inter</td>
+            <td>13.5px</td>
+            <td>400</td>
+          </tr>
+          <tr>
+            <td>Contact / Dates</td>
+            <td>Inter</td>
+            <td>13px</td>
+            <td>400</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Spacing & Surfaces</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Selection outline</td>
+            <td>2px solid <code>#10a37f</code></td>
+          </tr>
+          <tr>
+            <td>Hover background</td>
+            <td><code>rgba(16, 163, 127, 0.04)</code></td>
+          </tr>
+          <tr>
+            <td>Caret color</td>
+            <td><code>#0d0d0d</code> (matches text)</td>
+          </tr>
+          <tr>
+            <td>Toolbar background</td>
+            <td><code>#1e1e1e</code></td>
+          </tr>
+          <tr>
+            <td>Toolbar radius</td>
+            <td>8px</td>
+          </tr>
+          <tr>
+            <td>Toolbar shadow</td>
+            <td><code>0 8px 24px rgba(0,0,0,0.12)</code></td>
+          </tr>
+          <tr>
+            <td>Transition duration</td>
+            <td>150ms ease</td>
+          </tr>
+          <tr>
+            <td>Drag handle offset</td>
+            <td>-28px from left edge</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ── Implementation Notes ── -->
+      <h2>7. Implementation Notes</h2>
+      <ul>
+        <li>
+          Use <code>contentEditable="true"</code> on the existing text elements
+          instead of swapping to a <code>&lt;textarea&gt;</code>.
+        </li>
+        <li>
+          Keep the element's existing CSS classes and typography — editing must
+          be WYSIWYG (visually identical to read mode).
+        </li>
+        <li>
+          Use <code>document.execCommand</code> for basic formatting (bold,
+          italic, underline) for simplicity; consider a lightweight ProseMirror
+          or Tiptap integration for robust rich-text if undo/redo fidelity
+          matters.
+        </li>
+        <li>
+          Drag and drop (dnd-kit) must be disabled while any field is in editing
+          mode to prevent conflicts.
+        </li>
+        <li>
+          The edit queue debounce (2 seconds) should fire on
+          <code>blur</code> and on <code>input</code> events to batch rapid
+          edits.
+        </li>
+        <li>
+          For the link input, use a small floating bar positioned above the
+          selection, similar to Notion's link popover.
+        </li>
+        <li>
+          Selection state should be stored in React state and communicated to
+          the <code>FloatingToolbar</code> and <code>SortContext</code> to
+          disable drag during edits.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>
