@@ -37,7 +37,7 @@ export default function LoginPage() {
       <p className="text-sm text-slate text-center mb-6">Sign in to get started</p>
       <div className="space-y-3">
         <a
-          href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/github/login`}
+          href="/api/auth/github/login"
           className="flex items-center justify-center gap-2 w-full rounded-lg border border-muted px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -46,7 +46,7 @@ export default function LoginPage() {
           Continue with GitHub
         </a>
         <a
-          href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/google/login`}
+          href="/api/auth/google/login"
           className="flex items-center justify-center gap-2 w-full rounded-lg border border-muted px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f7f7f8] dark:hover:bg-[#40414f] transition-colors"
         >
           <svg width="20" height="20" viewBox="0 0 24 24">
