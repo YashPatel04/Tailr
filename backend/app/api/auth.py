@@ -1,5 +1,6 @@
 import secrets
 from datetime import UTC, datetime, timedelta
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -7,8 +8,6 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from urllib.parse import urlparse
 
 from app.api.deps import CurrentUser
 from app.config import settings
@@ -159,7 +158,10 @@ async def github_login():
         "&scope=user:email"
     )
     response = RedirectResponse(url)
-    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax", domain=_cookie_domain())
+    response.set_cookie(
+        "oauth_state", state, max_age=600, httponly=True, samesite="lax",
+        domain=_cookie_domain(),
+    )
     return response
 
 
@@ -262,7 +264,10 @@ async def google_login():
         f"&state={state}"
     )
     response = RedirectResponse(url)
-    response.set_cookie("oauth_state", state, max_age=600, httponly=True, samesite="lax", domain=_cookie_domain())
+    response.set_cookie(
+        "oauth_state", state, max_age=600, httponly=True, samesite="lax",
+        domain=_cookie_domain(),
+    )
     return response
 
 

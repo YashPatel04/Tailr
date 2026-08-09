@@ -20,7 +20,10 @@ class CsrfMiddleware(BaseHTTPMiddleware):
         if request.method in ("GET", "HEAD", "OPTIONS"):
             response = await call_next(request)
             csrf = request.cookies.get("csrf_token") or secrets.token_urlsafe(32)
-            response.set_cookie("csrf_token", csrf, httponly=False, samesite="lax", domain=_cookie_domain())
+            response.set_cookie(
+                "csrf_token", csrf, httponly=False, samesite="lax",
+                domain=_cookie_domain(),
+            )
             response.headers["X-CSRF-Token"] = csrf
             return response
 
