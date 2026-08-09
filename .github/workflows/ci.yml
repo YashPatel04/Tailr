@@ -32,7 +32,12 @@ jobs:
       - run: cd backend && poetry install
       - run: cd backend && poetry run ruff check .
       - run: cd backend && poetry run ruff format --check .
-      - run: cd backend && DATABASE_URL=postgresql+asyncpg://resume_builder:resume_builder@0.0.0.0:5432/resume_builder_test poetry run pytest
+      - run: >
+          cd backend &&
+          DATABASE_URL=postgresql+asyncpg://resume_builder:resume_builder@localhost:5432/resume_builder_test
+          REDIS_URL=redis://localhost:6379/0
+          SECRET_KEY=ci-secret-key-that-is-at-least-32-characters-long
+          poetry run pytest
 
   frontend:
     runs-on: ubuntu-latest
@@ -45,4 +50,4 @@ jobs:
       - run: cd frontend && npm install --include=optional --no-save
       - run: cd frontend && npm run lint
       - run: cd frontend && npx prettier --check .
-      - run: cd frontend && npm test
+      - run: cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:8000 npm test
