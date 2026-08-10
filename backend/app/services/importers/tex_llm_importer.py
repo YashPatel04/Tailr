@@ -74,7 +74,7 @@ async def import_from_tex(tex_source: str, llm_adapter, max_retries: int = 2) ->
     ]
 
     for attempt in range(max_retries + 1):
-        response = await llm_adapter.chat(messages)
+        response = await llm_adapter.chat(messages, max_tokens=16384)
         raw = response.content if hasattr(response, "content") else str(response)
 
         cleaned = raw.strip()
@@ -88,7 +88,9 @@ async def import_from_tex(tex_source: str, llm_adapter, max_retries: int = 2) ->
         except (json.JSONDecodeError, ValidationError) as e:
             logger.warning(
                 "[import] attempt=%d error=%s raw_response=%.500s",
-                attempt, e, cleaned,
+                attempt,
+                e,
+                cleaned,
             )
             if attempt < max_retries:
                 messages.append({"role": "assistant", "content": raw})

@@ -71,7 +71,7 @@ class OpenAIAdapter(LLMAdapter):
             payload["top_p"] = self.params.get("top_p", 1.0)
         payload.update(kwargs)
 
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=300) as client:
             if stream:
 
                 async def gen():

@@ -516,7 +516,9 @@ async def upload_master_resume(
         )
         logger.info(
             "[upload-master-resume] provider=%s model=%s tex_length=%d",
-            provider.provider_type, model or "gpt-4o", len(tex_source),
+            provider.provider_type,
+            model or "gpt-4o",
+            len(tex_source),
         )
         resume_content = await import_from_tex(tex_source, adapter)
         content_json = resume_content.model_dump(mode="json")
