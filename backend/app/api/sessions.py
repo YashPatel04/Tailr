@@ -86,9 +86,18 @@ async def analyze_jd(
         raise HTTPException(status_code=400, detail="Configure an LLM provider first")
 
     user = current_user
+    temp_adapter = get_adapter(
+        provider,
+        model="",
+        temperature=user.default_temperature,
+        max_tokens=user.default_max_tokens,
+        top_p=user.default_top_p,
+    )
+    available_models = await temp_adapter.list_models()
+    model_name = available_models[0].id if available_models else "gpt-4o"
     adapter = get_adapter(
         provider,
-        model="gpt-4o",
+        model=model_name,
         temperature=user.default_temperature,
         max_tokens=user.default_max_tokens,
         top_p=user.default_top_p,
