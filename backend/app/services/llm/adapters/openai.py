@@ -60,10 +60,11 @@ class OpenAIAdapter(LLMAdapter):
         self, messages: list[dict], stream: bool = False, **kwargs
     ) -> AsyncIterator[LLMChunk] | LLMResponse:
         max_token_key = self._max_token_param()
+        max_token_value = kwargs.pop("max_tokens", None)
         payload = {
             "model": self.model,
             "messages": messages,
-            max_token_key: self.params.get("max_tokens", 4096),
+            max_token_key: max_token_value or self.params.get("max_tokens", 4096),
             "stream": stream,
         }
         if max_token_key == "max_tokens":
