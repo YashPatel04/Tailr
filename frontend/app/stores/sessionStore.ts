@@ -112,7 +112,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const controller = new AbortController()
     controllerRef = controller
 
-    const requestId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const requestId =
+      crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
     set({ isStreaming: true, streamingDocType: docType, progressPhase: "", progressMessage: "" })
 
