@@ -2,10 +2,11 @@
 const nextConfig = {
   output: "standalone",
   async rewrites() {
+    const backend = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL
     return [
       {
-        source: "/api/auth/:path*",
-        destination: `${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/:path*`,
+        source: "/api/:path*",
+        destination: `${backend}/api/:path*`,
       },
     ]
   },
