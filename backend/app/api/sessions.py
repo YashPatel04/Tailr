@@ -471,7 +471,11 @@ async def upload_master_resume(
     db: AsyncSession = Depends(get_db),
 ):
     if file:
-        tex_source = (await file.read()).decode("utf-8")
+        raw = await file.read()
+        try:
+            tex_source = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            tex_source = raw.decode("latin-1")
     if not tex_source:
         raise HTTPException(status_code=400, detail="No tex_source provided")
 
