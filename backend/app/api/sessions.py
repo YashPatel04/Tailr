@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
@@ -20,6 +21,8 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 master_router = APIRouter(prefix="/api/master-resume", tags=["master-resume"])
 company_router = APIRouter(prefix="/api/companies", tags=["companies"])
 tag_router = APIRouter(prefix="/api/tags", tags=["tags"])
+
+logger = logging.getLogger(__name__)
 
 
 class SessionCreate(BaseModel):
@@ -511,9 +514,14 @@ async def upload_master_resume(
             max_tokens=user.default_max_tokens,
             top_p=user.default_top_p,
         )
+        logger.info(
+            "[upload-master-resume] provider=%s model=%s tex_length=%d",
+            provider.provider_type, model or "gpt-4o", len(tex_source),
+        )
         resume_content = await import_from_tex(tex_source, adapter)
         content_json = resume_content.model_dump(mode="json")
     except Exception as e:
+        logger.error("[upload-master-resume] failed: %s", e, exc_info=True)
         raise HTTPException(status_code=422, detail=f"Failed to parse resume: {e}") from e
 
     if master:

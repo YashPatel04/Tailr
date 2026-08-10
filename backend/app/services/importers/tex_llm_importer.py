@@ -1,9 +1,12 @@
 import json
+import logging
 import re
 
 from pydantic import ValidationError
 
 from app.models.resume_schema import ResumeContent
+
+logger = logging.getLogger(__name__)
 
 EXTRACTION_PROMPT = """You are a resume parser. Extract the content from this LaTeX document into the following JSON schema.
 
@@ -83,6 +86,10 @@ async def import_from_tex(tex_source: str, llm_adapter, max_retries: int = 2) ->
             result = ResumeContent.model_validate(data)
             return result
         except (json.JSONDecodeError, ValidationError) as e:
+            logger.warning(
+                "[import] attempt=%d error=%s raw_response=%.500s",
+                attempt, e, cleaned,
+            )
             if attempt < max_retries:
                 messages.append({"role": "assistant", "content": raw})
                 messages.append(
