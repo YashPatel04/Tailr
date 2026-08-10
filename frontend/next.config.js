@@ -2,11 +2,11 @@
 const nextConfig = {
   output: "standalone",
   async rewrites() {
-    const backend = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL
+    const backend = process.env.INTERNAL_API_URL || "http://localhost:8000"
     return [
       {
-        source: "/api/:path*",
-        destination: `${backend}/api/:path*`,
+        source: "/api/auth/:path*",
+        destination: `${backend}/api/auth/:path*`,
       },
     ]
   },
