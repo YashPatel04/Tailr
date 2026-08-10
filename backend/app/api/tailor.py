@@ -26,6 +26,8 @@ from app.services.research.summarizer import research_company
 router = APIRouter(prefix="/api/sessions", tags=["tailor"])
 logger = logging.getLogger(__name__)
 
+CHAT_HISTORY_LIMIT = 20
+
 
 class ChatMessageRequest(BaseModel):
     content: str
@@ -276,6 +278,18 @@ async def chat_stream(
                             ),
                         }
                     ]
+                    cl_history_result = await db.execute(
+                        select(ChatMessage)
+                        .where(
+                            ChatMessage.session_id == session.id,
+                            ChatMessage.doc_type == "cover_letter",
+                        )
+                        .order_by(ChatMessage.created_at.desc())
+                        .limit(CHAT_HISTORY_LIMIT)
+                    )
+                    cl_history = list(reversed(cl_history_result.scalars().all()))
+                    for msg in cl_history:
+                        plan_messages.append({"role": msg.role, "content": msg.content})
                     plan_messages.append({"role": "user", "content": body.content})
                     response = await adapter.chat(plan_messages, stream=False)
                     raw_content = response.content if hasattr(response, "content") else ""
@@ -399,6 +413,19 @@ async def chat_stream(
                 messages = build_tailor_prompt_v3(
                     session, content, research, current_user.career_context or ""
                 )
+
+            history_result = await db.execute(
+                select(ChatMessage)
+                .where(
+                    ChatMessage.session_id == session.id,
+                    ChatMessage.doc_type == body.doc_type,
+                )
+                .order_by(ChatMessage.created_at.desc())
+                .limit(CHAT_HISTORY_LIMIT)
+            )
+            history = list(reversed(history_result.scalars().all()))
+            for msg in history:
+                messages.append({"role": msg.role, "content": msg.content})
 
             messages.append({"role": "user", "content": body.content})
 
