@@ -256,6 +256,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       )
     } catch (err: any) {
       if (err.name !== "AbortError") {
+        console.error("[chat] sendMessage failed:", err)
+        toast.error(err.message || "Failed to send message")
         set({ isStreaming: false, streamingDocType: null, progressPhase: "", progressMessage: "" })
         queryClient.invalidateQueries({ queryKey })
       }
