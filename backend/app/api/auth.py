@@ -159,7 +159,11 @@ async def github_login():
     )
     response = RedirectResponse(url)
     response.set_cookie(
-        "oauth_state", state, max_age=600, httponly=True, samesite="lax",
+        "oauth_state",
+        state,
+        max_age=600,
+        httponly=True,
+        samesite="lax",
         domain=_cookie_domain(),
     )
     return response
@@ -265,7 +269,11 @@ async def google_login():
     )
     response = RedirectResponse(url)
     response.set_cookie(
-        "oauth_state", state, max_age=600, httponly=True, samesite="lax",
+        "oauth_state",
+        state,
+        max_age=600,
+        httponly=True,
+        samesite="lax",
         domain=_cookie_domain(),
     )
     return response
